@@ -17,6 +17,7 @@ import {
   Loader2,
   ShieldAlert,
   ArrowUpRight,
+  BarChart3,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -34,6 +35,7 @@ import { LegalSection } from "@/components/dashboard/legal-section"
 import { KitSection } from "@/components/dashboard/kit-section"
 import { RoadmapSection } from "@/components/dashboard/roadmap-section"
 import { ObstaclesSection } from "@/components/dashboard/obstacles-section"
+import { FinancialProjectionSection } from "@/components/dashboard/financial-projection-section"
 
 interface StartupDashboardProps {
   data: BusinessInputData
@@ -43,7 +45,7 @@ interface StartupDashboardProps {
   onReset: () => void
 }
 
-type SectionKey = "overview" | "viability" | "monetization" | "competitors" | "clients" | "legal" | "kit" | "roadmap" | "obstacles"
+type SectionKey = "overview" | "viability" | "monetization" | "competitors" | "clients" | "legal" | "kit" | "roadmap" | "obstacles" | "proyeccion"
 
 function LoadingCard({ className }: { className?: string }) {
   return (
@@ -147,6 +149,13 @@ export function StartupDashboard({ data, partial, isStreaming, sectionPlan, onRe
             {activeSection === "kit" && r && <KitSection data={r.startupKit} investment={data.investment} />}
             {activeSection === "roadmap" && d && <RoadmapSection data={d.roadmap} validationPlan={d.validationPlan} />}
             {activeSection === "obstacles" && d && <ObstaclesSection data={d.obstacles} />}
+            {activeSection === "proyeccion" && (
+              <FinancialProjectionSection
+                investment={data.investment ?? 0}
+                businessType={data.businessType}
+                monetizationPlans={v?.viability.monetization.plans}
+              />
+            )}
           </div>
         </div>
       </div>
@@ -405,6 +414,24 @@ export function StartupDashboard({ data, partial, isStreaming, sectionPlan, onRe
               </CardContent>
             </Card>
           ) : <LoadingCard />)}
+
+          {/* Proyección financiera */}
+          <Card className="group cursor-pointer transition-all hover:shadow-lg animate-in fade-in duration-500" onClick={() => handleSectionClick("proyeccion")}>
+            <CardContent className="p-5">
+              <div className="flex items-center justify-between">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg" style={{ backgroundColor: "oklch(0.58 0.18 145 / 0.1)" }}>
+                  <BarChart3 className="h-5 w-5" style={{ color: "oklch(0.58 0.18 145)" }} />
+                </div>
+                <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-1" />
+              </div>
+              <div className="mt-4">
+                <p className="text-sm font-semibold text-foreground">Proyección financiera</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Registrá gastos, simulá ingresos y calculá cuándo recuperás la inversión
+                </p>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Obstáculos */}
           {isSectionEnabled("obstacles") && (d ? (

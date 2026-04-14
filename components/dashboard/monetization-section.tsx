@@ -1,16 +1,22 @@
 "use client"
 
-import { DollarSign } from "lucide-react"
+import { useState } from "react"
+import { DollarSign, Check, Pencil, X } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { ViabilityData } from "@/lib/mock-data"
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts"
+import { cn } from "@/lib/utils"
 
 interface MonetizationSectionProps {
   data: ViabilityData
 }
 
 export function MonetizationSection({ data }: MonetizationSectionProps) {
-  const pieColors = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)"]
+  const [selectedPlan, setSelectedPlan] = useState<number | null>(null)
+  const [confirmedStreams, setConfirmedStreams] = useState<Set<number>>(new Set())
+  const [editingPrice, setEditingPrice] = useState<number | null>(null)
+  const [customPrices, setCustomPrices] = useState<Record<number, number>>({})
+  const [editingModel, setEditingModel] = useState(false)
+  const [customModel, setCustomModel] = useState(data.businessModel.description)
 
   const formatArs = (value: number) =>
     new Intl.NumberFormat("es-AR", {
@@ -18,6 +24,18 @@ export function MonetizationSection({ data }: MonetizationSectionProps) {
       currency: "ARS",
       maximumFractionDigits: 0,
     }).format(value)
+
+  const toggleStream = (index: number) => {
+    setConfirmedStreams((prev) => {
+      const next = new Set(prev)
+      if (next.has(index)) next.delete(index)
+      else next.add(index)
+      return next
+    })
+  }
+
+  const getPrice = (plan: (typeof data.monetization.plans)[0], index: number) =>
+    customPrices[index] ?? plan.monthlyPriceArs
 
   return (
     <div className="space-y-6">
@@ -28,92 +46,215 @@ export function MonetizationSection({ data }: MonetizationSectionProps) {
               <DollarSign className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <CardTitle className="text-xl">Plan de Monetización e Ingresos</CardTitle>
-              <p className="text-sm text-muted-foreground">Modelo de negocio y estrategia de precios</p>
+              <CardTitle className="text-xl">¿Cómo vas a ganar dinero?</CardTitle>
+              <p className="text-sm text-muted-foreground">Modelo de negocio y precios sugeridos para tu idea</p>
             </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-7">
           <p className="text-sm text-muted-foreground">{data.monetization.strategy}</p>
 
+          {/* Tipo de modelo + fuentes de ingreso */}
           <div className="space-y-4 rounded-xl border border-border bg-card p-4">
             <div>
-              <h4 className="text-sm font-semibold text-foreground">Modelo de Negocio</h4>
+              <h4 className="text-sm font-semibold text-foreground">Tu tipo de modelo</h4>
               <p className="text-xs text-muted-foreground">{data.businessModel.type}</p>
-              <p className="mt-2 text-sm text-muted-foreground">{data.businessModel.description}</p>
-            </div>
 
-            <div className="h-[280px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={data.businessModel.revenueStreams}
-                    dataKey="percentage"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={96}
-                    innerRadius={48}
-                    stroke="var(--card)"
-                    strokeWidth={2}
-                    label={({ percent }) => `${((percent || 0) * 100).toFixed(0)}%`}
-                  >
-                    {data.businessModel.revenueStreams.map((_, index) => (
-                      <Cell key={index} fill={pieColors[index % pieColors.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "var(--card)",
-                      border: "1px solid var(--border)",
-                      borderRadius: "8px",
-                    }}
-                    itemStyle={{ color: "var(--foreground)" }}
-                    formatter={(value: number) => [`${value}%`, "% de ingresos"]}
+              {editingModel ? (
+                <div className="mt-2 flex gap-2">
+                  <textarea
+                    value={customModel}
+                    onChange={(e) => setCustomModel(e.target.value)}
+                    className="w-full resize-none rounded-lg border border-input bg-background p-2 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    rows={3}
                   />
-                </PieChart>
-              </ResponsiveContainer>
+                  <div className="flex flex-col gap-1">
+                    <button
+                      onClick={() => setEditingModel(false)}
+                      className="rounded-md bg-primary p-1.5 text-primary-foreground hover:bg-primary/90"
+                    >
+                      <Check className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      onClick={() => {
+                        setCustomModel(data.businessModel.description)
+                        setEditingModel(false)
+                      }}
+                      className="rounded-md border border-border p-1.5 text-muted-foreground hover:bg-secondary"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="mt-2 flex items-start justify-between gap-2">
+                  <p className="text-sm text-muted-foreground">{customModel}</p>
+                  <button
+                    onClick={() => setEditingModel(true)}
+                    className="shrink-0 rounded-md border border-border p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground"
+                    title="Editar descripción"
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              )}
             </div>
 
-            <div className="space-y-2">
-              {data.businessModel.revenueStreams.map((stream, index) => (
-                <div key={index} className="flex items-start justify-between gap-3 rounded-lg border border-border bg-secondary/20 p-3">
-                  <div>
-                    <p className="text-sm font-medium text-foreground">{stream.name}</p>
-                    <p className="text-xs text-muted-foreground">{stream.description}</p>
-                  </div>
-                  <span className="text-sm font-bold text-primary">{stream.percentage}%</span>
-                </div>
-              ))}
+            {/* Fuentes de ingreso interactivas */}
+            <div>
+              <p className="mb-2 text-xs font-medium text-muted-foreground">
+                Tildá las fuentes de ingreso que aplican a tu negocio:
+              </p>
+              <div className="space-y-2">
+                {data.businessModel.revenueStreams.map((stream, index) => (
+                  <button
+                    key={index}
+                    onClick={() => toggleStream(index)}
+                    className={cn(
+                      "flex w-full items-center justify-between gap-3 rounded-lg border p-3 text-left transition-all",
+                      confirmedStreams.has(index)
+                        ? "border-primary bg-primary/10"
+                        : "border-border bg-secondary/20 hover:border-primary/40"
+                    )}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={cn(
+                          "flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-all",
+                          confirmedStreams.has(index)
+                            ? "border-primary bg-primary"
+                            : "border-muted-foreground"
+                        )}
+                      >
+                        {confirmedStreams.has(index) && (
+                          <Check className="h-3 w-3 text-primary-foreground" />
+                        )}
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-foreground">{stream.name}</p>
+                        <p className="text-xs text-muted-foreground">{stream.description}</p>
+                      </div>
+                    </div>
+                    <span className="shrink-0 text-sm font-bold text-primary">
+                      {stream.percentage}% del ingreso
+                    </span>
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
+          {/* Planes de precio — seleccionables y editables */}
           <div className="space-y-3">
-            <h4 className="text-sm font-semibold text-foreground">Precios Sugeridos (ARS / mes)</h4>
+            <div>
+              <h4 className="text-sm font-semibold text-foreground">¿Cuánto le cobrarías a tus clientes?</h4>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Estos son los precios que <span className="font-medium text-foreground">vos le cobrarías</span> a las personas que usen tu negocio — no lo que pagás vos. Seleccioná el modelo de entrada que más te cierra.
+              </p>
+            </div>
             <div className="grid gap-3 md:grid-cols-3">
               {data.monetization.plans.map((plan, index) => (
-                <div key={index} className="rounded-xl border border-border bg-secondary/20 p-4">
+                <button
+                  key={index}
+                  onClick={() => setSelectedPlan(selectedPlan === index ? null : index)}
+                  className={cn(
+                    "relative rounded-xl border p-4 text-left transition-all",
+                    selectedPlan === index
+                      ? "border-primary bg-primary/10 shadow-sm"
+                      : "border-border bg-secondary/20 hover:border-primary/40"
+                  )}
+                >
+                  {selectedPlan === index && (
+                    <div className="absolute right-3 top-3 flex h-5 w-5 items-center justify-center rounded-full bg-primary">
+                      <Check className="h-3 w-3 text-primary-foreground" />
+                    </div>
+                  )}
                   <p className="text-sm font-semibold text-foreground">{plan.name}</p>
-                  <p className="mt-1 text-2xl font-bold text-primary">{formatArs(plan.monthlyPriceArs)}</p>
+
+                  {editingPrice === index ? (
+                    <div
+                      className="mt-1 flex items-center gap-1.5"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <span className="text-sm text-muted-foreground">$</span>
+                      <input
+                        type="number"
+                        value={customPrices[index] ?? plan.monthlyPriceArs}
+                        onChange={(e) =>
+                          setCustomPrices((prev) => ({ ...prev, [index]: Number(e.target.value) }))
+                        }
+                        className="w-28 rounded-md border border-primary bg-background px-2 py-1 text-lg font-bold text-primary focus:outline-none"
+                        autoFocus
+                      />
+                      <button
+                        onClick={() => setEditingPrice(null)}
+                        className="rounded-md bg-primary p-1 text-primary-foreground"
+                      >
+                        <Check className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="mt-1 flex items-center gap-2">
+                      <p className="text-2xl font-bold text-primary">
+                        {formatArs(getPrice(plan, index))}
+                      </p>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setEditingPrice(index)
+                        }}
+                        className="rounded-md border border-border p-1 text-muted-foreground hover:bg-secondary hover:text-foreground"
+                        title="Ajustar precio"
+                      >
+                        <Pencil className="h-3 w-3" />
+                      </button>
+                    </div>
+                  )}
+
+                  <p className="text-xs text-muted-foreground">/mes · precio para tu cliente</p>
                   <p className="mt-2 text-xs font-medium text-foreground">{plan.target}</p>
                   <p className="mt-1 text-xs text-muted-foreground">{plan.rationale}</p>
-                </div>
+                </button>
               ))}
             </div>
-            <div className="rounded-xl border border-border bg-card p-4">
-              <p className="text-sm font-semibold text-foreground">Referencia de Competidores (estimada)</p>
-              <div className="mt-3 grid gap-2 text-sm text-muted-foreground sm:grid-cols-3">
-                <p>
-                  Bajo: <span className="font-semibold text-foreground">{formatArs(data.monetization.benchmark.lowArs)}</span>
-                </p>
-                <p>
-                  Mediana: <span className="font-semibold text-foreground">{formatArs(data.monetization.benchmark.medianArs)}</span>
-                </p>
-                <p>
-                  Alto: <span className="font-semibold text-foreground">{formatArs(data.monetization.benchmark.highArs)}</span>
+
+            {selectedPlan !== null && (
+              <div className="rounded-lg border border-primary/30 bg-primary/5 px-4 py-3">
+                <p className="text-sm text-foreground">
+                  Elegiste el plan{" "}
+                  <span className="font-semibold text-primary">
+                    {data.monetization.plans[selectedPlan].name}
+                  </span>{" "}
+                  — {formatArs(getPrice(data.monetization.plans[selectedPlan], selectedPlan))} por mes.{" "}
+                  <span className="text-muted-foreground">Podés cambiarlo en cualquier momento.</span>
                 </p>
               </div>
-              <p className="mt-2 text-xs text-muted-foreground">{data.monetization.benchmark.note}</p>
+            )}
+          </div>
+
+          {/* Benchmark de la competencia */}
+          <div className="rounded-xl border border-border bg-card p-4">
+            <p className="text-sm font-semibold text-foreground">¿Cuánto cobra la competencia?</p>
+            <p className="mt-1 text-xs text-muted-foreground">{data.monetization.benchmark.note}</p>
+            <div className="mt-3 grid gap-2 sm:grid-cols-3">
+              <div className="rounded-lg bg-secondary/30 p-3 text-center">
+                <p className="text-xs text-muted-foreground">Precio bajo</p>
+                <p className="mt-0.5 font-semibold text-foreground">
+                  {formatArs(data.monetization.benchmark.lowArs)}
+                </p>
+              </div>
+              <div className="rounded-lg bg-primary/10 p-3 text-center ring-1 ring-primary/30">
+                <p className="text-xs font-medium text-primary">Promedio del mercado</p>
+                <p className="mt-0.5 font-semibold text-primary">
+                  {formatArs(data.monetization.benchmark.medianArs)}
+                </p>
+              </div>
+              <div className="rounded-lg bg-secondary/30 p-3 text-center">
+                <p className="text-xs text-muted-foreground">Precio alto</p>
+                <p className="mt-0.5 font-semibold text-foreground">
+                  {formatArs(data.monetization.benchmark.highArs)}
+                </p>
+              </div>
             </div>
           </div>
         </CardContent>
