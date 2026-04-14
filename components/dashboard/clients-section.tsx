@@ -12,33 +12,33 @@ interface ClientsSectionProps {
 }
 
 function buildB2BEmail(clientName: string, city: string | undefined, role: string, context: string): string {
-  return `Subject: Quick idea to improve results at ${clientName}
+  return `Asunto: Una idea rápida para mejorar resultados en ${clientName}
 
-Hi ${role},
+Hola ${role},
 
-I noticed ${clientName}${city ? ` is growing in ${city}` : ""}. I help teams like yours improve outcomes with a practical, low-risk rollout that starts with a short pilot.
+Noté que ${clientName}${city ? ` está creciendo en ${city}` : ""}. Ayudo a equipos como el tuyo a mejorar resultados con un enfoque práctico y de bajo riesgo que arranca con un piloto corto.
 
-Why this can be relevant for you:
+Por qué esto puede ser relevante para vos:
 - ${context}
-- We can deliver measurable improvements within the first month
-- No long-term commitment required for the pilot phase
+- Podemos entregar mejoras medibles en el primer mes
+- No se requiere compromiso a largo plazo para la fase de piloto
 
-Would you be open to a 20-minute call this week?
+¿Te copa una llamada de 20 minutos esta semana?
 
-Best regards,
-[Your Name]
-DayZero Founder`
+Saludos,
+[Tu Nombre]
+Fundador de DayZero`
 }
 
 function buildB2CMessage(segment: string, city: string | undefined): string {
-  const locationSuffix = city ? ` in ${city}` : ""
-  return `Campaign Draft for ${segment}
+  const locationSuffix = city ? ` en ${city}` : ""
+  return `Borrador de campaña para ${segment}
 
-Headline: Better everyday solutions for ${segment.toLowerCase()}${locationSuffix}
-CTA: Join our early access list and get the first-month launch benefit.
+Titular: Mejores soluciones para ${segment.toLowerCase()}${locationSuffix}
+CTA: Sumate a la lista de acceso anticipado y obtené el beneficio de lanzamiento del primer mes.
 
-Message:
-We built this specifically for ${segment.toLowerCase()}${locationSuffix}. Sign up today and be first to get priority onboarding, launch pricing, and concierge support during the first weeks.`
+Mensaje:
+Creamos esto específicamente para ${segment.toLowerCase()}${locationSuffix}. Registrate hoy y sé de los primeros en tener onboarding prioritario, precio de lanzamiento y soporte personalizado durante las primeras semanas.`
 }
 
 export function ClientsSection({ data, city }: ClientsSectionProps) {
@@ -57,7 +57,7 @@ export function ClientsSection({ data, city }: ClientsSectionProps) {
             {isB2B ? <Building2 className="h-5 w-5 text-[oklch(0.55_0.18_270)]" /> : <Users className="h-5 w-5 text-[oklch(0.55_0.18_270)]" />}
           </div>
           <CardTitle className="text-xl">
-            {isB2B ? `B2B Clients Identified${city ? ` in ${city}` : ""}` : `Customer Segments${city ? ` in ${city}` : ""}`}
+            {isB2B ? `Clientes B2B Identificados${city ? ` en ${city}` : ""}` : `Segmentos de Clientes${city ? ` en ${city}` : ""}`}
           </CardTitle>
         </div>
       </CardHeader>
@@ -72,10 +72,10 @@ export function ClientsSection({ data, city }: ClientsSectionProps) {
                   <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{client.reason}</p>
                   <div className="mt-3 rounded-md bg-secondary/50 p-2.5 text-xs text-muted-foreground">
                     <p>
-                      <span className="font-semibold text-foreground">How to approach:</span> {client.approach}
+                      <span className="font-semibold text-foreground">Cómo abordarlo:</span> {client.approach}
                     </p>
                     <p className="mt-1">
-                      <span className="font-semibold text-foreground">Best contact role:</span> {client.contactRole}
+                      <span className="font-semibold text-foreground">Mejor rol de contacto:</span> {client.contactRole}
                     </p>
                   </div>
 
@@ -88,7 +88,7 @@ export function ClientsSection({ data, city }: ClientsSectionProps) {
                       onClick={() => handleGenerate(contentKey, buildB2BEmail(client.name, city, client.contactRole, client.companyContext))}
                     >
                       <Mail className="h-4 w-4" />
-                      Generate specific email
+                      Generar email específico
                     </Button>
                   </div>
 
@@ -114,7 +114,7 @@ export function ClientsSection({ data, city }: ClientsSectionProps) {
                     </span>
                   </div>
                   <div className="mt-3 rounded-md bg-secondary/50 p-2.5 text-xs text-muted-foreground">
-                    <span className="font-semibold text-foreground">How to reach:</span> {segment.reachStrategy}
+                    <span className="font-semibold text-foreground">Cómo llegar:</span> {segment.reachStrategy}
                   </div>
                   <div className="mt-3">
                     <Button
@@ -125,7 +125,7 @@ export function ClientsSection({ data, city }: ClientsSectionProps) {
                       onClick={() => handleGenerate(contentKey, buildB2CMessage(segment.segment, city))}
                     >
                       <Wand2 className="h-4 w-4" />
-                      Generate message
+                      Generar mensaje
                     </Button>
                   </div>
                   {generatedContent[contentKey] && (

@@ -20,7 +20,7 @@ const plusJakarta = Plus_Jakarta_Sans({
 
 export const metadata: Metadata = {
   title: 'DayZero — Tu copiloto de lanzamiento',
-  description: 'Valida tu idea de negocio con IA. Análisis de viabilidad, competencia, kit de arranque y hoja de ruta personalizada para LATAM.',
+  description: 'Validá tu idea de negocio con IA. Análisis de viabilidad, competencia, kit de arranque y hoja de ruta personalizada para Argentina.',
   generator: 'v0.app',
   icons: {
     icon: [
@@ -54,7 +54,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="es" className="bg-background" suppressHydrationWarning>
+    <html lang="es-AR" className="bg-background" suppressHydrationWarning>
       <body className={`${sora.variable} ${plusJakarta.variable} font-sans antialiased`} suppressHydrationWarning>
         <ThemeProvider
           attribute="class"

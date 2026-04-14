@@ -330,7 +330,7 @@ export default function ClaudeQuestionsPage() {
                 </>
               ) : (
                 <>
-                  Continuar al analisis
+                  Continuar al análisis
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </>
               )}
