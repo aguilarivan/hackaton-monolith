@@ -77,7 +77,7 @@ async function runToolLoop(
   for (let turn = 0; turn < 5; turn++) {
     const response = await anthropic.messages.create({
       model: "claude-haiku-4-5",
-      max_tokens: 8192,
+      max_tokens: 3000,
       system: [{ type: "text", text: system, cache_control: { type: "ephemeral" } }],
       tools: [tool],
       tool_choice: { type: "auto" },
@@ -392,16 +392,16 @@ const DetailsOutputSchema = z.object({
     description: z.string(),
     solution: z.string(),
     failureCase: z.object({ startup: z.string(), reason: z.string(), lesson: z.string() }).optional(),
-  }))),
-  validationPlan: jsonString(z.array(z.object({ action: z.string(), metric: z.string(), duration: z.string() }))),
-  roadmap: jsonString(z.array(z.object({ period: z.string(), title: z.string(), actions: z.array(z.string()) }))),
+  }))).optional(),
+  validationPlan: jsonString(z.array(z.object({ action: z.string(), metric: z.string(), duration: z.string() }))).optional(),
+  roadmap: jsonString(z.array(z.object({ period: z.string(), title: z.string(), actions: z.array(z.string()) }))).optional(),
   legalStructure: jsonString(z.object({
     structures: z.array(z.object({ name: z.string(), recommended: z.boolean() })),
     explanation: z.string(),
     timeline: z.array(z.object({ month: z.number(), action: z.string() })),
     taxInfo: z.object({ regime: z.string(), monthlyEstimate: z.string(), annualEstimate: z.string(), benefits: z.array(z.string()) }),
     taxCategories: z.array(z.object({ name: z.string(), type: z.enum(["simplified", "general"]), fixedMonthlyArs: z.number(), vatRate: z.number(), incomeTaxRate: z.number(), socialChargeRate: z.number() })).optional().default([]),
-  })),
+  })).optional(),
 })
 
 export async function generateDetailsSection(
@@ -411,20 +411,24 @@ export async function generateDetailsSection(
 ): Promise<DetailsSection> {
   try {
     const block = await runToolLoop(
-      `Sos un analista de startups argentinos. Generá obstáculos, roadmap, plan de validación y estructura legal para la idea. Marcos legales: Monotributo, SAS (recomendada), SRL, SA. Citá startups reales que fallaron. Llamá a generate_details.`,
+      `Sos un analista de startups argentinos. Generá obstáculos, roadmap, plan de validación y estructura legal para la idea. Marcos legales: Monotributo, SAS (recomendada), SRL, SA. Citá startups reales que fallaron. Llamá a generate_details con los 4 campos: obstacles, validationPlan, roadmap y legalStructure.`,
       buildAnalysisUserMessage(input, answers),
       DETAILS_TOOL
     )
     const parsed = DetailsOutputSchema.parse(deepParse(block.input))
+
+    // Merge per-field: use Claude's data where available, fall back to mock
     return {
-      obstacles: parsed.obstacles,
-      validationPlan: parsed.validationPlan,
-      roadmap: parsed.roadmap.map((step, i) => ({
+      obstacles: parsed.obstacles ?? mock.obstacles,
+      validationPlan: parsed.validationPlan ?? mock.validationPlan,
+      roadmap: (parsed.roadmap ?? mock.roadmap).map((step, i) => ({
         ...step,
         domainSuggestion: mock.roadmap[i]?.domainSuggestion,
         domainChecks: mock.roadmap[i]?.domainChecks,
       })),
-      legalStructure: { ...parsed.legalStructure, bureaucracyLinks: mock.legalStructure.bureaucracyLinks },
+      legalStructure: parsed.legalStructure
+        ? { ...parsed.legalStructure, bureaucracyLinks: mock.legalStructure.bureaucracyLinks }
+        : mock.legalStructure,
     }
   } catch (error) {
     console.error("[generate_details] error:", (error as Error).message)
