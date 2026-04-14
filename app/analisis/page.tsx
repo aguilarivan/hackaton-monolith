@@ -1,8 +1,8 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
-import { AlertTriangle, ArrowLeft, Bot, Loader2 } from "lucide-react"
+import { AlertTriangle, ArrowLeft, Bot, Loader2, Rocket } from "lucide-react"
 import { Header } from "@/components/header"
 import { StartupDashboard } from "@/components/startup-dashboard"
 import { Button } from "@/components/ui/button"
@@ -12,6 +12,13 @@ import type { ViabilitySection, DetailsSection, ResearchSection } from "@/lib/se
 import { clearFlowStorage, getBusinessInput, getClaudeAnswers, getFlowId } from "@/lib/flow-storage"
 import type { BusinessInputData } from "@/components/hero-input"
 import { StepIndicator } from "@/components/step-indicator"
+
+const loadingMessages = [
+  "Analizando las condiciones de lanzamiento...",
+  "Evaluando viabilidad y modelo de negocio...",
+  "Investigando competencia y mercado...",
+  "Armando tu plan de lanzamiento personalizado...",
+]
 
 export interface PartialAnalysis {
   viability?: ViabilitySection
@@ -26,6 +33,18 @@ export default function AnalysisPage() {
   const [isStreaming, setIsStreaming] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [requestId, setRequestId] = useState<string | null>(null)
+  const [messageIndex, setMessageIndex] = useState(0)
+  const messageIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  // Cycle loading messages immediately on mount, independent of data
+  useEffect(() => {
+    messageIntervalRef.current = setInterval(() => {
+      setMessageIndex((prev) => (prev + 1) % loadingMessages.length)
+    }, 2200)
+    return () => {
+      if (messageIntervalRef.current) clearInterval(messageIntervalRef.current)
+    }
+  }, [])
 
   useEffect(() => {
     let isMounted = true
@@ -39,7 +58,7 @@ export default function AnalysisPage() {
       const flowId = getFlowId()
       if (!flowId) {
         if (!isMounted) return
-        setLoadError("No hay una sesion activa para generar el analisis.")
+        setLoadError("No hay una sesión activa para generar el análisis.")
         setIsStreaming(false)
         return
       }
@@ -97,13 +116,13 @@ export default function AnalysisPage() {
         if (!isMounted) return
 
         if (isApiClientError(error) && error.status === 404) {
-          setLoadError("La sesion de analisis no existe o expiro. Inicia una nueva idea.")
+          setLoadError("La sesión de análisis no existe o expiró. Iniciá una nueva idea.")
           setRequestId(error.requestId ?? null)
         } else if (isApiClientError(error)) {
           setLoadError(error.message)
           setRequestId(error.requestId ?? null)
         } else {
-          setLoadError("No se pudo generar el analisis desde backend.")
+          setLoadError("No se pudo generar el análisis desde backend.")
         }
         setIsStreaming(false)
       }
@@ -131,7 +150,7 @@ export default function AnalysisPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-destructive">
                 <AlertTriangle className="h-5 w-5" />
-                Error al construir el analisis
+                Error al construir el análisis
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -162,19 +181,19 @@ export default function AnalysisPage() {
           <Card className="w-full border-border/70">
             <CardContent className="space-y-6 p-8 text-center">
               <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
-                <Bot className="h-7 w-7 text-primary" />
+                <Rocket className="h-7 w-7 text-primary" />
               </div>
               <div className="space-y-2">
                 <p className="text-lg font-semibold text-foreground">
-                  Claude esta construyendo tu analisis
+                  Preparando tu despegue
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  Evaluando viabilidad, modelo de negocio y estructura legal...
+                  {loadingMessages[messageIndex]}
                 </p>
               </div>
               <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Procesando datos de tu idea
+                Esto puede tardar unos segundos
               </div>
             </CardContent>
           </Card>

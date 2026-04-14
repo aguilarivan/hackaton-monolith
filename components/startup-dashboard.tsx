@@ -28,7 +28,7 @@ import { cn } from "@/lib/utils"
 import type { BusinessInputData } from "@/components/hero-input"
 import type { PartialAnalysis } from "@/app/analisis/page"
 
-import { BrandIdentityCard } from "@/components/brand-identity-card"
+import { LandingCTA } from "@/components/dashboard/landing-cta"
 import { ViabilitySection } from "@/components/dashboard/viability-section"
 import { MonetizationSection } from "@/components/dashboard/monetization-section"
 import { CompetitorsSection } from "@/components/dashboard/competitors-section"
@@ -77,7 +77,7 @@ export function StartupDashboard({ data, partial, isStreaming, onReset }: Startu
     return () => clearTimeout(timer)
   }, [])
 
-  const formatInvestment = (amount: number) => `$${amount.toLocaleString("en-US")}`
+  const formatInvestment = (amount: number) => `$${amount.toLocaleString("es-AR")}`
 
   const getScoreColor = (score: number) => {
     if (score >= 7) return "text-success"
@@ -92,9 +92,9 @@ export function StartupDashboard({ data, partial, isStreaming, onReset }: Startu
   }
 
   const getVerdictSentence = (score: number) => {
-    if (score >= 7) return `${displayName} tiene orbita alta en ${data.city} — las condiciones de lanzamiento son favorables.`
+    if (score >= 7) return `${displayName} tiene órbita alta en ${data.city} — las condiciones de lanzamiento son favorables.`
     if (score >= 5) return `${displayName} tiene trayectoria viable en ${data.city} — hay turbulencia pero el camino existe.`
-    return `${displayName} enfrenta gravedad fuerte en ${data.city} — necesitas repensar la mision.`
+    return `${displayName} enfrenta gravedad fuerte en ${data.city} — necesitás repensar la misión.`
   }
 
   const getCompetitionLabel = (level: string) => {
@@ -506,6 +506,13 @@ export function StartupDashboard({ data, partial, isStreaming, onReset }: Startu
           ) : <LoadingCard className="lg:col-span-2" />}
 
         </div>
+
+        {/* Landing CTA */}
+        {!isStreaming && (
+          <div className="mt-8">
+            <LandingCTA />
+          </div>
+        )}
       </div>
     </div>
   )
