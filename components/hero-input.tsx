@@ -59,7 +59,7 @@ export function HeroInput({ onSubmit }: HeroInputProps) {
   }
 
   return (
-    <div className="relative flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center px-4 py-12 sm:py-16">
+    <div className="relative flex flex-col items-center px-4 py-10 sm:py-14">
       <div className="relative mx-auto w-full max-w-3xl">
         {/* Decorative twinkling dots */}
         <span className="dz-twinkle pointer-events-none absolute -left-4 top-6 hidden h-1.5 w-1.5 rounded-full bg-primary/50 sm:block" />
@@ -84,9 +84,19 @@ export function HeroInput({ onSubmit }: HeroInputProps) {
           todo y genera un informe completo adaptado a tu contexto.
         </p>
 
+        {/* Step indicator */}
+        <div className="dz-enter-2 mx-auto mt-3 flex items-center justify-center gap-2">
+          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+            1
+          </span>
+          <span className="text-sm text-muted-foreground">
+            Paso 1 de 3 — Contanos tu idea
+          </span>
+        </div>
+
         {/* Form Card */}
-        <form onSubmit={handleSubmit} className="dz-enter-3 mt-10">
-          <div className="rounded-2xl border border-border/50 bg-card/80 p-6 shadow-xl backdrop-blur-xl sm:p-8 dark:border-primary/[0.08] dark:bg-white/[0.03] dark:shadow-2xl dark:shadow-primary/[0.05]">
+        <form onSubmit={handleSubmit} className="dz-enter-3 mt-8">
+          <div className="dz-form-card rounded-2xl border border-border/50 bg-card/80 p-6 backdrop-blur-xl sm:p-8 dark:border-primary/[0.08] dark:bg-white/[0.03]">
             {/* Brand Name Input */}
             <div className="space-y-2">
               <label htmlFor="brandName" className="text-sm font-medium text-foreground">
