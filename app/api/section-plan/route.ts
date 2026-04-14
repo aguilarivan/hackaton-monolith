@@ -108,6 +108,8 @@ export async function POST(request: Request) {
       }
     }
 
+    const planSummary = ALL_SECTION_KEYS.map((k) => `${k}:${(parsed as SectionPlan)[k].enabled ? "✓" : "✗"}`).join(" ")
+    console.log("[section-plan] result:", planSummary)
     return apiSuccess({ plan: parsed })
   } catch (error) {
     console.error("[section-plan] Claude error:", (error as Error).message)
