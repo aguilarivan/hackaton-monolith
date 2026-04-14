@@ -7,10 +7,9 @@ import { Header } from "@/components/header"
 import { StartupDashboard } from "@/components/startup-dashboard"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { streamAnalysis, isApiClientError } from "@/lib/flow-api"
+import { streamAnalysis, isApiClientError, getFlowSession } from "@/lib/flow-api"
 import type { ViabilitySection, DetailsSection, ResearchSection } from "@/lib/server/section-generators"
-import { clearFlowStorage, getFlowId } from "@/lib/flow-storage"
-import { getFlowSession } from "@/lib/flow-api"
+import { clearFlowStorage, getBusinessInput, getClaudeAnswers, getFlowId } from "@/lib/flow-storage"
 import type { BusinessInputData } from "@/components/hero-input"
 
 export interface PartialAnalysis {
@@ -45,17 +44,34 @@ export default function AnalysisPage() {
       }
 
       try {
-        const session = await getFlowSession(flowId)
+        let input: BusinessInputData | null = null
+        let answers: import("@/lib/flow-storage").ClaudeAnswer[] = []
+
+        try {
+          const session = await getFlowSession(flowId)
+          if (!isMounted) return
+          input = session.businessInput
+          answers = session.claudeAnswers
+        } catch (sessionError) {
+          // Flow lost (server restart) — recover from localStorage
+          if (isApiClientError(sessionError) && sessionError.status === 404) {
+            input = getBusinessInput()
+            answers = getClaudeAnswers()
+          } else {
+            throw sessionError
+          }
+        }
+
         if (!isMounted) return
 
-        if (session.claudeAnswers.length === 0) {
+        if (!input || answers.length === 0) {
           router.replace("/preguntas-claude")
           return
         }
 
-        setBusinessData(session.businessInput)
+        setBusinessData(input)
 
-        const stream = streamAnalysis(session.businessInput, session.claudeAnswers)
+        const stream = streamAnalysis(input, answers)
 
         for await (const event of stream) {
           if (!isMounted) break
@@ -135,7 +151,6 @@ export default function AnalysisPage() {
     )
   }
 
-  // Show loading screen only until the first (fastest) section arrives
   if (!businessData || !partial.viability) {
     return (
       <main className="min-h-screen bg-background">

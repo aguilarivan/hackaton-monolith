@@ -4,6 +4,7 @@ export interface BusinessInputData {
   idea: string
   city: string
   investment: number
+  brandName?: string
 }
 
 export interface ClaudeAnswer {
