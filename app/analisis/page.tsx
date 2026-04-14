@@ -7,10 +7,16 @@ import { Header } from "@/components/header"
 import { StartupDashboard } from "@/components/startup-dashboard"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { streamAnalysis, isApiClientError, getFlowSession } from "@/lib/flow-api"
+import { streamAnalysis, fetchSectionPlan, isApiClientError, getFlowSession } from "@/lib/flow-api"
 import type { ViabilitySection, DetailsSection, ResearchSection } from "@/lib/server/section-generators"
-import { clearFlowStorage, getBusinessInput, getClaudeAnswers, getFlowId } from "@/lib/flow-storage"
+import type { SectionPlan } from "@/lib/server/section-plan-prompt"
+import { clearFlowStorage, getBusinessInput, getClaudeAnswers, getFlowId, saveSectionPlan, getSectionPlan } from "@/lib/flow-storage"
 import type { BusinessInputData } from "@/components/hero-input"
+
+const planningMessages = [
+  "Evaluando qué secciones aplican a tu idea...",
+  "Determinando el alcance del análisis...",
+]
 
 const loadingMessages = [
   "Analizando las condiciones de lanzamiento...",
@@ -28,6 +34,8 @@ export interface PartialAnalysis {
 export default function AnalysisPage() {
   const router = useRouter()
   const [businessData, setBusinessData] = useState<BusinessInputData | null>(null)
+  const [sectionPlan, setSectionPlan] = useState<SectionPlan | null>(null)
+  const [isPlanning, setIsPlanning] = useState(true)
   const [partial, setPartial] = useState<PartialAnalysis>({})
   const [isStreaming, setIsStreaming] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
@@ -51,6 +59,7 @@ export default function AnalysisPage() {
     const loadData = async () => {
       setLoadError(null)
       setRequestId(null)
+      setIsPlanning(true)
       setIsStreaming(true)
       setPartial({})
 
@@ -58,6 +67,7 @@ export default function AnalysisPage() {
       if (!flowId) {
         if (!isMounted) return
         setLoadError("No hay una sesión activa para generar el análisis.")
+        setIsPlanning(false)
         setIsStreaming(false)
         return
       }
@@ -90,7 +100,20 @@ export default function AnalysisPage() {
 
         setBusinessData(input)
 
-        const stream = streamAnalysis(input, answers)
+        // ── Phase 1: Section plan (fast Haiku call) ──────────────────────
+        let plan: SectionPlan | null = null
+        try {
+          plan = await fetchSectionPlan(input, answers)
+          if (!isMounted) return
+          setSectionPlan(plan)
+          saveSectionPlan(plan)
+        } catch {
+          // On failure, proceed with all sections enabled
+        }
+        setIsPlanning(false)
+
+        // ── Phase 2: Stream analysis (only enabled sections) ─────────────
+        const stream = streamAnalysis(input, answers, plan ?? undefined)
 
         for await (const event of stream) {
           if (!isMounted) break
@@ -123,6 +146,7 @@ export default function AnalysisPage() {
         } else {
           setLoadError("No se pudo generar el análisis desde backend.")
         }
+        setIsPlanning(false)
         setIsStreaming(false)
       }
     }
@@ -171,6 +195,9 @@ export default function AnalysisPage() {
   }
 
   if (!businessData || !partial.viability) {
+    const messages = isPlanning ? planningMessages : loadingMessages
+    const currentMessage = messages[messageIndex % messages.length]
+
     return (
       <main className="min-h-screen bg-background">
         <Header />
@@ -178,19 +205,19 @@ export default function AnalysisPage() {
           <Card className="w-full border-border/70">
             <CardContent className="space-y-6 p-8 text-center">
               <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
-                <Rocket className="h-7 w-7 text-primary" />
+                {isPlanning ? <Bot className="h-7 w-7 text-primary" /> : <Rocket className="h-7 w-7 text-primary" />}
               </div>
               <div className="space-y-2">
                 <p className="text-lg font-semibold text-foreground">
-                  Preparando tu despegue
+                  {isPlanning ? "Preparando el análisis" : "Generando tu análisis"}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  {loadingMessages[messageIndex]}
+                  {currentMessage}
                 </p>
               </div>
               <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Esto puede tardar unos segundos
+                {isPlanning ? "Esto toma solo unos segundos" : "Esto puede tardar unos segundos"}
               </div>
             </CardContent>
           </Card>
@@ -206,6 +233,7 @@ export default function AnalysisPage() {
         data={businessData}
         partial={partial}
         isStreaming={isStreaming}
+        sectionPlan={sectionPlan ?? undefined}
         onReset={handleReset}
       />
     </main>

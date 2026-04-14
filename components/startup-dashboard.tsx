@@ -26,6 +26,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 import type { BusinessInputData } from "@/components/hero-input"
 import type { PartialAnalysis } from "@/app/analisis/page"
+import type { SectionPlan, AnalysisSectionKey } from "@/lib/server/section-plan-prompt"
 
 import { LandingCTA } from "@/components/dashboard/landing-cta"
 import { ViabilitySection } from "@/components/dashboard/viability-section"
@@ -41,6 +42,7 @@ interface StartupDashboardProps {
   data: BusinessInputData
   partial: PartialAnalysis
   isStreaming: boolean
+  sectionPlan?: SectionPlan
   onReset: () => void
 }
 
@@ -63,13 +65,16 @@ function LoadingCard({ className }: { className?: string }) {
   )
 }
 
-export function StartupDashboard({ data, partial, isStreaming, onReset }: StartupDashboardProps) {
+export function StartupDashboard({ data, partial, isStreaming, sectionPlan, onReset }: StartupDashboardProps) {
   const v = partial.viability
   const d = partial.details
   const r = partial.research
   const displayName = data.brandName || v?.appName || "Tu proyecto"
   const [activeSection, setActiveSection] = useState<SectionKey>("overview")
   const [isLoaded, setIsLoaded] = useState(false)
+
+  const isSectionEnabled = (key: AnalysisSectionKey) =>
+    !sectionPlan || sectionPlan[key].enabled
 
   useEffect(() => {
     const timer = setTimeout(() => setIsLoaded(true), 100)
@@ -277,7 +282,7 @@ export function StartupDashboard({ data, partial, isStreaming, onReset }: Startu
         {/* Bento Grid Dashboard */}
         <div className={cn("grid gap-4 transition-all duration-700 delay-150 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4", isLoaded ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0")}>
 
-          {v ? (
+          {isSectionEnabled("viability") && (v ? (
             <Card className="group relative cursor-pointer overflow-hidden transition-all hover:shadow-lg sm:col-span-2 lg:row-span-2 animate-in fade-in duration-500" onClick={() => handleSectionClick("viability")}>
               <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/10" />
               <CardContent className="relative flex h-full flex-col justify-between p-6">
@@ -315,9 +320,9 @@ export function StartupDashboard({ data, partial, isStreaming, onReset }: Startu
                 </div>
               </CardContent>
             </Card>
-          )}
+          ))}
 
-          {v ? (
+          {isSectionEnabled("monetization") && (v ? (
             <Card className="group cursor-pointer transition-all hover:shadow-lg sm:col-span-2 lg:col-span-2 animate-in fade-in duration-500" onClick={() => handleSectionClick("monetization")}>
               <CardContent className="p-5">
                 <div className="flex items-start justify-between">
@@ -345,9 +350,9 @@ export function StartupDashboard({ data, partial, isStreaming, onReset }: Startu
             </Card>
           ) : (
             <LoadingCard className="sm:col-span-2 lg:col-span-2" />
-          )}
+          ))}
 
-          {r ? (
+          {isSectionEnabled("competitors") && (r ? (
             <Card className="group cursor-pointer transition-all hover:shadow-lg animate-in fade-in duration-500" onClick={() => handleSectionClick("competitors")}>
               <CardContent className="flex h-full flex-col justify-between p-5">
                 <div className="flex items-center justify-between">
@@ -362,9 +367,9 @@ export function StartupDashboard({ data, partial, isStreaming, onReset }: Startu
                 </div>
               </CardContent>
             </Card>
-          ) : <LoadingCard />}
+          ) : <LoadingCard />)}
 
-          {v ? (
+          {isSectionEnabled("clients") && (v ? (
             <Card className="group cursor-pointer transition-all hover:shadow-lg animate-in fade-in duration-500" onClick={() => handleSectionClick("clients")}>
               <CardContent className="flex h-full flex-col justify-between p-5">
                 <div className="flex items-center justify-between">
@@ -383,9 +388,9 @@ export function StartupDashboard({ data, partial, isStreaming, onReset }: Startu
                 </div>
               </CardContent>
             </Card>
-          ) : <LoadingCard />}
+          ) : <LoadingCard />)}
 
-          {d ? (
+          {isSectionEnabled("legal") && (d ? (
             <Card className="group cursor-pointer transition-all hover:shadow-lg animate-in fade-in duration-500" onClick={() => handleSectionClick("legal")}>
               <CardContent className="flex h-full flex-col justify-between p-5">
                 <div className="flex items-center justify-between">
@@ -402,9 +407,9 @@ export function StartupDashboard({ data, partial, isStreaming, onReset }: Startu
                 </div>
               </CardContent>
             </Card>
-          ) : <LoadingCard />}
+          ) : <LoadingCard />)}
 
-          {d ? (
+          {isSectionEnabled("obstacles") && (d ? (
             <Card className="group cursor-pointer transition-all hover:shadow-lg animate-in fade-in duration-500" onClick={() => handleSectionClick("obstacles")}>
               <CardContent className="p-5">
                 <div className="flex items-center justify-between">
@@ -426,9 +431,9 @@ export function StartupDashboard({ data, partial, isStreaming, onReset }: Startu
                 </div>
               </CardContent>
             </Card>
-          ) : <LoadingCard />}
+          ) : <LoadingCard />)}
 
-          {r ? (
+          {isSectionEnabled("kit") && (r ? (
             <Card className="group cursor-pointer transition-all hover:shadow-lg sm:col-span-2 animate-in fade-in duration-500" onClick={() => handleSectionClick("kit")}>
               <CardContent className="p-5">
                 <div className="flex items-center justify-between">
@@ -472,9 +477,9 @@ export function StartupDashboard({ data, partial, isStreaming, onReset }: Startu
                 <div className="mt-3 flex gap-4"><Skeleton className="h-3 w-20" /><Skeleton className="h-3 w-20" /><Skeleton className="h-3 w-20" /></div>
               </CardContent>
             </Card>
-          )}
+          ))}
 
-          {d ? (
+          {isSectionEnabled("roadmap") && (d ? (
             <Card className="group cursor-pointer transition-all hover:shadow-lg lg:col-span-2 animate-in fade-in duration-500" onClick={() => handleSectionClick("roadmap")}>
               <CardContent className="p-5">
                 <div className="flex items-center justify-between">
@@ -504,7 +509,7 @@ export function StartupDashboard({ data, partial, isStreaming, onReset }: Startu
                 </div>
               </CardContent>
             </Card>
-          ) : <LoadingCard className="lg:col-span-2" />}
+          ) : <LoadingCard className="lg:col-span-2" />)}
 
         </div>
 

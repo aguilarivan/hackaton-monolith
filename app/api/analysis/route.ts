@@ -6,6 +6,7 @@ import {
   generateDetailsSection,
   generateResearchSection,
 } from "@/lib/server/section-generators"
+import type { SectionPlan } from "@/lib/server/section-plan-prompt"
 
 function isBusinessInputData(value: unknown): value is BusinessInputData {
   if (!value || typeof value !== "object") return false
@@ -27,10 +28,10 @@ function isClaudeAnswerArray(value: unknown): value is ClaudeAnswer[] {
 }
 
 export async function POST(request: Request) {
-  let body: { businessInput?: unknown; claudeAnswers?: unknown }
+  let body: { businessInput?: unknown; claudeAnswers?: unknown; sectionPlan?: unknown }
 
   try {
-    body = (await parseJsonBody(request)) as { businessInput?: unknown; claudeAnswers?: unknown }
+    body = (await parseJsonBody(request)) as typeof body
   } catch {
     return new Response(
       JSON.stringify({ ok: false, error: { code: "BAD_REQUEST", message: "Invalid JSON body" } }),
@@ -54,7 +55,13 @@ export async function POST(request: Request) {
 
   const input = body.businessInput
   const answers = body.claudeAnswers
+  const plan = body.sectionPlan as SectionPlan | undefined
   const mock = generateAnalysis(input)
+
+  // Determine which generator groups to run based on the section plan
+  const needViability = !plan || plan.viability.enabled || plan.monetization.enabled || plan.clients.enabled
+  const needDetails = !plan || plan.obstacles.enabled || plan.roadmap.enabled || plan.legal.enabled
+  const needResearch = !plan || plan.competitors.enabled || plan.kit.enabled
 
   const { readable, writable } = new TransformStream<Uint8Array, Uint8Array>()
   const writer = writable.getWriter()
@@ -70,20 +77,33 @@ export async function POST(request: Request) {
 
   ;(async () => {
     try {
-      await Promise.all([
-        // Section 1: viability + clients — Haiku, fast (~5s)
-        generateViabilitySection(input, answers, mock).then((data) =>
-          emit({ type: "viability", data })
-        ),
-        // Section 2: obstacles + roadmap + legal — Haiku, medium (~10s)
-        generateDetailsSection(input, answers, mock).then((data) =>
-          emit({ type: "details", data })
-        ),
-        // Section 3: competitors + kit — Sonnet + web search, slow (~30s)
-        generateResearchSection(input, answers, mock).then((data) =>
-          emit({ type: "research", data })
-        ),
-      ])
+      const tasks: Promise<void>[] = []
+
+      if (needViability) {
+        tasks.push(
+          generateViabilitySection(input, answers, mock).then((data) =>
+            emit({ type: "viability", data })
+          )
+        )
+      }
+
+      if (needDetails) {
+        tasks.push(
+          generateDetailsSection(input, answers, mock).then((data) =>
+            emit({ type: "details", data })
+          )
+        )
+      }
+
+      if (needResearch) {
+        tasks.push(
+          generateResearchSection(input, answers, mock).then((data) =>
+            emit({ type: "research", data })
+          )
+        )
+      }
+
+      await Promise.all(tasks)
     } catch (error) {
       console.error("[analysis/stream] unexpected error:", error)
       await emit({ type: "error", message: "Analysis failed" })

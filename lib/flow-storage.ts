@@ -1,9 +1,11 @@
 import type { BusinessInputData } from "@/components/hero-input"
+import type { SectionPlan } from "@/lib/server/section-plan-prompt"
 
 const BUSINESS_INPUT_KEY = "dayzero.business-input"
 const CLAUDE_ANSWERS_KEY = "dayzero.claude-answers"
 const FLOW_ID_KEY = "dayzero.flow-id"
 const BRAND_IDENTITY_KEY = "dayzero.brand-identity"
+const SECTION_PLAN_KEY = "dayzero.section-plan"
 
 export type LogoShape = "circle" | "rounded" | "hexagon"
 
@@ -80,12 +82,29 @@ export function getBrandIdentity(): BrandIdentity | null {
   }
 }
 
+export function saveSectionPlan(plan: SectionPlan) {
+  if (!canUseStorage()) return
+  window.localStorage.setItem(SECTION_PLAN_KEY, JSON.stringify(plan))
+}
+
+export function getSectionPlan(): SectionPlan | null {
+  if (!canUseStorage()) return null
+  const raw = window.localStorage.getItem(SECTION_PLAN_KEY)
+  if (!raw) return null
+  try {
+    return JSON.parse(raw) as SectionPlan
+  } catch {
+    return null
+  }
+}
+
 export function clearFlowStorage() {
   if (!canUseStorage()) return
   window.localStorage.removeItem(BUSINESS_INPUT_KEY)
   window.localStorage.removeItem(CLAUDE_ANSWERS_KEY)
   window.localStorage.removeItem(FLOW_ID_KEY)
   window.localStorage.removeItem(BRAND_IDENTITY_KEY)
+  window.localStorage.removeItem(SECTION_PLAN_KEY)
 }
 
 export function saveFlowId(flowId: string) {

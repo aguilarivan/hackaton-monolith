@@ -1,6 +1,7 @@
 import type { StartupAnalysis } from "@/lib/mock-data"
 import type { BusinessInputData } from "@/components/hero-input"
 import type { ClaudeAnswer } from "@/lib/flow-storage"
+import type { SectionPlan } from "@/lib/server/section-plan-prompt"
 import type { ViabilitySection, DetailsSection, ResearchSection } from "@/lib/server/section-generators"
 
 type ApiErrorCode = "BAD_REQUEST" | "NOT_FOUND" | "INVALID_PAYLOAD" | "INTERNAL_ERROR"
@@ -136,6 +137,19 @@ export async function getFlowSession(flowId: string): Promise<FlowPayload> {
   return data.flow
 }
 
+// ── Section plan ─────────────────────────────────────────────────────────────
+
+export async function fetchSectionPlan(
+  businessInput: BusinessInputData,
+  claudeAnswers: ClaudeAnswer[]
+): Promise<SectionPlan> {
+  const data = await requestJson<{ plan: SectionPlan }>("/api/section-plan", {
+    method: "POST",
+    body: JSON.stringify({ businessInput, claudeAnswers }),
+  })
+  return data.plan
+}
+
 // ── Streaming analysis ────────────────────────────────────────────────────────
 
 export type AnalysisStreamEvent =
@@ -147,12 +161,13 @@ export type AnalysisStreamEvent =
 
 export async function* streamAnalysis(
   businessInput: BusinessInputData,
-  claudeAnswers: ClaudeAnswer[]
+  claudeAnswers: ClaudeAnswer[],
+  sectionPlan?: SectionPlan
 ): AsyncGenerator<AnalysisStreamEvent> {
   const response = await fetch("/api/analysis", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ businessInput, claudeAnswers }),
+    body: JSON.stringify({ businessInput, claudeAnswers, sectionPlan }),
   })
 
   if (!response.ok || !response.body) {
