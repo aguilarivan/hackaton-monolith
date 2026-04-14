@@ -41,8 +41,8 @@ export function ObstaclesSection({ data }: ObstaclesSectionProps) {
             <AlertTriangle className="h-5 w-5 text-[oklch(0.55_0.18_30)]" />
           </div>
           <div>
-            <CardTitle className="text-xl">Obstacles and Solutions</CardTitle>
-            <p className="mt-1 text-sm text-muted-foreground">Real failure cases included to avoid common mistakes</p>
+            <CardTitle className="text-xl">Obstáculos y Soluciones</CardTitle>
+            <p className="mt-1 text-sm text-muted-foreground">Casos de fracaso reales incluidos para evitar errores comunes</p>
           </div>
         </div>
       </CardHeader>
@@ -60,7 +60,7 @@ export function ObstaclesSection({ data }: ObstaclesSectionProps) {
 
               <div className={cn("mt-4 rounded-md p-3", styles.solution)}>
                 <p className="text-sm">
-                  <span className="font-semibold text-foreground">How to tackle it: </span>
+                  <span className="font-semibold text-foreground">Cómo enfrentarlo: </span>
                   <span className="text-muted-foreground">{obstacle.solution}</span>
                 </p>
               </div>
@@ -69,13 +69,13 @@ export function ObstaclesSection({ data }: ObstaclesSectionProps) {
                 <div className="mt-3 rounded-md border border-border bg-card p-3">
                   <p className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-foreground">
                     <Landmark className="h-3.5 w-3.5 text-primary" />
-                    Failure case: {obstacle.failureCase.startup}
+                    Caso de fracaso: {obstacle.failureCase.startup}
                   </p>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    <span className="font-medium text-foreground">Why it failed:</span> {obstacle.failureCase.reason}
+                    <span className="font-medium text-foreground">Por qué falló:</span> {obstacle.failureCase.reason}
                   </p>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    <span className="font-medium text-foreground">Lesson:</span> {obstacle.failureCase.lesson}
+                    <span className="font-medium text-foreground">Lección:</span> {obstacle.failureCase.lesson}
                   </p>
                 </div>
               )}

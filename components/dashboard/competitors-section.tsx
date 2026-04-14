@@ -136,7 +136,7 @@ export function CompetitorsSection({ data, city, isMock }: CompetitorsSectionPro
                 <TrendingUp className="h-5 w-5 text-[oklch(0.55_0.18_270)]" />
               </div>
               <div>
-                <CardTitle className="text-xl">Market share estimado</CardTitle>
+                <CardTitle className="text-xl">Participación de mercado estimada</CardTitle>
                 <p className="text-sm text-muted-foreground">Distribución relativa entre competidores</p>
               </div>
             </div>
@@ -150,7 +150,7 @@ export function CompetitorsSection({ data, city, isMock }: CompetitorsSectionPro
                   <YAxis tick={{ fontSize: 12, fill: "var(--muted-foreground)" }} unit="%" />
                   <Tooltip
                     contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8 }}
-                    formatter={(value: number) => [`${value}%`, "Market share"]}
+                    formatter={(value: number) => [`${value}%`, "Cuota de mercado"]}
                     labelFormatter={(_, payload) => payload?.[0]?.payload?.fullName ?? ""}
                   />
                   <Bar dataKey="share" radius={[4, 4, 0, 0]}>

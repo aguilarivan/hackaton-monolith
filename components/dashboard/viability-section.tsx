@@ -50,7 +50,7 @@ function getTrendAccent(trend: "up" | "stable" | "down") {
       line: "var(--chart-2)",
       area: "color-mix(in oklab, var(--chart-2) 14%, transparent)",
       badge: "bg-success/10 text-success border-success/30",
-      label: "Growth trend: Up",
+      label: "Tendencia: Creciendo",
     }
   }
   if (trend === "stable") {
@@ -59,7 +59,7 @@ function getTrendAccent(trend: "up" | "stable" | "down") {
       line: "var(--warning)",
       area: "color-mix(in oklab, var(--warning) 16%, transparent)",
       badge: "bg-warning/10 text-warning border-warning/30",
-      label: "Growth trend: Stable",
+      label: "Tendencia: Estable",
     }
   }
   return {
@@ -67,15 +67,15 @@ function getTrendAccent(trend: "up" | "stable" | "down") {
     line: "var(--destructive)",
     area: "color-mix(in oklab, var(--destructive) 13%, transparent)",
     badge: "bg-destructive/10 text-destructive border-destructive/30",
-    label: "Growth trend: Down",
+    label: "Tendencia: Bajando",
   }
 }
 
 export function ViabilitySection({ data }: ViabilitySectionProps) {
   const formatSignalTrendLabel = (trend: "up" | "stable" | "down") => {
-    if (trend === "up") return "Source trend: Up"
-    if (trend === "stable") return "Source trend: Stable"
-    return "Source trend: Down"
+    if (trend === "up") return "Fuente: Creciendo"
+    if (trend === "stable") return "Fuente: Estable"
+    return "Fuente: Bajando"
   }
 
   return (
@@ -86,24 +86,24 @@ export function ViabilitySection({ data }: ViabilitySectionProps) {
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
               <Gauge className="h-5 w-5 text-primary" />
             </div>
-            <CardTitle className="text-xl">Market Potential</CardTitle>
+            <CardTitle className="text-xl">Potencial de Mercado</CardTitle>
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="grid grid-cols-2 gap-3">
             <div className={cn("rounded-lg border p-4 text-center", getScoreColor(data.marketPotential))}>
               <p className="text-3xl font-bold">{data.marketPotential}/10</p>
-              <p className="mt-1 text-sm font-medium">Dynamic Potential Score</p>
+              <p className="mt-1 text-sm font-medium">Puntaje Dinámico de Potencial</p>
             </div>
 
             <div className={cn("rounded-lg border p-4 text-center", getLevelColor(data.competitionLevel))}>
-              <p className="text-2xl font-bold">{data.competitionLevel}</p>
-              <p className="mt-1 text-sm font-medium">Competition Level</p>
+              <p className="text-2xl font-bold">{data.competitionLevel === "Low" ? "Baja" : data.competitionLevel === "Medium" ? "Media" : "Alta"}</p>
+              <p className="mt-1 text-sm font-medium">Nivel de Competencia</p>
             </div>
 
             <div className={cn("rounded-lg border p-4 text-center", getLevelColor(data.entryBarrier))}>
-              <p className="text-2xl font-bold">{data.entryBarrier}</p>
-              <p className="mt-1 text-sm font-medium">Entry Barrier</p>
+              <p className="text-2xl font-bold">{data.entryBarrier === "Low" ? "Baja" : data.entryBarrier === "Medium" ? "Media" : "Alta"}</p>
+              <p className="mt-1 text-sm font-medium">Barrera de Entrada</p>
             </div>
 
             <div className="rounded-lg border border-border bg-secondary/30 p-4 text-center">
@@ -111,12 +111,12 @@ export function ViabilitySection({ data }: ViabilitySectionProps) {
                 <Clock className="h-5 w-5 text-primary" />
                 <p className="text-lg font-bold text-primary">{data.timeToFirstIncome}</p>
               </div>
-              <p className="mt-1 text-sm font-medium text-muted-foreground">Time to First Income</p>
+              <p className="mt-1 text-sm font-medium text-muted-foreground">Tiempo al Primer Ingreso</p>
             </div>
           </div>
 
           <div className="space-y-2">
-            <h4 className="text-sm font-semibold text-foreground">Key Findings</h4>
+            <h4 className="text-sm font-semibold text-foreground">Hallazgos Clave</h4>
             {data.findings.map((finding, index) => (
               <div key={index} className="flex items-start gap-3">
                 <div className={cn("mt-2 h-2.5 w-2.5 shrink-0 rounded-full", getFindingColor(finding.type))} />
@@ -134,8 +134,8 @@ export function ViabilitySection({ data }: ViabilitySectionProps) {
               <Database className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <CardTitle className="text-xl">Score Sources (Mocked Live Signals)</CardTitle>
-              <p className="text-sm text-muted-foreground">Serp/Trends, Mercado Libre API, and INDEC snapshots</p>
+              <CardTitle className="text-xl">Fuentes del Puntaje (Señales en Vivo Simuladas)</CardTitle>
+              <p className="text-sm text-muted-foreground">Serp/Trends, Mercado Libre API e INDEC</p>
             </div>
           </div>
         </CardHeader>
@@ -175,7 +175,7 @@ export function ViabilitySection({ data }: ViabilitySectionProps) {
                         borderRadius: "8px",
                       }}
                       labelStyle={{ color: "var(--foreground)" }}
-                      formatter={(value: number) => [`${value.toFixed(1)} pts`, "Source strength"]}
+                      formatter={(value: number) => [`${value.toFixed(1)} pts`, "Fuerza de señal"]}
                     />
                     <Area
                       type="monotone"
@@ -190,9 +190,9 @@ export function ViabilitySection({ data }: ViabilitySectionProps) {
               <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
                 <p className="text-sm font-medium text-foreground">{signal.value}</p>
                 <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                  <span>Updated: {signal.lastUpdated}</span>
+                  <span>Actualizado: {signal.lastUpdated}</span>
                   <a href={signal.url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                    Source
+                    Fuente
                   </a>
                 </div>
               </div>
@@ -203,7 +203,7 @@ export function ViabilitySection({ data }: ViabilitySectionProps) {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-xl">Similar Successful Ideas</CardTitle>
+          <CardTitle className="text-xl">Ideas Similares Exitosas</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           {data.similarIdeas.map((idea, index) => (
@@ -214,15 +214,15 @@ export function ViabilitySection({ data }: ViabilitySectionProps) {
                   <p className="text-xs text-muted-foreground">{idea.market}</p>
                 </div>
                 <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
-                  Match: {idea.matchScore}/100
+                  Similitud: {idea.matchScore}/100
                 </span>
               </div>
               <div className="mt-2 grid gap-2 sm:grid-cols-2">
                 <p className="text-sm text-muted-foreground">
-                  <span className="font-medium text-foreground">Growth:</span> {idea.annualGrowth}
+                  <span className="font-medium text-foreground">Crecimiento:</span> {idea.annualGrowth}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  <span className="font-medium text-foreground">Traction:</span> {idea.traction}
+                  <span className="font-medium text-foreground">Tracción:</span> {idea.traction}
                 </p>
               </div>
             </div>

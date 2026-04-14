@@ -17,7 +17,7 @@ import type { BusinessInputData } from "@/components/hero-input"
 const COLORS = [
   { label: "Violeta",  value: "#7c3aed", text: "#fff" },
   { label: "Azul",     value: "#2563eb", text: "#fff" },
-  { label: "Teal",     value: "#0d9488", text: "#fff" },
+  { label: "Verde azulado", value: "#0d9488", text: "#fff" },
   { label: "Verde",    value: "#16a34a", text: "#fff" },
   { label: "Ámbar",    value: "#d97706", text: "#fff" },
   { label: "Naranja",  value: "#ea580c", text: "#fff" },

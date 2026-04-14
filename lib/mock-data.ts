@@ -246,7 +246,7 @@ function clamp(min: number, value: number, max: number): number {
 }
 
 function buildSignalHistory(base: number, seed: string, trend: "up" | "stable" | "down") {
-  const periods = ["M-5", "M-4", "M-3", "M-2", "M-1", "Now"]
+  const periods = ["M-5", "M-4", "M-3", "M-2", "M-1", "Ahora"]
   const drift = trend === "up" ? 0.28 : trend === "down" ? -0.28 : 0.03
 
   return periods.map((period, index) => {
@@ -329,31 +329,31 @@ export function generateAnalysis(input: BusinessInputData): StartupAnalysis {
 
   const businessModel: BusinessModel = isFood
     ? {
-        type: "Service + Product Hybrid",
-        description: "Revenue from recurring company catering plus high-margin event menus.",
+        type: "Servicio + Producto Híbrido",
+        description: "Ingresos por catering corporativo recurrente y menús de eventos con alto margen.",
         revenueStreams: [
-          { name: "Corporate plans", percentage: 55, description: "Weekly recurring office meal plans." },
-          { name: "Events", percentage: 30, description: "One-off events and branded activations." },
-          { name: "On-demand orders", percentage: 15, description: "Direct and app-based ad-hoc sales." },
+          { name: "Planes corporativos", percentage: 55, description: "Planes semanales de comida para oficinas." },
+          { name: "Eventos", percentage: 30, description: "Eventos puntuales y activaciones de marca." },
+          { name: "Pedidos a demanda", percentage: 15, description: "Ventas directas y por app." },
         ],
       }
     : isTech
     ? {
-        type: "B2B SaaS",
-        description: "Subscription software with implementation upsell and annual contracts.",
+        type: "SaaS B2B",
+        description: "Software por suscripción con upsell de implementación y contratos anuales.",
         revenueStreams: [
-          { name: "Monthly subscriptions", percentage: 65, description: "Tiered plans by seats or usage." },
-          { name: "Annual enterprise", percentage: 25, description: "Discounted annual contracts with SLA." },
-          { name: "Implementation", percentage: 10, description: "Onboarding, training, and custom setup." },
+          { name: "Suscripciones mensuales", percentage: 65, description: "Planes escalonados por usuarios o uso." },
+          { name: "Contratos anuales enterprise", percentage: 25, description: "Contratos anuales con descuento y SLA." },
+          { name: "Implementación", percentage: 10, description: "Onboarding, capacitación y setup personalizado." },
         ],
       }
     : {
-        type: "Specialized Services",
-        description: "Project-based delivery with recurring retainers once trust is built.",
+        type: "Servicios Especializados",
+        description: "Entrega basada en proyectos con retainers recurrentes una vez construida la confianza.",
         revenueStreams: [
-          { name: "Projects", percentage: 50, description: "Defined-scope delivery." },
-          { name: "Retainers", percentage: 35, description: "Recurring service agreements." },
-          { name: "Advisory", percentage: 15, description: "Consulting and optimization." },
+          { name: "Proyectos", percentage: 50, description: "Entrega con alcance definido." },
+          { name: "Retainers", percentage: 35, description: "Acuerdos de servicio recurrente." },
+          { name: "Asesoramiento", percentage: 15, description: "Consultoría y optimización." },
         ],
       }
 
@@ -377,39 +377,39 @@ export function generateAnalysis(input: BusinessInputData): StartupAnalysis {
 
   const monetization: MonetizationData = {
     strategy:
-      "Tiered monetization with an accessible entry plan, a margin-focused core plan, and a premium tier to maximize ARPU on higher-value accounts.",
+      "Monetización escalonada con un plan de entrada accesible, un plan central enfocado en margen, y un tier premium para maximizar el ingreso promedio por cuenta.",
     plans: [
       {
-        name: "Starter",
+        name: "Inicial",
         monthlyPriceArs: Math.round((anchorPrice * 0.68) / 500) * 500,
-        target: isTech ? "Small teams" : isFood ? "SMBs with basic recurring orders" : "Early-stage, lower-ticket clients",
-        rationale: "Entry price designed to speed up acquisition without weakening brand positioning.",
+        target: isTech ? "Equipos chicos" : isFood ? "PyMEs con pedidos recurrentes básicos" : "Clientes iniciales, ticket bajo",
+        rationale: "Precio de entrada diseñado para acelerar adquisición sin debilitar el posicionamiento de marca.",
       },
       {
-        name: "Growth",
+        name: "Crecimiento",
         monthlyPriceArs: anchorPrice,
-        target: isTech ? "Growing SMBs" : isFood ? "Mid-sized offices with weekly frequency" : "Recurring clients with higher volume",
-        rationale: "Recommended core plan: balances competitiveness and operating margin.",
+        target: isTech ? "PyMEs en crecimiento" : isFood ? "Oficinas medianas con frecuencia semanal" : "Clientes recurrentes con mayor volumen",
+        rationale: "Plan central recomendado: equilibra competitividad y margen operativo.",
       },
       {
-        name: "Scale",
+        name: "Escala",
         monthlyPriceArs: Math.round((anchorPrice * 1.52) / 500) * 500,
-        target: isTech ? "Enterprise accounts" : isFood ? "Corporate clients and premium events" : "High-demand accounts with SLA requirements",
-        rationale: "Captures value in segments with lower price sensitivity.",
+        target: isTech ? "Cuentas enterprise" : isFood ? "Clientes corporativos y eventos premium" : "Cuentas de alta demanda con requerimientos de SLA",
+        rationale: "Captura valor en segmentos con menor sensibilidad al precio.",
       },
     ],
     benchmark: {
       lowArs: Math.round((anchorPrice * 0.8) / 500) * 500,
       medianArs: Math.round((anchorPrice * 1.03) / 500) * 500,
       highArs: Math.round((anchorPrice * 1.37) / 500) * 500,
-      note: `Estimated range based on ${competitionLevel.toLowerCase()} competition and a ${trend} trend scenario.`,
+      note: `Rango estimado basado en competencia ${competitionLevel === "Low" ? "baja" : competitionLevel === "Medium" ? "moderada" : "alta"} y tendencia ${trend === "up" ? "alcista" : trend === "stable" ? "estable" : "bajista"}.`,
     },
   }
 
   const sourceSignals: MarketSignal[] = [
     {
       source: "Google Trends / Serp snapshot",
-      metric: "Demand momentum",
+      metric: "Impulso de demanda",
       value: `${trendsScore}/100`,
       scoreImpact: Number((trendsScore / 12).toFixed(1)),
       trend: trendsScore > 72 ? "up" : trendsScore > 58 ? "stable" : "down",
@@ -418,9 +418,9 @@ export function generateAnalysis(input: BusinessInputData): StartupAnalysis {
       url: "https://trends.google.com/",
     },
     {
-      source: "Mercado Libre public API",
-      metric: "Active listings",
-      value: `${meliListings.toLocaleString("en-US")} listings`,
+      source: "Mercado Libre API pública",
+      metric: "Publicaciones activas",
+      value: `${meliListings.toLocaleString("es-AR")} publicaciones`,
       scoreImpact: Number((Math.min(meliListings / 900, 3.3)).toFixed(1)),
       trend: meliListings > 1800 ? "up" : meliListings > 900 ? "stable" : "down",
       history: buildSignalHistory(Number((Math.min(meliListings / 900, 3.3)).toFixed(1)), `${idea}-meli-history`, meliListings > 1800 ? "up" : meliListings > 900 ? "stable" : "down"),
@@ -428,8 +428,8 @@ export function generateAnalysis(input: BusinessInputData): StartupAnalysis {
       url: "https://developers.mercadolibre.com.ar/",
     },
     {
-      source: "INDEC sector estimate",
-      metric: "Sector yearly growth",
+      source: "INDEC estimación sectorial",
+      metric: "Crecimiento interanual del sector",
       value: `${indecGrowth}% YoY`,
       scoreImpact: Number(((indecGrowth + 2) / 5).toFixed(1)),
       trend: indecGrowth > 8 ? "up" : indecGrowth > 3 ? "stable" : "down",
@@ -442,17 +442,17 @@ export function generateAnalysis(input: BusinessInputData): StartupAnalysis {
   const similarIdeas: SimilarIdeaBenchmark[] = isTech
     ? [
         {
-          idea: "Nubity (B2B automation)",
-          market: "LATAM SMB",
+          idea: "Nubity (automatización B2B)",
+          market: "PyMEs LATAM",
           annualGrowth: "+29%",
-          traction: "Reached 500 paid accounts in 14 months",
+          traction: "Alcanzó 500 cuentas pagas en 14 meses",
           matchScore: 86,
         },
         {
-          idea: "Mural-style workflow tools",
-          market: "Remote collaboration",
+          idea: "Herramientas estilo Mural para workflows",
+          market: "Colaboración remota",
           annualGrowth: "+18%",
-          traction: "Scaled through product-led growth",
+          traction: "Escaló con crecimiento liderado por producto",
           matchScore: 79,
         },
       ]
@@ -460,32 +460,32 @@ export function generateAnalysis(input: BusinessInputData): StartupAnalysis {
     ? [
         {
           idea: "Cocina de Barrio",
-          market: "Urban office catering",
+          market: "Catering corporativo urbano",
           annualGrowth: "+21%",
-          traction: "From 8 to 60 recurring company clients",
+          traction: "De 8 a 60 clientes corporativos recurrentes",
           matchScore: 82,
         },
         {
-          idea: "Healthy Lunch Subscriptions",
-          market: "Corporate wellness",
+          idea: "Suscripciones de almuerzo saludable",
+          market: "Bienestar corporativo",
           annualGrowth: "+17%",
-          traction: "Partnered with 3 coworking chains",
+          traction: "Se asoció con 3 cadenas de coworking",
           matchScore: 76,
         },
       ]
     : [
         {
           idea: "UrbanFix Services",
-          market: "On-demand home services",
+          market: "Servicios para el hogar a demanda",
           annualGrowth: "+16%",
-          traction: "Scaled through local referrals",
+          traction: "Escaló con referidos locales",
           matchScore: 78,
         },
         {
           idea: "ProAssist B2B",
-          market: "SMB operations",
+          market: "Operaciones PyME",
           annualGrowth: "+14%",
-          traction: "Strong recurring contracts",
+          traction: "Fuerte base de contratos recurrentes",
           matchScore: 74,
         },
       ]
@@ -495,23 +495,23 @@ export function generateAnalysis(input: BusinessInputData): StartupAnalysis {
     competitionLevel,
     entryBarrier,
     trend,
-    timeToFirstIncome: isTech ? "6-10 weeks" : isFood ? "2-4 weeks" : "3-6 weeks",
+    timeToFirstIncome: isTech ? "6-10 semanas" : isFood ? "2-4 semanas" : "3-6 semanas",
     findings: [
       {
         type: "opportunity",
-        text: `Search and listing signals show sustained demand for this category in ${normalizedCity}.`,
+        text: `Las señales de búsqueda y publicaciones muestran demanda sostenida para esta categoría en ${normalizedCity}.`,
       },
       {
         type: "opportunity",
-        text: `With ${investment.toLocaleString("en-US")} ARS, the first 90 days are financially viable with controlled burn.`,
+        text: `Con ${investment.toLocaleString("es-AR")} ARS, los primeros 90 días son financieramente viables con burn controlado.`,
       },
       {
         type: "caution",
-        text: `Comparable successful ideas score ${similarIdeasStrength}/100 in similarity, but positioning must be sharper than local incumbents.`,
+        text: `Ideas comparables exitosas puntúan ${similarIdeasStrength}/100 en similitud, pero el posicionamiento debe ser más afilado que los competidores locales.`,
       },
       {
         type: "risk",
-        text: "Initial client acquisition can stall without a clear niche and repeatable outreach.",
+        text: "La adquisición inicial de clientes puede estancarse sin un nicho claro y un canal de llegada repetible.",
       },
     ],
     sourceSignals,
@@ -543,37 +543,37 @@ export function generateAnalysis(input: BusinessInputData): StartupAnalysis {
     competitors: [
       {
         name: isTech ? "ScaleOps" : isFood ? "MesaPro Catering" : "UrbanAssist",
-        description: "Well-positioned incumbent with strong brand recognition.",
-        strengths: ["Distribution", "Repeat customers", "Operational discipline"],
-        weaknesses: ["Higher prices", "Slow personalization", "Rigid packages"],
-        cityArea: "Financial district",
+        description: "Incumbente bien posicionado con fuerte reconocimiento de marca.",
+        strengths: ["Distribución", "Clientes recurrentes", "Disciplina operativa"],
+        weaknesses: ["Precios altos", "Personalización lenta", "Paquetes rígidos"],
+        cityArea: "Microcentro",
         marketShare: "24%",
         location: competitorLocations[0],
       },
       {
         name: isTech ? "FlowPilot" : isFood ? "DailyFork" : "FastHands",
-        description: "Fast-growing challenger focused on convenience.",
-        strengths: ["Speed", "Modern UX", "Strong social presence"],
-        weaknesses: ["Support gaps", "Quality variance", "Cash burn risk"],
-        cityArea: "North corridor",
+        description: "Challenger de rápido crecimiento enfocado en conveniencia.",
+        strengths: ["Velocidad", "UX moderna", "Fuerte presencia en redes"],
+        weaknesses: ["Brechas en soporte", "Calidad variable", "Riesgo de quema de caja"],
+        cityArea: "Corredor norte",
         marketShare: "16%",
         location: competitorLocations[1],
       },
       {
         name: isTech ? "LegacySuite" : isFood ? "Tradizione Eventos" : "MasterLocal",
-        description: "Traditional operator with long-standing accounts.",
-        strengths: ["Relationships", "Experience", "Large contracts"],
-        weaknesses: ["Outdated stack", "Weak digital funnel", "Slow onboarding"],
-        cityArea: "Historic center",
+        description: "Operador tradicional con cuentas de larga data.",
+        strengths: ["Relaciones", "Experiencia", "Contratos grandes"],
+        weaknesses: ["Stack desactualizado", "Funnel digital débil", "Onboarding lento"],
+        cityArea: "Centro histórico",
         marketShare: "19%",
         location: competitorLocations[2],
       },
       {
         name: isTech ? "NicheCloud" : isFood ? "GreenBite Co" : "HomePro Plus",
-        description: "Niche specialist with selective clientele.",
-        strengths: ["Specialization", "Premium perception", "High retention"],
-        weaknesses: ["Limited scale", "Narrow segment", "Higher CAC"],
-        cityArea: "Residential west",
+        description: "Especialista de nicho con clientela selecta.",
+        strengths: ["Especialización", "Percepción premium", "Alta retención"],
+        weaknesses: ["Escala limitada", "Segmento estrecho", "CAC elevado"],
+        cityArea: "Zona residencial oeste",
         marketShare: "11%",
         location: competitorLocations[3],
       },
@@ -586,25 +586,25 @@ export function generateAnalysis(input: BusinessInputData): StartupAnalysis {
         type: "b2b",
         b2bClients: [
           {
-            name: `Tech offices in ${normalizedCity}`,
-            reason: "Recurring demand and budget allocated for productivity and employee experience.",
-            approach: "Warm intro + 20-minute diagnostic call + pilot proposal.",
-            contactRole: "Operations Manager",
-            companyContext: "Fast decision cycles and clear ROI expectations.",
+            name: `Oficinas tech en ${normalizedCity}`,
+            reason: "Demanda recurrente y presupuesto asignado para productividad y experiencia de empleados.",
+            approach: "Intro cálida + llamada diagnóstica de 20 min + propuesta de piloto.",
+            contactRole: "Gerente de Operaciones",
+            companyContext: "Ciclos de decisión rápidos y expectativas claras de ROI.",
           },
           {
-            name: "Professional services firms",
-            reason: "Need reliable quality and reputation-safe providers.",
-            approach: "Account-based outreach with a compliance-first pitch.",
-            contactRole: "Managing Partner / Admin Lead",
-            companyContext: "Risk-averse but high lifetime value once onboarded.",
+            name: "Estudios de servicios profesionales",
+            reason: "Necesitan calidad confiable y proveedores seguros para su reputación.",
+            approach: "Outreach basado en cuentas con un pitch enfocado en cumplimiento.",
+            contactRole: "Socio / Responsable administrativo",
+            companyContext: "Aversos al riesgo, pero alto lifetime value una vez que entran.",
           },
           {
-            name: "Coworking operators",
-            reason: "Need differentiated member experience to reduce churn.",
-            approach: "Offer co-branded pilot for one location.",
+            name: "Operadores de coworking",
+            reason: "Necesitan experiencia diferenciada para sus miembros y reducir churn.",
+            approach: "Ofrecer piloto co-brandeado para una sede.",
             contactRole: "Community Manager",
-            companyContext: "Open to experimentation and quick pilots.",
+            companyContext: "Abiertos a experimentar con pilotos rápidos.",
           },
         ],
       }
@@ -612,19 +612,19 @@ export function generateAnalysis(input: BusinessInputData): StartupAnalysis {
         type: "b2c",
         b2cSegments: [
           {
-            segment: "Young professionals (25-40)",
-            estimatedSize: `~110,000 people in ${normalizedCity}`,
-            reachStrategy: "Instagram + Google Maps reviews + referral loops.",
+            segment: "Jóvenes profesionales (25-40)",
+            estimatedSize: `~110.000 personas en ${normalizedCity}`,
+            reachStrategy: "Instagram + reseñas en Google Maps + boca en boca.",
           },
           {
-            segment: "Families with children",
-            estimatedSize: `~82,000 households in ${normalizedCity}`,
-            reachStrategy: "Facebook community groups + WhatsApp campaigns.",
+            segment: "Familias con hijos",
+            estimatedSize: `~82.000 hogares en ${normalizedCity}`,
+            reachStrategy: "Grupos de Facebook + campañas de WhatsApp.",
           },
           {
-            segment: "Independent seniors",
-            estimatedSize: `~42,000 people in ${normalizedCity}`,
-            reachStrategy: "Local partnerships and trust-focused messaging.",
+            segment: "Adultos mayores independientes",
+            estimatedSize: `~42.000 personas en ${normalizedCity}`,
+            reachStrategy: "Alianzas locales y comunicación basada en confianza.",
           },
         ],
       }
@@ -638,35 +638,35 @@ export function generateAnalysis(input: BusinessInputData): StartupAnalysis {
     ],
     explanation:
       investment < 1200000
-        ? "Monotributo is practical for a lean start. Keep fixed costs low and migrate once invoicing approaches category ceilings."
-        : "SAS balances legal protection and operational agility. It is typically the best path for scalable operations.",
+        ? "Monotributo es práctico para arrancar liviano. Mantené los costos fijos bajos y migra cuando la facturación se acerque al tope de la categoría."
+        : "La SAS equilibra protección legal y agilidad operativa. Suele ser el mejor camino para operaciones escalables.",
     timeline: [
-      { month: 1, action: "Register tax category and open legal entity if needed" },
-      { month: 2, action: "Set invoicing, contracts, and accounting controls" },
-      { month: 6, action: "Reassess category based on actual monthly revenue" },
+      { month: 1, action: "Inscribir categoría impositiva y abrir entidad legal si es necesario" },
+      { month: 2, action: "Configurar facturación, contratos y controles contables" },
+      { month: 6, action: "Reevaluar categoría según facturación mensual real" },
     ],
     taxInfo:
       investment < 1200000
         ? {
-            regime: "Simplified Tax Regime",
-            monthlyEstimate: "ARS 42,000 - 95,000",
-            annualEstimate: "ARS 504,000 - 1,140,000",
+            regime: "Régimen Simplificado (Monotributo)",
+            monthlyEstimate: "ARS 42.000 - 95.000",
+            annualEstimate: "ARS 504.000 - 1.140.000",
             benefits: [
-              "Single monthly payment",
-              "Lower administrative complexity",
-              "Predictable cash planning",
-              "Fast initial setup",
+              "Pago mensual único",
+              "Menor complejidad administrativa",
+              "Planificación de caja predecible",
+              "Alta rápida e inicial",
             ],
           }
         : {
-            regime: "General Tax Regime",
-            monthlyEstimate: "VAT + Income Tax + Social charges",
-            annualEstimate: "Depends on margin and invoices",
+            regime: "Régimen General (Responsable Inscripto)",
+            monthlyEstimate: "IVA + Ganancias + Cargas sociales",
+            annualEstimate: "Depende del margen y la facturación",
             benefits: [
-              "No billing ceilings",
-              "Deductible operational expenses",
-              "Suitable for growth and investors",
-              "More robust legal profile",
+              "Sin topes de facturación",
+              "Gastos operativos deducibles",
+              "Apto para crecimiento e inversores",
+              "Perfil legal más robusto",
             ],
           },
     taxCategories: [
@@ -697,19 +697,19 @@ export function generateAnalysis(input: BusinessInputData): StartupAnalysis {
     ],
     bureaucracyLinks: [
       {
-        label: "AFIP - Tax registration",
+        label: "AFIP — Inscripción impositiva",
         url: "https://www.afip.gob.ar/",
-        description: "Start or update tax status and billing setup.",
+        description: "Iniciar o actualizar tu situación fiscal y facturación.",
       },
       {
-        label: "TAD - Legal entity procedures",
+        label: "TAD — Trámites de entidad legal",
         url: "https://tramitesadistancia.gob.ar/",
-        description: "Online incorporation and administrative legal workflows.",
+        description: "Constitución de sociedad y trámites legales administrativos online.",
       },
       {
-        label: "IGJ - Corporate filings",
+        label: "IGJ — Registros societarios",
         url: "https://www.argentina.gob.ar/justicia/igj",
-        description: "Corporate registration and legal formalization guidance.",
+        description: "Registro societario y guía de formalización legal.",
       },
     ],
   }
@@ -721,24 +721,24 @@ export function generateAnalysis(input: BusinessInputData): StartupAnalysis {
 
   const startupKit: StartupKitData = {
     budgetDistribution: [
-      { category: "Equipment", percentage: equipmentPct, color: "var(--section-kit)" },
-      { category: "Initial Stock", percentage: stockPct, color: "var(--section-clients)" },
+      { category: "Equipamiento", percentage: equipmentPct, color: "var(--section-kit)" },
+      { category: "Stock inicial", percentage: stockPct, color: "var(--section-clients)" },
       { category: "Marketing", percentage: marketingPct, color: "var(--section-roadmap)" },
-      { category: "Reserve", percentage: reservePct, color: "var(--section-viability)" },
+      { category: "Reserva", percentage: reservePct, color: "var(--section-viability)" },
     ],
     items: [
       {
-        name: isFood ? "Commercial convection oven" : isTech ? "High-performance laptop" : "Field service starter set",
-        reason: "Critical base asset to deliver reliably from day one.",
+        name: isFood ? "Horno de convección comercial" : isTech ? "Notebook de alto rendimiento" : "Kit inicial de servicio en campo",
+        reason: "Activo base crítico para entregar confiablemente desde el día uno.",
         price: Math.round(investment * 0.15),
         percentage: 15,
         offers: [
           {
             platform: "Mercado Libre",
-            title: "Pro Series Standard",
+            title: "Serie Pro Estándar",
             price: Math.round(investment * 0.14),
             rating: 4.6,
-            delivery: "2-3 days",
+            delivery: "2-3 días",
             url: "https://www.mercadolibre.com.ar/",
           },
           {
@@ -746,79 +746,79 @@ export function generateAnalysis(input: BusinessInputData): StartupAnalysis {
             title: "Business Essentials Prime",
             price: Math.round(investment * 0.16),
             rating: 4.7,
-            delivery: "5-7 days",
+            delivery: "5-7 días",
             url: "https://www.amazon.com/",
           },
           {
             platform: "Alibaba",
-            title: "Wholesale Supplier Pack",
+            title: "Pack mayorista",
             price: Math.round(investment * 0.12),
             rating: 4.4,
-            delivery: "15-25 days",
+            delivery: "15-25 días",
             url: "https://www.alibaba.com/",
           },
         ],
       },
       {
-        name: isFood ? "Cold chain containers" : isTech ? "Software stack (annual)" : "Operations software pack",
-        reason: "Protects quality, speed, and customer consistency.",
+        name: isFood ? "Contenedores de cadena de frío" : isTech ? "Stack de software (anual)" : "Pack de software operativo",
+        reason: "Protege calidad, velocidad y consistencia para el cliente.",
         price: Math.round(investment * 0.1),
         percentage: 10,
         offers: [
           {
             platform: "Mercado Libre",
-            title: "Local bestseller option",
+            title: "Opción más vendida local",
             price: Math.round(investment * 0.095),
             rating: 4.5,
-            delivery: "1-2 days",
+            delivery: "1-2 días",
             url: "https://www.mercadolibre.com.ar/",
           },
           {
             platform: "Amazon",
-            title: "Top reviewed global option",
+            title: "Opción global mejor reseñada",
             price: Math.round(investment * 0.11),
             rating: 4.8,
-            delivery: "5-8 days",
+            delivery: "5-8 días",
             url: "https://www.amazon.com/",
           },
           {
             platform: "TiendaNube Partners",
-            title: "Regional partner bundle",
+            title: "Bundle de socio regional",
             price: Math.round(investment * 0.09),
             rating: 4.3,
-            delivery: "3-5 days",
+            delivery: "3-5 días",
             url: "https://www.tiendanube.com/",
           },
         ],
       },
       {
-        name: "Brand and launch assets",
-        reason: "Needed to build trust and convert early demand.",
+        name: "Activos de marca y lanzamiento",
+        reason: "Necesarios para generar confianza y convertir demanda temprana.",
         price: Math.round(investment * 0.08),
         percentage: 8,
         offers: [
           {
-            platform: "Canva / templates",
-            title: "Launch creative pack",
+            platform: "Canva / plantillas",
+            title: "Pack creativo de lanzamiento",
             price: Math.round(investment * 0.06),
             rating: 4.7,
-            delivery: "Instant",
+            delivery: "Inmediato",
             url: "https://www.canva.com/",
           },
           {
             platform: "Fiverr",
-            title: "Freelance implementation",
+            title: "Implementación freelance",
             price: Math.round(investment * 0.09),
             rating: 4.5,
-            delivery: "2-5 days",
+            delivery: "2-5 días",
             url: "https://www.fiverr.com/",
           },
           {
             platform: "Upwork",
-            title: "Specialist retainer",
+            title: "Retainer con especialista",
             price: Math.round(investment * 0.1),
             rating: 4.6,
-            delivery: "2-6 days",
+            delivery: "2-6 días",
             url: "https://www.upwork.com/",
           },
         ],
@@ -830,44 +830,44 @@ export function generateAnalysis(input: BusinessInputData): StartupAnalysis {
   const slug = generateSlug(idea) || "dayzero"
   const validationPlan: ValidationStep[] = [
     {
-      action: "Interview 10 ideal customers",
-      metric: "At least 8 confirm the core pain",
-      duration: "Week 1",
+      action: "Entrevistar a 10 clientes ideales",
+      metric: "Al menos 8 confirman el dolor principal",
+      duration: "Semana 1",
     },
     {
-      action: "Launch waitlist landing page",
-      metric: "100 qualified signups in 14 days",
-      duration: "Week 2",
+      action: "Lanzar página de lista de espera",
+      metric: "100 registros calificados en 14 días",
+      duration: "Semana 2",
     },
     {
-      action: "Run 3-5 paid pilots",
-      metric: "At least 2 repeat purchases",
-      duration: "Week 3-4",
+      action: "Correr 3-5 pilotos pagos",
+      metric: "Al menos 2 recompras",
+      duration: "Semana 3-4",
     },
     {
-      action: "Iterate offer and pricing",
-      metric: "Gross margin target reached",
-      duration: "Week 5-6",
+      action: "Iterar oferta y pricing",
+      metric: "Margen bruto objetivo alcanzado",
+      duration: "Semana 5-6",
     },
   ]
 
   const roadmap: RoadmapStep[] = [
     {
-      period: "Week 1",
-      title: "Legal and foundations",
+      period: "Semana 1",
+      title: "Legales y fundaciones",
       actions: [
-        "Define legal structure and tax category",
-        "Set accounting and invoicing flow",
-        "Set baseline pricing and margin guardrails",
+        "Definir estructura legal y categoría impositiva",
+        "Configurar facturación, contratos y controles contables",
+        "Establecer precios base y guardarraíles de margen",
       ],
     },
     {
-      period: "Week 2",
-      title: "Landing and domain sprint",
+      period: "Semana 2",
+      title: "Página y dominio sprint",
       actions: [
-        "Generate landing page draft from analysis context",
-        "Check domain availability and reserve a primary option",
-        "Connect a basic analytics pixel and lead form",
+        "Generar borrador de página desde el contexto del análisis",
+        "Verificar disponibilidad de dominio y reservar opción principal",
+        "Conectar pixel de analytics básico y formulario de leads",
       ],
       domainSuggestion: {
         domain: `${slug}.com`,
@@ -880,21 +880,21 @@ export function generateAnalysis(input: BusinessInputData): StartupAnalysis {
       ],
     },
     {
-      period: "Month 2",
-      title: "Acquisition and proof",
+      period: "Mes 2",
+      title: "Adquisición y prueba",
       actions: [
-        "Start outbound and referral loops",
-        "Track conversion funnel from lead to first sale",
-        "Publish social proof from early customers",
+        "Iniciar outbound y circuitos de referidos",
+        "Trackear el funnel de conversión desde lead hasta primera venta",
+        "Publicar prueba social de clientes tempranos",
       ],
     },
     {
-      period: "Month 3-4",
-      title: "Scale with control",
+      period: "Mes 3-4",
+      title: "Escalar con control",
       actions: [
-        "Automate recurring workflows",
-        "Hire only after repeat demand is stable",
-        "Expand only in high-score zones from competitor map",
+        "Automatizar workflows recurrentes",
+        "Contratar solo cuando la demanda repetida sea estable",
+        "Expandir solo en zonas de alto puntaje del mapa de competidores",
       ],
     },
   ]
@@ -902,42 +902,42 @@ export function generateAnalysis(input: BusinessInputData): StartupAnalysis {
   const obstacles: Obstacle[] = [
     {
       severity: "High",
-      title: "Weak differentiation in crowded niche",
-      description: "Entering with a generic pitch often leads to high acquisition cost and low retention.",
-      solution: "Specialize in a narrow, painful use case and price around measurable outcomes.",
+      title: "Diferenciación débil en nicho saturado",
+      description: "Entrar con un pitch genérico suele llevar a alto costo de adquisición y baja retención.",
+      solution: "Especializate en un caso de uso estrecho y doloroso, y ponele precio en base a resultados medibles.",
       failureCase: {
         startup: "Homejoy",
-        reason: "High CAC and low customer retention made unit economics unsustainable.",
-        lesson: "Retention and repeat behavior must be validated before scaling marketing spend.",
+        reason: "Alto CAC y baja retención de clientes hicieron insostenible la unit economics.",
+        lesson: "La retención y el comportamiento de recompra deben validarse antes de escalar el gasto en marketing.",
       },
     },
     {
       severity: "Medium",
-      title: "Growth without operational readiness",
-      description: "Demand spikes can damage brand when delivery quality is inconsistent.",
-      solution: "Gate growth with service-level metrics and capacity thresholds.",
+      title: "Crecimiento sin preparación operativa",
+      description: "Los picos de demanda pueden dañar la marca cuando la calidad de entrega es inconsistente.",
+      solution: "Limitar el crecimiento con métricas de nivel de servicio y umbrales de capacidad.",
       failureCase: {
         startup: "Webvan",
-        reason: "Scaled logistics too early with a cost structure that outpaced demand.",
-        lesson: "Operational efficiency should scale with proven local demand.",
+        reason: "Escaló logística demasiado temprano con una estructura de costos que superó la demanda.",
+        lesson: "La eficiencia operativa debe escalar con demanda local comprobada.",
       },
     },
     {
       severity: "Medium",
-      title: "Ignoring runway and burn discipline",
-      description: "Over-investing in non-essential assets can shorten runway before product-market fit.",
-      solution: "Protect reserve cash and review burn rate weekly.",
+      title: "Ignorar runway y disciplina de burn",
+      description: "Sobre-invertir en activos no esenciales puede acortar el runway antes del product-market fit.",
+      solution: "Proteger la caja de reserva y revisar el burn rate semanalmente.",
       failureCase: {
         startup: "Quibi",
-        reason: "Large upfront spend with weak product-market fit.",
-        lesson: "Validate behavior and willingness to pay before heavy production budgets.",
+        reason: "Gasto inicial grande con product-market fit débil.",
+        lesson: "Validar comportamiento y disposición a pagar antes de presupuestos grandes de producción.",
       },
     },
     {
       severity: "Low",
-      title: "Over-reliance on one client segment",
-      description: "Concentration risk can create sudden revenue drops.",
-      solution: "Diversify acquisition channels and segment mix from month one.",
+      title: "Dependencia excesiva de un solo segmento de clientes",
+      description: "El riesgo de concentración puede generar caídas repentinas de ingresos.",
+      solution: "Diversificar canales de adquisición y mix de segmentos desde el mes uno.",
     },
   ]
 

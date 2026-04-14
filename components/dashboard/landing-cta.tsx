@@ -6,12 +6,12 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 
 const features = [
-  { icon: Layout, label: "Hero con propuesta de valor" },
+  { icon: Layout, label: "Sección principal con propuesta de valor" },
   { icon: Layout, label: "Sección de servicios" },
   { icon: MessageSquare, label: "Formulario WhatsApp" },
   { icon: Search, label: "SEO básico" },
-  { icon: Smartphone, label: "Mobile-first" },
-  { icon: Upload, label: "Lista para deploy" },
+  { icon: Smartphone, label: "Prioridad móvil" },
+  { icon: Upload, label: "Lista para publicar" },
 ]
 
 export function LandingCTA() {
@@ -37,7 +37,7 @@ export function LandingCTA() {
                   Tu análisis está completo. Ahora aterrizá tu idea.
                 </h3>
                 <p className="mt-1 text-muted-foreground">
-                  La IA ya tiene todo el contexto de tu análisis y puede generar una landing page lista para publicar.
+                  La IA ya tiene todo el contexto de tu análisis y puede generar una página lista para publicar.
                 </p>
               </div>
             </div>
@@ -60,12 +60,12 @@ export function LandingCTA() {
           <div className="flex flex-col gap-3 sm:flex-row lg:flex-col lg:items-end">
             <div className="relative">
               <Button size="lg" className="h-12 px-6 text-base font-semibold" onClick={handleClick}>
-                Crear mi landing page
+                Crear mi página
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
               {toastVisible && (
                 <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-lg bg-foreground px-3 py-1.5 text-xs font-medium text-background shadow-lg">
-                  Próximamente: generá tu landing automáticamente
+                  Próximamente: generá tu página automáticamente
                 </div>
               )}
             </div>

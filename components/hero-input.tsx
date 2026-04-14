@@ -155,7 +155,7 @@ export function HeroInput({ onSubmit }: HeroInputProps) {
                     type="text"
                     value={investment}
                     onChange={handleInvestmentChange}
-                    placeholder="Ej: 500,000"
+                    placeholder="Ej: 500.000"
                     className="dz-input w-full rounded-xl border border-input bg-background/50 py-3 pl-10 pr-4 text-base text-foreground placeholder:text-muted-foreground dark:bg-white/[0.02]"
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">

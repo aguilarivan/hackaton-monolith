@@ -28,8 +28,8 @@ export function MonetizationSection({ data }: MonetizationSectionProps) {
               <DollarSign className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <CardTitle className="text-xl">Monetization & Revenue Plan</CardTitle>
-              <p className="text-sm text-muted-foreground">Business model and pricing strategy</p>
+              <CardTitle className="text-xl">Plan de Monetización e Ingresos</CardTitle>
+              <p className="text-sm text-muted-foreground">Modelo de negocio y estrategia de precios</p>
             </div>
           </div>
         </CardHeader>
@@ -38,7 +38,7 @@ export function MonetizationSection({ data }: MonetizationSectionProps) {
 
           <div className="space-y-4 rounded-xl border border-border bg-card p-4">
             <div>
-              <h4 className="text-sm font-semibold text-foreground">Business Model</h4>
+              <h4 className="text-sm font-semibold text-foreground">Modelo de Negocio</h4>
               <p className="text-xs text-muted-foreground">{data.businessModel.type}</p>
               <p className="mt-2 text-sm text-muted-foreground">{data.businessModel.description}</p>
             </div>
@@ -69,7 +69,7 @@ export function MonetizationSection({ data }: MonetizationSectionProps) {
                       borderRadius: "8px",
                     }}
                     itemStyle={{ color: "var(--foreground)" }}
-                    formatter={(value: number) => [`${value}%`, "Revenue share"]}
+                    formatter={(value: number) => [`${value}%`, "% de ingresos"]}
                   />
                 </PieChart>
               </ResponsiveContainer>
@@ -89,7 +89,7 @@ export function MonetizationSection({ data }: MonetizationSectionProps) {
           </div>
 
           <div className="space-y-3">
-            <h4 className="text-sm font-semibold text-foreground">Suggested Pricing (ARS / month)</h4>
+            <h4 className="text-sm font-semibold text-foreground">Precios Sugeridos (ARS / mes)</h4>
             <div className="grid gap-3 md:grid-cols-3">
               {data.monetization.plans.map((plan, index) => (
                 <div key={index} className="rounded-xl border border-border bg-secondary/20 p-4">
@@ -101,16 +101,16 @@ export function MonetizationSection({ data }: MonetizationSectionProps) {
               ))}
             </div>
             <div className="rounded-xl border border-border bg-card p-4">
-              <p className="text-sm font-semibold text-foreground">Competitor Benchmark (estimated)</p>
+              <p className="text-sm font-semibold text-foreground">Referencia de Competidores (estimada)</p>
               <div className="mt-3 grid gap-2 text-sm text-muted-foreground sm:grid-cols-3">
                 <p>
-                  Low: <span className="font-semibold text-foreground">{formatArs(data.monetization.benchmark.lowArs)}</span>
+                  Bajo: <span className="font-semibold text-foreground">{formatArs(data.monetization.benchmark.lowArs)}</span>
                 </p>
                 <p>
-                  Median: <span className="font-semibold text-foreground">{formatArs(data.monetization.benchmark.medianArs)}</span>
+                  Mediana: <span className="font-semibold text-foreground">{formatArs(data.monetization.benchmark.medianArs)}</span>
                 </p>
                 <p>
-                  High: <span className="font-semibold text-foreground">{formatArs(data.monetization.benchmark.highArs)}</span>
+                  Alto: <span className="font-semibold text-foreground">{formatArs(data.monetization.benchmark.highArs)}</span>
                 </p>
               </div>
               <p className="mt-2 text-xs text-muted-foreground">{data.monetization.benchmark.note}</p>

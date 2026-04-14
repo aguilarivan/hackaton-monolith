@@ -131,7 +131,7 @@ export function StartupDashboard({ data, partial, isStreaming, onReset }: Startu
             className="mb-6 gap-2 text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4" />
-            Volver al dashboard
+            Volver al panel
           </Button>
           <div className="animate-in fade-in slide-in-from-right-4 duration-300">
             {activeSection === "viability" && v && <ViabilitySection data={v.viability} />}
@@ -312,7 +312,7 @@ export function StartupDashboard({ data, partial, isStreaming, onReset }: Startu
                 <div className="mt-4">
                   <p className="text-sm font-semibold text-foreground">Monetización</p>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    {v.viability.monetization.plans.length} planes de precio sugeridos y benchmark de mercado
+                    {v.viability.monetization.plans.length} planes de precio sugeridos y referencia de mercado
                   </p>
                 </div>
               </CardContent>
@@ -372,7 +372,7 @@ export function StartupDashboard({ data, partial, isStreaming, onReset }: Startu
                   <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-1" />
                 </div>
                 <div className="mt-4">
-                  <p className="text-sm font-semibold text-foreground">Legal & Impuestos</p>
+                  <p className="text-sm font-semibold text-foreground">Legal e Impuestos</p>
                   <p className="mt-1 text-xs text-muted-foreground">
                     {d.legalStructure.structures.find((s) => s.recommended)?.name || "SAS"} recomendada — régimen fiscal y trámites
                   </p>
@@ -394,7 +394,7 @@ export function StartupDashboard({ data, partial, isStreaming, onReset }: Startu
                 <div className="mt-4">
                   <p className="text-sm font-semibold text-foreground">Kit de inicio</p>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    {r.startupKit.items.length} items esenciales — qué comprar, dónde y a qué precio
+                    {r.startupKit.items.length} elementos esenciales — qué comprar, dónde y a qué precio
                   </p>
                 </div>
               </CardContent>
@@ -436,7 +436,7 @@ export function StartupDashboard({ data, partial, isStreaming, onReset }: Startu
                       <Map className="h-5 w-5" style={{ color: "oklch(0.55 0.15 195)" }} />
                     </div>
                     <div>
-                      <p className="font-semibold text-foreground">Roadmap de lanzamiento</p>
+                      <p className="font-semibold text-foreground">Hoja de ruta de lanzamiento</p>
                       <p className="text-sm text-muted-foreground">{d.roadmap.length} fases &middot; {d.validationPlan.length} pasos de validación</p>
                     </div>
                   </div>
