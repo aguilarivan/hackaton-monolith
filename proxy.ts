@@ -8,7 +8,7 @@ const JWT_SECRET = new TextEncoder().encode(
 
 const PROTECTED = ["/preguntas-claude", "/analisis"]
 
-export async function middleware(request: NextRequest) {
+export default async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
   if (!PROTECTED.some((p) => pathname.startsWith(p))) {
     return NextResponse.next()
