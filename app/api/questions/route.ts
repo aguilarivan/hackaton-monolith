@@ -23,7 +23,7 @@ async function generateQuestionsWithClaude(input: BusinessInputData) {
   try {
     const response = await anthropic.messages.create({
       model: "claude-haiku-4-5",
-      max_tokens: 1500,
+      max_tokens: 4096,
       system: [
         {
           type: "text",

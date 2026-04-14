@@ -17,6 +17,8 @@ import {
 } from "@/lib/flow-api"
 import { getBusinessInput, getFlowId, saveClaudeAnswers, type ClaudeAnswer } from "@/lib/flow-storage"
 
+const QUESTIONS_PER_PAGE = 5
+
 const askMessages = [
   "Claude esta leyendo tu idea y detectando riesgos",
   "Claude esta armando preguntas para reducir incertidumbre",
@@ -36,6 +38,26 @@ export default function ClaudeQuestionsPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [answers, setAnswers] = useState<Record<string, string>>({})
   const [details, setDetails] = useState<Record<string, string>>({})
+  const [currentPage, setCurrentPage] = useState(0)
+
+  const totalPages = Math.max(1, Math.ceil(questions.length / QUESTIONS_PER_PAGE))
+
+  const pageQuestions = useMemo(
+    () => questions.slice(currentPage * QUESTIONS_PER_PAGE, (currentPage + 1) * QUESTIONS_PER_PAGE),
+    [questions, currentPage]
+  )
+
+  const isCurrentPageValid = useMemo(
+    () => pageQuestions.every((question) => {
+      const selected = answers[question.id]
+      if (!selected) return false
+      if (selected !== "expand") return true
+      return Boolean(details[question.id]?.trim())
+    }),
+    [answers, details, pageQuestions]
+  )
+
+  const isLastPage = currentPage === totalPages - 1
 
   useEffect(() => {
     const data = getBusinessInput()
@@ -109,21 +131,21 @@ export default function ClaudeQuestionsPage() {
       })
   }, [isPreparing, noQuestionsNeeded, router])
 
-  const isValid = useMemo(
-    () => questions.length > 0 && questions.every((question) => {
-      const selected = answers[question.id]
-      if (!selected) return false
-      if (selected !== "expand") return true
-      return Boolean(details[question.id]?.trim())
-    }),
-    [answers, details, questions]
-  )
-
   const handleOptionChange = (questionId: string, option: string) => {
     setAnswers((prev) => ({ ...prev, [questionId]: option }))
     if (option !== "expand") {
       setDetails((prev) => ({ ...prev, [questionId]: "" }))
     }
+  }
+
+  const handleNextPage = () => {
+    setCurrentPage((prev) => Math.min(prev + 1, totalPages - 1))
+    window.scrollTo({ top: 0, behavior: "smooth" })
+  }
+
+  const handlePrevPage = () => {
+    setCurrentPage((prev) => Math.max(prev - 1, 0))
+    window.scrollTo({ top: 0, behavior: "smooth" })
   }
 
   const handleContinue = async () => {
@@ -232,16 +254,22 @@ export default function ClaudeQuestionsPage() {
             <CardDescription>
               Idea: {businessData.idea} | Ciudad: {businessData.city} | Inversion inicial: ${businessData.investment.toLocaleString("es-AR")}
             </CardDescription>
+            {totalPages > 1 && (
+              <p className="text-sm text-muted-foreground">
+                Pagina {currentPage + 1} de {totalPages} ({questions.length} preguntas en total)
+              </p>
+            )}
           </CardHeader>
         </Card>
 
-        {questions.map((question, index) => {
+        {pageQuestions.map((question) => {
+          const globalIndex = questions.indexOf(question)
           const selected = answers[question.id]
           return (
             <Card key={question.id} className="border-border/70">
               <CardHeader>
                 <CardTitle className="text-base">
-                  {index + 1}. {question.title}
+                  {globalIndex + 1}. {question.title}
                 </CardTitle>
                 <CardDescription>{question.helper}</CardDescription>
               </CardHeader>
@@ -283,14 +311,31 @@ export default function ClaudeQuestionsPage() {
         })}
 
         <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <Button variant="outline" onClick={() => router.push("/")}>
+          <Button variant="outline" onClick={currentPage === 0 ? () => router.push("/") : handlePrevPage}>
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Volver al paso 1
+            {currentPage === 0 ? "Volver al paso 1" : "Anterior"}
           </Button>
-          <Button onClick={handleContinue} disabled={!isValid || isSubmitting}>
-            Continuar al analisis
-            <ArrowRight className="ml-2 h-4 w-4" />
-          </Button>
+
+          {isLastPage ? (
+            <Button onClick={handleContinue} disabled={!isCurrentPageValid || isSubmitting}>
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Guardando...
+                </>
+              ) : (
+                <>
+                  Continuar al analisis
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </>
+              )}
+            </Button>
+          ) : (
+            <Button onClick={handleNextPage} disabled={!isCurrentPageValid}>
+              Siguiente
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          )}
         </div>
 
         {submitError && (
@@ -307,7 +352,7 @@ export default function ClaudeQuestionsPage() {
 
         <p className="flex items-center gap-2 text-sm text-muted-foreground">
           <Sparkles className="h-4 w-4" />
-          Siempre podes usar "Quiero ampliar este punto" para darle mas contexto a Claude.
+          Siempre podes usar &quot;Quiero ampliar este punto&quot; para darle mas contexto a Claude.
         </p>
       </div>
     </main>
