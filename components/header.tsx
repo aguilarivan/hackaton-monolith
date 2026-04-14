@@ -5,7 +5,15 @@ import { usePathname, useRouter } from "next/navigation"
 import { LogIn, LogOut, Moon, Rocket, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
 import { Button } from "@/components/ui/button"
-import { clearFlowStorage } from "@/lib/flow-storage"
+import { SpaceProgress } from "@/components/space-progress"
+import { clearFlowStorage, getBrandIdentity, getBusinessInput } from "@/lib/flow-storage"
+import type { SpaceProgressProps } from "@/components/space-progress"
+
+const STEP_MAP: Record<string, SpaceProgressProps["currentStep"]> = {
+  "/":                  1,
+  "/preguntas-claude":  2,
+  "/analisis":          3,
+}
 
 interface AuthUser {
   id: string
@@ -20,6 +28,17 @@ export function Header() {
   const showReset = pathname !== "/" && pathname !== "/login"
 
   const [user, setUser] = useState<AuthUser | null>(null)
+  const [brandName, setBrandName] = useState<string | null>(null)
+  const showBrandName = showReset && brandName // only on steps 2/3, never on home
+
+  const currentStep = STEP_MAP[pathname] ?? null
+  const showProgress = currentStep !== null && pathname !== "/login"
+
+  useEffect(() => {
+    const input = getBusinessInput()
+    const stored = getBrandIdentity()
+    setBrandName(stored?.name ?? input?.brandName ?? null)
+  }, [pathname])
 
   useEffect(() => {
     fetch("/api/auth/me")
@@ -53,6 +72,12 @@ export function Header() {
             <Rocket className="h-5 w-5 text-primary-foreground" />
           </div>
           <span className="text-lg font-semibold tracking-tight">DayZero</span>
+          {showBrandName && (
+            <>
+              <span className="text-muted-foreground/40 text-lg font-light">/</span>
+              <span className="text-base font-medium text-primary">{brandName}</span>
+            </>
+          )}
         </button>
 
         <div className="flex items-center gap-3">
@@ -93,6 +118,17 @@ export function Header() {
           </Button>
         </div>
       </div>
+
+      {showProgress && (
+        <div className="border-t border-white/5 px-4 py-3 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-7xl">
+            <SpaceProgress
+              currentStep={currentStep as SpaceProgressProps["currentStep"]}
+              brandName={brandName ?? undefined}
+            />
+          </div>
+        </div>
+      )}
     </header>
   )
 }

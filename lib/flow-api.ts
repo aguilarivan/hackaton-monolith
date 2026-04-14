@@ -118,11 +118,16 @@ export async function createFlowSession(businessInput: BusinessInputData): Promi
   return data.flowId
 }
 
-export async function saveFlowAnswers(flowId: string, claudeAnswers: ClaudeAnswer[]): Promise<void> {
-  await requestJson<{ flow: FlowPayload }>("/api/flow", {
+export async function saveFlowAnswers(
+  flowId: string,
+  claudeAnswers: ClaudeAnswer[],
+  businessInput?: BusinessInputData
+): Promise<{ newFlowId?: string }> {
+  const data = await requestJson<{ flow: FlowPayload; newFlowId?: string }>("/api/flow", {
     method: "PATCH",
-    body: JSON.stringify({ flowId, claudeAnswers }),
+    body: JSON.stringify({ flowId, claudeAnswers, businessInput }),
   })
+  return { newFlowId: data.newFlowId }
 }
 
 export async function getFlowSession(flowId: string): Promise<FlowPayload> {

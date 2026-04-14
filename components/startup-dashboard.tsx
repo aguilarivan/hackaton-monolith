@@ -9,7 +9,6 @@ import {
   Package,
   Map,
   AlertTriangle,
-  Rocket,
   ChevronRight,
   TrendingUp,
   Clock,
@@ -25,6 +24,7 @@ import { cn } from "@/lib/utils"
 import type { BusinessInputData } from "@/components/hero-input"
 
 // Import section detail components
+import { BrandIdentityCard } from "@/components/brand-identity-card"
 import { ViabilitySection } from "@/components/dashboard/viability-section"
 import { MonetizationSection } from "@/components/dashboard/monetization-section"
 import { CompetitorsSection } from "@/components/dashboard/competitors-section"
@@ -108,37 +108,31 @@ export function StartupDashboard({ data, analysisOverride, onReset }: StartupDas
   return (
     <div className="min-h-screen bg-background">
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-        {/* Header */}
+        {/* Brand Identity + context */}
         <div
           className={cn(
-            "mb-8 transition-all duration-500",
+            "mb-8 space-y-4 transition-all duration-500",
             isLoaded ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
           )}
         >
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-            <div className="space-y-3">
-              <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-                {analysis.appName} Analysis
-              </h1>
-              <p className="max-w-2xl text-base text-muted-foreground leading-relaxed">
-                {data.idea}
-              </p>
-              <div className="flex flex-wrap items-center gap-3">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1.5 text-sm font-medium text-primary">
-                  <MapPin className="h-3.5 w-3.5" />
-                  {data.city}
-                </span>
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1.5 text-sm font-medium text-muted-foreground">
-                  <DollarSign className="h-3.5 w-3.5" />
-                  {formatInvestment(data.investment)}
-                </span>
-              </div>
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1.5 text-sm font-medium text-primary">
+                <MapPin className="h-3.5 w-3.5" />
+                {data.city}
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1.5 text-sm font-medium text-muted-foreground">
+                <DollarSign className="h-3.5 w-3.5" />
+                {formatInvestment(data.investment)}
+              </span>
             </div>
             <Button variant="outline" size="sm" onClick={onReset} className="shrink-0">
               <RefreshCw className="mr-2 h-4 w-4" />
-              New idea
+              Nueva idea
             </Button>
           </div>
+
+          <BrandIdentityCard businessData={data} />
         </div>
 
         {/* Bento Grid Dashboard */}
@@ -424,7 +418,7 @@ export function StartupDashboard({ data, analysisOverride, onReset }: StartupDas
                   <Target className="h-4 w-4" />
                 </div>
                 <div className="h-0.5 w-4 bg-border" />
-                {analysis.roadmap.map((step, index) => (
+                {analysis.roadmap.map((_step, index) => (
                   <div key={index} className="flex shrink-0 items-center">
                     <div className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-primary bg-background text-xs font-bold text-primary">
                       {index + 1}

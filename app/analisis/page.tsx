@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { generateAnalysisFromApi, getFlowSession, isApiClientError } from "@/lib/flow-api"
 import type { StartupAnalysis } from "@/lib/mock-data"
-import { clearFlowStorage, getFlowId } from "@/lib/flow-storage"
+import { clearFlowStorage, getBusinessInput, getClaudeAnswers, getFlowId } from "@/lib/flow-storage"
 import type { BusinessInputData } from "@/components/hero-input"
 
 const analysisMessages = [
@@ -45,28 +45,38 @@ export default function AnalysisPage() {
       }
 
       try {
-        const session = await getFlowSession(flowId)
+        let input: BusinessInputData | null = null
+        let answers: import("@/lib/flow-storage").ClaudeAnswer[] = []
+
+        try {
+          const session = await getFlowSession(flowId)
+          if (!isMounted) return
+          input = session.businessInput
+          answers = session.claudeAnswers
+        } catch (sessionError) {
+          // Flow lost (server restart) — recover from localStorage
+          if (isApiClientError(sessionError) && sessionError.status === 404) {
+            input = getBusinessInput()
+            answers = getClaudeAnswers()
+          } else {
+            throw sessionError
+          }
+        }
+
         if (!isMounted) return
 
-        if (session.claudeAnswers.length === 0) {
+        if (!input || answers.length === 0) {
           router.replace("/preguntas-claude")
           return
         }
 
-        setBusinessData(session.businessInput)
+        setBusinessData(input)
 
-        const analysis = await generateAnalysisFromApi(session.businessInput, session.claudeAnswers)
+        const analysis = await generateAnalysisFromApi(input, answers)
         if (!isMounted) return
         setAnalysisData(analysis)
       } catch (error) {
         if (!isMounted) return
-
-        if (isApiClientError(error) && error.status === 404) {
-          setLoadError("La sesion de analisis no existe o expiro. Inicia una nueva idea.")
-          setRequestId(error.requestId ?? null)
-          setIsAnalyzing(false)
-          return
-        }
 
         if (isApiClientError(error)) {
           setLoadError(error.message)

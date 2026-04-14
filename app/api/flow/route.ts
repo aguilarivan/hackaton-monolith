@@ -90,31 +90,34 @@ export async function POST(request: Request) {
 
 export async function PATCH(request: Request) {
   try {
-    const body = (await parseJsonBody(request)) as { flowId?: unknown; claudeAnswers?: unknown }
+    const body = (await parseJsonBody(request)) as {
+      flowId?: unknown
+      claudeAnswers?: unknown
+      businessInput?: unknown
+    }
 
     if (typeof body.flowId !== "string") {
-      return apiError({
-        status: 400,
-        code: "BAD_REQUEST",
-        message: "flowId is required",
-      })
+      return apiError({ status: 400, code: "BAD_REQUEST", message: "flowId is required" })
     }
 
     if (!isClaudeAnswerArray(body.claudeAnswers)) {
-      return apiError({
-        status: 400,
-        code: "INVALID_PAYLOAD",
-        message: "Invalid claudeAnswers payload",
-      })
+      return apiError({ status: 400, code: "INVALID_PAYLOAD", message: "Invalid claudeAnswers payload" })
     }
 
-    const updated = updateFlowAnswers(body.flowId, body.claudeAnswers)
+    let updated = updateFlowAnswers(body.flowId, body.claudeAnswers)
+
+    // Flow lost (server restart / hot-reload) — recreate from businessInput if provided
+    if (!updated && isBusinessInputData(body.businessInput)) {
+      const restored = createFlow(body.businessInput)
+      updated = updateFlowAnswers(restored.id, body.claudeAnswers)
+      // Return with the new flowId so the client can update localStorage
+      if (updated) {
+        return apiSuccess({ flow: updated, newFlowId: restored.id })
+      }
+    }
+
     if (!updated) {
-      return apiError({
-        status: 404,
-        code: "NOT_FOUND",
-        message: "Flow not found",
-      })
+      return apiError({ status: 404, code: "NOT_FOUND", message: "Flow not found" })
     }
 
     return apiSuccess({ flow: updated })
