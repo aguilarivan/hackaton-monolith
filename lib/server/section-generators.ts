@@ -73,20 +73,20 @@ async function runToolLoop(
   system: string,
   userMessage: string,
   tool: Anthropic.Tool,
+  maxTokens = 1500,
 ): Promise<Anthropic.ToolUseBlock> {
   const messages: Anthropic.MessageParam[] = [{ role: "user", content: userMessage }]
 
   for (let turn = 0; turn < 5; turn++) {
     const response = await anthropic.messages.create({
       model: "claude-haiku-4-5",
-      max_tokens: 1500,
+      max_tokens: maxTokens,
       system: [{ type: "text", text: system, cache_control: { type: "ephemeral" } }],
       tools: [tool],
-      tool_choice: { type: "auto" },
+      // Force immediate tool call — avoids Haiku wasting tokens on preamble text
+      tool_choice: { type: "tool", name: tool.name },
       messages,
     })
-
-    console.log(`[${tool.name}] turn=${turn + 1} stop=${response.stop_reason}`)
 
     const block = response.content.find(
       (b): b is Anthropic.ToolUseBlock => b.type === "tool_use" && b.name === tool.name
@@ -416,7 +416,8 @@ export async function generateDetailsSection(
     const block = await runToolLoop(
       `Sos un analista de startups argentinos. Generá obstáculos, roadmap, plan de validación y estructura legal para la idea. Marcos legales: Monotributo, SAS (recomendada), SRL, SA. Citá startups reales que fallaron. Llamá a generate_details con los 4 campos: obstacles, validationPlan, roadmap y legalStructure.`,
       buildAnalysisUserMessage(input, answers),
-      DETAILS_TOOL
+      DETAILS_TOOL,
+      2500,
     )
     const parsed = DetailsOutputSchema.parse(deepParse(block.input))
 
@@ -642,7 +643,6 @@ export async function generateResearchSection(
       buildAnalysisUserMessage(input, answers),
       RESEARCH_TOOL
     )
-    console.log("[generate_research] raw block.input:", JSON.stringify(block.input, null, 2))
     const parsed = ResearchOutputSchema.parse(deepParse(block.input))
 
     const competitors: Competitor[] = parsed.competitors.competitors.map((c) => ({ ...c }))
