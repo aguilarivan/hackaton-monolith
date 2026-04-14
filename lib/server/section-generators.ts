@@ -613,19 +613,21 @@ const ResearchOutputSchema = z.object({
   ),
 })
 
-const RESEARCH_SYSTEM = `Sos un analista de startups argentinos con acceso a búsqueda web.
+function buildResearchSystem(city: string): string {
+  return `Sos un analista de startups con acceso a búsqueda web.
 
 TAREA: Encontrar competidores REALES para la idea y ciudad indicadas.
 
 PASOS OBLIGATORIOS:
-1. Buscá "[tipo de negocio] [ciudad] Argentina" — encontrá empresas/emprendimientos reales que operen en ese mercado
-2. Buscá "[tipo de negocio] Argentina Instagram" o "[tipo de negocio] Buenos Aires" — encontrá perfiles reales
+1. Buscá "[tipo de negocio] ${city}" — encontrá empresas/emprendimientos reales que operen en ese mercado
+2. Buscá "[tipo de negocio] ${city} Instagram" o "[tipo de negocio] ${city} sitio web" — encontrá perfiles reales
 3. Para cada competidor: anotá su nombre real, URL del sitio o Instagram, y zona donde opera
-4. Identificá 4 zonas geográficas reales de la ciudad con análisis de densidad competidora vs demanda
+4. Identificá 4 zonas geográficas reales de ${city} con análisis de densidad competidora vs demanda
 
 REGLA CRÍTICA: Solo incluí competidores que encontraste en la búsqueda. Si no encontrás suficientes reales, podés completar con competidores plausibles pero indicalo en la descripción.
 
 Después de buscar, llamá a generate_research con los datos.`
+}
 
 export async function generateResearchSection(
   input: BusinessInputData,
@@ -634,7 +636,7 @@ export async function generateResearchSection(
 ): Promise<ResearchSection> {
   try {
     const block = await runToolLoopWithSearch(
-      RESEARCH_SYSTEM,
+      buildResearchSystem(input.city || "la ciudad indicada"),
       buildAnalysisUserMessage(input, answers),
       RESEARCH_TOOL
     )
