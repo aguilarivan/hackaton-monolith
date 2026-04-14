@@ -51,6 +51,7 @@ export interface ViabilitySection {
   appName: string
   viability: ViabilityData
   clients: ClientData
+  _isMock?: boolean
 }
 
 export interface DetailsSection {
@@ -58,11 +59,13 @@ export interface DetailsSection {
   validationPlan: ValidationStep[]
   roadmap: RoadmapStep[]
   legalStructure: LegalStructure
+  _isMock?: boolean
 }
 
 export interface ResearchSection {
   competitors: CompetitorData
   startupKit: StartupKitData
+  _isMock?: boolean
 }
 
 // ── Shared tool loop ──────────────────────────────────────────────────────────
@@ -277,10 +280,11 @@ export async function generateViabilitySection(
       appName: parsed.appName,
       viability: { ...parsed.viability, growthData: mock.viability.growthData, sourceSignals: mock.viability.sourceSignals },
       clients: parsed.clients,
+      _isMock: false,
     }
   } catch (error) {
     console.error("[generate_viability] error:", (error as Error).message)
-    return { appName: mock.appName, viability: mock.viability, clients: mock.clients }
+    return { appName: mock.appName, viability: mock.viability, clients: mock.clients, _isMock: true }
   }
 }
 
@@ -429,10 +433,11 @@ export async function generateDetailsSection(
       legalStructure: parsed.legalStructure
         ? { ...parsed.legalStructure, bureaucracyLinks: mock.legalStructure.bureaucracyLinks }
         : mock.legalStructure,
+      _isMock: false,
     }
   } catch (error) {
     console.error("[generate_details] error:", (error as Error).message)
-    return { obstacles: mock.obstacles, validationPlan: mock.validationPlan, roadmap: mock.roadmap, legalStructure: mock.legalStructure }
+    return { obstacles: mock.obstacles, validationPlan: mock.validationPlan, roadmap: mock.roadmap, legalStructure: mock.legalStructure, _isMock: true }
   }
 }
 
@@ -649,6 +654,7 @@ export async function generateResearchSection(
       buildAnalysisUserMessage(input, answers),
       RESEARCH_TOOL
     )
+    console.log("[generate_research] raw block.input:", JSON.stringify(block.input, null, 2))
     const parsed = ResearchOutputSchema.parse(deepParse(block.input))
 
     const competitorsWithLocations: Competitor[] = parsed.competitors.competitors.map((c, i) => ({
@@ -679,9 +685,10 @@ export async function generateResearchSection(
           { category: "Reserve", percentage: reservePct, color: "var(--section-viability)" },
         ],
       },
+      _isMock: false,
     }
   } catch (error) {
     console.error("[generate_research] error:", (error as Error).message)
-    return { competitors: mock.competitors, startupKit: mock.startupKit }
+    return { competitors: mock.competitors, startupKit: mock.startupKit, _isMock: true }
   }
 }

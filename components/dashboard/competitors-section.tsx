@@ -8,6 +8,7 @@ import type { CompetitorData } from "@/lib/mock-data"
 interface CompetitorsSectionProps {
   data: CompetitorData
   city?: string
+  isMock?: boolean
 }
 
 function scoreColor(score: number) {
@@ -16,7 +17,7 @@ function scoreColor(score: number) {
   return { bg: "bg-destructive/10", border: "border-destructive/30", text: "text-destructive", bar: "#ef4444" }
 }
 
-export function CompetitorsSection({ data, city }: CompetitorsSectionProps) {
+export function CompetitorsSection({ data, city, isMock }: CompetitorsSectionProps) {
   const sorted = [...data.launchZones].sort((a, b) => b.launchScore - a.launchScore)
   const best = sorted[0]
 
@@ -38,7 +39,10 @@ export function CompetitorsSection({ data, city }: CompetitorsSectionProps) {
               <Users className="h-5 w-5 text-[oklch(0.55_0.18_270)]" />
             </div>
             <div>
-              <CardTitle className="text-xl">Competidores identificados</CardTitle>
+              <div className="flex items-center gap-2">
+                <CardTitle className="text-xl">Competidores identificados</CardTitle>
+                {isMock && <span className="rounded bg-yellow-400/20 px-1.5 py-0.5 text-xs font-bold text-yellow-600">MOCK</span>}
+              </div>
               <p className="text-sm text-muted-foreground">
                 {data.competitors.length} competidores{city ? ` en ${city}` : ""}
               </p>

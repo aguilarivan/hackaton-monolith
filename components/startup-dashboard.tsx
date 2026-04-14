@@ -136,7 +136,7 @@ export function StartupDashboard({ data, partial, isStreaming, onReset }: Startu
           <div className="animate-in fade-in slide-in-from-right-4 duration-300">
             {activeSection === "viability" && v && <ViabilitySection data={v.viability} />}
             {activeSection === "monetization" && v && <MonetizationSection data={v.viability} />}
-            {activeSection === "competitors" && r && <CompetitorsSection data={r.competitors} city={data.city} />}
+            {activeSection === "competitors" && r && <CompetitorsSection data={r.competitors} city={data.city} isMock={r._isMock} />}
             {activeSection === "clients" && v && <ClientsSection data={v.clients} city={data.city} />}
             {activeSection === "legal" && d && <LegalSection data={d.legalStructure} />}
             {activeSection === "kit" && r && <KitSection data={r.startupKit} investment={data.investment} />}
