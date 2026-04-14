@@ -1,10 +1,12 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { usePathname, useRouter } from "next/navigation"
+import { usePathname, useRouter } from "@/i18n/navigation"
 import { LogIn, LogOut, Moon, Rocket, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
+import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
+import { LanguageToggle } from "@/components/language-toggle"
 import { SpaceProgress } from "@/components/space-progress"
 import { clearFlowStorage, getBrandIdentity, getBusinessInput } from "@/lib/flow-storage"
 import type { SpaceProgressProps } from "@/components/space-progress"
@@ -25,6 +27,7 @@ export function Header() {
   const { theme, setTheme } = useTheme()
   const router = useRouter()
   const pathname = usePathname()
+  const t = useTranslations("common")
   const showReset = pathname !== "/" && pathname !== "/login"
 
   const [user, setUser] = useState<AuthUser | null>(null)
@@ -90,7 +93,7 @@ export function Header() {
         <div className="flex items-center gap-2">
           {showReset && (
             <Button variant="outline" size="sm" onClick={handleReset}>
-              Nueva idea
+              {t("newIdea")}
             </Button>
           )}
 
@@ -101,17 +104,19 @@ export function Header() {
               </span>
               <Button variant="ghost" size="sm" onClick={handleLogout} className="gap-2">
                 <LogOut className="h-4 w-4" />
-                <span className="hidden sm:inline">Salir</span>
+                <span className="hidden sm:inline">{t("logout")}</span>
               </Button>
             </>
           ) : (
             pathname !== "/login" && (
               <Button variant="ghost" size="sm" onClick={() => router.push("/login")} className="gap-2">
                 <LogIn className="h-4 w-4" />
-                <span className="hidden sm:inline">Ingresar</span>
+                <span className="hidden sm:inline">{t("login")}</span>
               </Button>
             )
           )}
+
+          <LanguageToggle />
 
           <Button
             variant="ghost"
@@ -121,7 +126,7 @@ export function Header() {
           >
             <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
             <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-            <span className="sr-only">Cambiar tema</span>
+            <span className="sr-only">{t("toggleTheme")}</span>
           </Button>
         </div>
       </div>

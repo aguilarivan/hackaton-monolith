@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useTranslations, useLocale } from "next-intl"
 import { Rocket, MapPin, DollarSign, Tag } from "lucide-react"
 
 export type BusinessType = "fisica" | "digital" | "ambos"
@@ -13,20 +14,14 @@ export interface BusinessInputData {
   businessType?: BusinessType
 }
 
-const BUSINESS_TYPES: { value: BusinessType; emoji: string; label: string; desc: string }[] = [
-  { value: "fisica",  emoji: "🏪", label: "Local físico",      desc: "Tienda, restaurante, taller..." },
-  { value: "digital", emoji: "💻", label: "Digital / Online",  desc: "App, e-commerce, servicio web..." },
-  { value: "ambos",   emoji: "🔄", label: "Físico y digital",  desc: "Presencia en ambos canales" },
-]
-
 interface HeroInputProps {
   onSubmit: (data: BusinessInputData) => void
 }
 
-function formatNumber(value: string): string {
+function formatNumber(value: string, locale: string): string {
   const num = value.replace(/\D/g, "")
   if (!num) return ""
-  return Number(num).toLocaleString("es-AR")
+  return Number(num).toLocaleString(locale === "es" ? "es-AR" : "en-US")
 }
 
 function parseNumber(value: string): number {
@@ -34,6 +29,15 @@ function parseNumber(value: string): number {
 }
 
 export function HeroInput({ onSubmit }: HeroInputProps) {
+  const t = useTranslations("heroInput")
+  const locale = useLocale()
+
+  const BUSINESS_TYPES = [
+    { value: "fisica" as const, emoji: "🏪", label: t("businessTypes.fisica"), desc: t("businessTypes.fisicaDesc") },
+    { value: "digital" as const, emoji: "💻", label: t("businessTypes.digital"), desc: t("businessTypes.digitalDesc") },
+    { value: "ambos" as const, emoji: "🔄", label: t("businessTypes.ambos"), desc: t("businessTypes.ambosDesc") },
+  ]
+
   const [idea, setIdea] = useState("")
   const [city, setCity] = useState("")
   const [investment, setInvestment] = useState("")
@@ -54,7 +58,7 @@ export function HeroInput({ onSubmit }: HeroInputProps) {
   }
 
   const handleInvestmentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatNumber(e.target.value)
+    const formatted = formatNumber(e.target.value, locale)
     setInvestment(formatted)
   }
 
@@ -75,7 +79,7 @@ export function HeroInput({ onSubmit }: HeroInputProps) {
             1
           </span>
           <span className="text-sm text-muted-foreground">
-            Paso 1 de 3 — Contanos tu idea
+            {t("stepIndicator")}
           </span>
         </div>
 
@@ -85,8 +89,8 @@ export function HeroInput({ onSubmit }: HeroInputProps) {
             {/* Brand Name Input */}
             <div className="space-y-2">
               <label htmlFor="brandName" className="text-sm font-medium text-foreground">
-                ¿Tenés un nombre para tu marca?{" "}
-                <span className="font-normal text-muted-foreground">(opcional)</span>
+                {t("brandNameLabel")}{" "}
+                <span className="font-normal text-muted-foreground">{t("optional")}</span>
               </label>
               <div className="relative">
                 <Tag className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -95,7 +99,7 @@ export function HeroInput({ onSubmit }: HeroInputProps) {
                   type="text"
                   value={brandName}
                   onChange={(e) => setBrandName(e.target.value)}
-                  placeholder="Ej: Empanadas La Abuela"
+                  placeholder={t("brandNamePlaceholder")}
                   className="dz-input w-full rounded-xl border border-input bg-background/50 py-3 pl-10 pr-4 text-base text-foreground placeholder:text-muted-foreground dark:bg-white/[0.02]"
                 />
               </div>
@@ -107,13 +111,13 @@ export function HeroInput({ onSubmit }: HeroInputProps) {
             {/* Idea Textarea */}
             <div className="space-y-2">
               <label htmlFor="idea" className="text-sm font-medium text-foreground">
-                Tu idea de negocio
+                {t("ideaLabel")}
               </label>
               <textarea
                 id="idea"
                 value={idea}
                 onChange={(e) => setIdea(e.target.value)}
-                placeholder="Ej: servicio de catering corporativo en Buenos Aires"
+                placeholder={t("ideaPlaceholder")}
                 className="dz-input min-h-[110px] w-full resize-none rounded-xl border border-input bg-background/50 p-4 text-base text-foreground placeholder:text-muted-foreground dark:bg-white/[0.02]"
               />
             </div>
@@ -123,7 +127,7 @@ export function HeroInput({ onSubmit }: HeroInputProps) {
               {/* City Input */}
               <div className="space-y-2">
                 <label htmlFor="city" className="text-sm font-medium text-foreground">
-                  Ciudad
+                  {t("cityLabel")}
                 </label>
                 <div className="relative">
                   <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -132,7 +136,7 @@ export function HeroInput({ onSubmit }: HeroInputProps) {
                     type="text"
                     value={city}
                     onChange={(e) => setCity(e.target.value)}
-                    placeholder="Ej: Buenos Aires"
+                    placeholder={t("cityPlaceholder")}
                     className="dz-input w-full rounded-xl border border-input bg-background/50 py-3 pl-10 pr-4 text-base text-foreground placeholder:text-muted-foreground dark:bg-white/[0.02]"
                   />
                 </div>
@@ -141,7 +145,7 @@ export function HeroInput({ onSubmit }: HeroInputProps) {
               {/* Investment Input */}
               <div className="space-y-2">
                 <label htmlFor="investment" className="text-sm font-medium text-foreground">
-                  Inversión inicial
+                  {t("investmentLabel")}
                 </label>
                 <div className="relative">
                   <DollarSign className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -150,11 +154,11 @@ export function HeroInput({ onSubmit }: HeroInputProps) {
                     type="text"
                     value={investment}
                     onChange={handleInvestmentChange}
-                    placeholder="Ej: 500.000"
+                    placeholder={t("investmentPlaceholder")}
                     className="dz-input w-full rounded-xl border border-input bg-background/50 py-3 pl-10 pr-4 text-base text-foreground placeholder:text-muted-foreground dark:bg-white/[0.02]"
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
-                    ARS
+                    {t("currencyLabel")}
                   </span>
                 </div>
               </div>
@@ -168,11 +172,11 @@ export function HeroInput({ onSubmit }: HeroInputProps) {
               disabled={!idea.trim()}
               className="dz-cta group inline-flex h-14 items-center justify-center gap-3 rounded-xl px-10 text-lg font-semibold text-white"
             >
-              Iniciar misión
+              {t("submitButton")}
               <Rocket className="h-5 w-5 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:-rotate-12" />
             </button>
             <p className="text-center text-sm text-muted-foreground">
-              La IA analiza mercado, competencia y arma tu plan de lanzamiento personalizado
+              {t("submitHint")}
             </p>
           </div>
         </form>

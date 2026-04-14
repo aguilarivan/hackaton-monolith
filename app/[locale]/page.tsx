@@ -1,7 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter } from "@/i18n/navigation"
+import { useTranslations } from "next-intl"
 import {
   AlertTriangle,
   TrendingUp,
@@ -18,36 +19,15 @@ import { Card, CardContent } from "@/components/ui/card"
 import { createFlowSession, isApiClientError } from "@/lib/flow-api"
 import { saveBusinessInput, saveFlowId } from "@/lib/flow-storage"
 
-const FEATURE_PILLS = [
-  { icon: TrendingUp, label: "Viabilidad de mercado" },
-  { icon: Users, label: "Competencia local" },
-  { icon: Scale, label: "Marco legal argentino" },
-  { icon: Map, label: "Plan de lanzamiento" },
-]
+const FEATURE_ICONS = [TrendingUp, Users, Scale, Map]
+const FEATURE_KEYS = ["marketViability", "localCompetition", "legalFramework", "launchPlan"] as const
 
-const TRUST_CARDS = [
-  {
-    icon: MapPin,
-    title: "Pensado para Argentina",
-    description:
-      "Análisis de mercado local, marco legal argentino (monotributo, SAS), competencia real en tu ciudad.",
-  },
-  {
-    icon: Sparkles,
-    title: "IA que entiende tu contexto",
-    description:
-      "No es un análisis genérico. Claude analiza tu idea, tus respuestas y tu ciudad para darte un plan personalizado.",
-  },
-  {
-    icon: Zap,
-    title: "De idea a acción en minutos",
-    description:
-      "Viabilidad, competencia, kit de arranque, roadmap y landing page. Todo en un solo lugar.",
-  },
-]
+const TRUST_ICONS = [MapPin, Sparkles, Zap]
+const TRUST_KEYS = ["argentina", "ai", "action"] as const
 
 export default function Home() {
   const router = useRouter()
+  const t = useTranslations("home")
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [requestId, setRequestId] = useState<string | null>(null)
 
@@ -65,7 +45,7 @@ export default function Home() {
         setSubmitError(error.message)
         setRequestId(error.requestId ?? null)
       } else {
-        setSubmitError("No se pudo iniciar el flujo en backend.")
+        setSubmitError(t("backendError"))
       }
     }
   }
@@ -91,7 +71,7 @@ export default function Home() {
               <CardContent className="space-y-2 p-4">
                 <p className="flex items-center gap-2 text-sm font-medium text-destructive">
                   <AlertTriangle className="h-4 w-4" />
-                  Error al iniciar tu sesión
+                  {t("sessionError")}
                 </p>
                 <p className="text-sm text-foreground/80">{submitError}</p>
                 {requestId && (
@@ -105,14 +85,13 @@ export default function Home() {
         {/* ─── Hero Hook ─── */}
         <section className="mx-auto max-w-4xl px-4 pt-16 text-center sm:pt-20">
           <h1 className="dz-enter-1 font-display text-balance text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
-            Lanzá el negocio{" "}
+            {t("heroTitle1")}{" "}
             <span className="bg-gradient-to-r from-primary via-[oklch(0.6_0.18_175)] to-[oklch(0.55_0.16_160)] bg-clip-text text-transparent">
-              que siempre soñaste
+              {t("heroTitle2")}
             </span>
           </h1>
           <p className="dz-enter-2 mx-auto mt-5 max-w-xl text-pretty text-base text-muted-foreground sm:text-lg">
-            Describí tu idea, tu ciudad y tu inversión inicial. La IA analiza
-            todo y genera un informe completo adaptado a tu contexto.
+            {t("heroDescription")}
           </p>
         </section>
 
@@ -122,20 +101,23 @@ export default function Home() {
         {/* ─── What you get ─── */}
         <section className="dz-enter-5 mx-auto max-w-4xl px-4 pt-4 pb-12 text-center">
           <h3 className="font-display text-lg font-semibold tracking-tight sm:text-xl">
-            ¿Qué vas a recibir?
+            {t("whatYouGet")}
           </h3>
 
           {/* Feature pills */}
           <div className="mx-auto mt-4 flex flex-wrap justify-center gap-2">
-            {FEATURE_PILLS.map(({ icon: Icon, label }) => (
-              <span
-                key={label}
-                className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-secondary/60 px-3 py-1.5 text-xs font-medium text-secondary-foreground backdrop-blur-sm dark:border-primary/10 dark:bg-white/[0.04]"
-              >
-                <Icon className="h-3.5 w-3.5 text-primary" />
-                {label}
-              </span>
-            ))}
+            {FEATURE_KEYS.map((key, i) => {
+              const Icon = FEATURE_ICONS[i]
+              return (
+                <span
+                  key={key}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-secondary/60 px-3 py-1.5 text-xs font-medium text-secondary-foreground backdrop-blur-sm dark:border-primary/10 dark:bg-white/[0.04]"
+                >
+                  <Icon className="h-3.5 w-3.5 text-primary" />
+                  {t(`featurePills.${key}`)}
+                </span>
+              )
+            })}
           </div>
 
           {/* Dashboard Preview */}
@@ -153,28 +135,28 @@ export default function Home() {
               {/* Mini bento grid */}
               <div className="grid grid-cols-4 gap-1.5 text-left">
                 <div className="col-span-2 row-span-2 rounded-lg bg-primary/10 p-2.5">
-                  <div className="text-[10px] text-muted-foreground">Viabilidad</div>
+                  <div className="text-[10px] text-muted-foreground">{t("preview.viability")}</div>
                   <div className="mt-1 text-xl font-bold text-primary">72%</div>
                   <div className="mt-1.5 h-1 w-full rounded-full bg-primary/20">
                     <div className="h-full w-[72%] rounded-full bg-primary" />
                   </div>
                 </div>
                 <div className="col-span-2 rounded-lg bg-[oklch(0.55_0.18_270_/_0.08)] p-2 dark:bg-[oklch(0.6_0.18_270_/_0.08)]">
-                  <div className="text-[9px] text-muted-foreground">Competencia</div>
-                  <div className="mt-0.5 text-xs font-semibold">4 rivales</div>
+                  <div className="text-[9px] text-muted-foreground">{t("preview.competition")}</div>
+                  <div className="mt-0.5 text-xs font-semibold">{t("preview.rivals")}</div>
                 </div>
                 <div className="col-span-2 rounded-lg bg-[oklch(0.6_0.12_160_/_0.08)] p-2 dark:bg-[oklch(0.65_0.12_160_/_0.08)]">
-                  <div className="text-[9px] text-muted-foreground">Clientes</div>
-                  <div className="mt-0.5 text-xs font-semibold">3 segmentos</div>
+                  <div className="text-[9px] text-muted-foreground">{t("preview.clients")}</div>
+                  <div className="mt-0.5 text-xs font-semibold">{t("preview.segments")}</div>
                 </div>
                 <div className="col-span-1 rounded-lg bg-[oklch(0.6_0.15_80_/_0.08)] p-1.5 dark:bg-[oklch(0.7_0.15_80_/_0.08)]">
-                  <div className="text-[8px] text-muted-foreground">Legal</div>
+                  <div className="text-[8px] text-muted-foreground">{t("preview.legal")}</div>
                 </div>
                 <div className="col-span-1 rounded-lg bg-primary/5 p-1.5">
-                  <div className="text-[8px] text-muted-foreground">Kit</div>
+                  <div className="text-[8px] text-muted-foreground">{t("preview.kit")}</div>
                 </div>
                 <div className="col-span-2 rounded-lg bg-[oklch(0.55_0.18_30_/_0.08)] p-1.5 dark:bg-[oklch(0.6_0.18_30_/_0.08)]">
-                  <div className="text-[8px] text-muted-foreground">Roadmap</div>
+                  <div className="text-[8px] text-muted-foreground">{t("preview.roadmap")}</div>
                   <div className="mt-0.5 flex gap-0.5">
                     <div className="h-0.5 flex-1 rounded-full bg-foreground/20" />
                     <div className="h-0.5 flex-1 rounded-full bg-foreground/10" />
@@ -186,7 +168,7 @@ export default function Home() {
               <div className="pointer-events-none absolute inset-x-0 bottom-0 h-10 rounded-b-2xl bg-gradient-to-t from-card to-transparent dark:from-[oklch(0.12_0.02_220)]" />
             </div>
             <p className="mt-3 text-xs text-muted-foreground">
-              Así se ve tu análisis completo
+              {t("previewCaption")}
             </p>
           </div>
         </section>
@@ -194,26 +176,29 @@ export default function Home() {
         {/* ─── Trust Section ─── */}
         <section className="dz-enter-5 mx-auto max-w-4xl px-4 pb-16 pt-8">
           <h3 className="text-center font-display text-2xl font-bold tracking-tight sm:text-3xl">
-            ¿Por qué DayZero?
+            {t("whyDayZero")}
           </h3>
           <div className="mt-8 grid gap-6 sm:grid-cols-3">
-            {TRUST_CARDS.map(({ icon: Icon, title, description }) => (
-              <div
-                key={title}
-                className="rounded-2xl border border-border/50 bg-card/70 p-6 backdrop-blur-sm transition-shadow hover:shadow-lg dark:border-primary/[0.06] dark:bg-white/[0.03] dark:hover:shadow-primary/[0.05]"
-              >
-                <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
-                  <Icon className="h-5 w-5 text-primary" />
+            {TRUST_KEYS.map((key, i) => {
+              const Icon = TRUST_ICONS[i]
+              return (
+                <div
+                  key={key}
+                  className="rounded-2xl border border-border/50 bg-card/70 p-6 backdrop-blur-sm transition-shadow hover:shadow-lg dark:border-primary/[0.06] dark:bg-white/[0.03] dark:hover:shadow-primary/[0.05]"
+                >
+                  <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+                    <Icon className="h-5 w-5 text-primary" />
+                  </div>
+                  <h4 className="font-display text-base font-semibold">{t(`trustCards.${key}Title`)}</h4>
+                  <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+                    {t(`trustCards.${key}Desc`)}
+                  </p>
                 </div>
-                <h4 className="font-display text-base font-semibold">{title}</h4>
-                <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
-                  {description}
-                </p>
-              </div>
-            ))}
+              )
+            })}
           </div>
           <p className="mt-10 text-center text-sm text-muted-foreground">
-            Creado en el hackathon Kaszek × Anthropic 2026 — Buenos Aires
+            {t("hackathonBadge")}
           </p>
         </section>
 
@@ -221,10 +206,10 @@ export default function Home() {
         <footer className="border-t border-border/40 bg-background/50 backdrop-blur-sm">
           <div className="mx-auto max-w-4xl px-4 py-8 text-center">
             <p className="font-display text-sm font-semibold tracking-tight">
-              DayZero — Tu copiloto de lanzamiento
+              {t("footerTagline")}
             </p>
             <p className="mt-1 text-xs text-muted-foreground/60">
-              Hackathon Kaszek × Anthropic 2026
+              {t("footerSubtext")}
             </p>
           </div>
         </footer>
