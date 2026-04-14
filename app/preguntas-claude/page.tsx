@@ -175,15 +175,12 @@ export default function ClaudeQuestionsPage() {
           <Card className="w-full border-border/60">
             <CardContent className="space-y-5 p-8 text-center">
               <div className="mx-auto text-5xl">🚀</div>
-              <div className="space-y-1.5">
-                <p className="text-lg font-semibold text-foreground">
-                  Calibrando tu misión
-                </p>
-                <p className="text-sm text-muted-foreground">{loadingMessages[messageIndex]}...</p>
-              </div>
+              <p className="text-lg font-semibold text-foreground">
+                Preparando tus preguntas...
+              </p>
               <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Esto solo tarda unos segundos
+                {loadingMessages[messageIndex]}
               </div>
             </CardContent>
           </Card>
@@ -230,42 +227,32 @@ export default function ClaudeQuestionsPage() {
       <Header />
       <div className="mx-auto w-full max-w-4xl space-y-6 px-4 py-8">
 
-        {/* Warm intro */}
-        <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-violet-500/5">
-          <CardContent className="p-6">
-            <div className="flex gap-4">
-              <div className="shrink-0 text-4xl">🌎</div>
-              <div className="space-y-2">
-                <h2 className="text-lg font-bold text-foreground">
-                  ¡Excelente! Misión iniciada 🚀
-                </h2>
-                <p className="text-sm leading-relaxed text-muted-foreground">
-                  Recibimos tu idea y estamos calibrando los datos de lanzamiento. Ahora vamos a hacerte <strong className="text-foreground">unas preguntas cortas y simples</strong> para entender mejor tu proyecto.
-                  No te preocupes, no hay respuestas correctas ni incorrectas: solo queremos capturar tu visión tal como la imaginás.
-                </p>
-                <p className="text-sm leading-relaxed text-muted-foreground">
-                  Con lo que nos contés, vamos a ayudarte a avanzar con <strong className="text-foreground">todo lo que necesitás</strong> para llevar tu negocio adelante:
-                  desde la validación de la idea hasta el plan de acción concreto.
-                </p>
-                <p className="text-sm leading-relaxed text-muted-foreground">
-                  A lo largo de todo el proceso vas a contar con un <strong className="text-foreground">agente personal</strong> que te va a acompañar, responder tus dudas y orientarte en cada paso. 🤝
-                </p>
-                {totalPages > 1 && (
-                  <p className="text-sm text-muted-foreground">
-                    Página {currentPage + 1} de {totalPages} ({questions.length} preguntas en total)
-                  </p>
-                )}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Questions */}
-        {pageQuestions.map((question) => {
+        {pageQuestions.map((question, idx) => {
           const globalIndex = questions.indexOf(question)
           const selected = answers[question.id]
           return (
             <Card key={question.id} className="border-border/70 transition-shadow hover:shadow-md">
+              {currentPage === 0 && idx === 0 && (
+                <div className="flex items-center gap-2 border-b border-border/50 px-6 py-3">
+                  <Sparkles className="h-4 w-4 shrink-0 text-primary" />
+                  <p className="text-sm text-muted-foreground">
+                    Respondé las siguientes preguntas para que pueda comprender mejor tu idea.
+                    {totalPages > 1 && (
+                      <span className="ml-1 text-muted-foreground/70">
+                        — Página {currentPage + 1} de {totalPages}
+                      </span>
+                    )}
+                  </p>
+                </div>
+              )}
+              {currentPage > 0 && idx === 0 && totalPages > 1 && (
+                <div className="border-b border-border/50 px-6 py-3">
+                  <p className="text-sm text-muted-foreground">
+                    Página {currentPage + 1} de {totalPages}
+                  </p>
+                </div>
+              )}
               <CardHeader className="pb-3">
                 <div className="flex items-start gap-3">
                   <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
@@ -355,10 +342,6 @@ export default function ClaudeQuestionsPage() {
           </Card>
         )}
 
-        <p className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Sparkles className="h-4 w-4 shrink-0" />
-          Podés elegir &quot;Quiero ampliar este punto&quot; para darle más contexto a la IA en cualquier pregunta.
-        </p>
       </div>
     </main>
   )
