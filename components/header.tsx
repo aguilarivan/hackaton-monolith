@@ -63,24 +63,31 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-xl">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <button
           onClick={handleReset}
           className="flex items-center gap-2 transition-opacity hover:opacity-80"
         >
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-            <Rocket className="h-5 w-5 text-primary-foreground" />
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+            <Rocket className="h-4 w-4 text-primary-foreground" />
           </div>
-          <span className="text-lg font-semibold tracking-tight">DayZero</span>
+          <span className="text-base font-semibold tracking-tight">DayZero</span>
           {showBrandName && (
             <>
-              <span className="text-muted-foreground/40 text-lg font-light">/</span>
-              <span className="text-base font-medium text-primary">{brandName}</span>
+              <span className="text-muted-foreground/40 text-base font-light">/</span>
+              <span className="text-sm font-medium text-primary">{brandName}</span>
             </>
           )}
         </button>
 
-        <div className="flex items-center gap-3">
+        {showProgress && (
+          <SpaceProgress
+            currentStep={currentStep as SpaceProgressProps["currentStep"]}
+            brandName={brandName ?? undefined}
+          />
+        )}
+
+        <div className="flex items-center gap-2">
           {showReset && (
             <Button variant="outline" size="sm" onClick={handleReset}>
               Nueva idea
@@ -110,7 +117,7 @@ export function Header() {
             variant="ghost"
             size="icon"
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            className="h-9 w-9"
+            className="h-8 w-8"
           >
             <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
             <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
@@ -118,17 +125,6 @@ export function Header() {
           </Button>
         </div>
       </div>
-
-      {showProgress && (
-        <div className="border-t border-white/5 px-4 py-3 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-7xl">
-            <SpaceProgress
-              currentStep={currentStep as SpaceProgressProps["currentStep"]}
-              brandName={brandName ?? undefined}
-            />
-          </div>
-        </div>
-      )}
     </header>
   )
 }
