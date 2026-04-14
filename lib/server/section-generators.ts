@@ -461,21 +461,16 @@ async function runToolLoopWithSearch(
   const messages: Anthropic.MessageParam[] = [{ role: "user", content: userMessage }]
 
   for (let turn = 0; turn < 12; turn++) {
-    // Force the very first turn to be a web_search so Claude can't skip it
-    const toolChoice = turn === 0
-      ? { type: "tool" as const, name: "web_search" }
-      : { type: "auto" as const }
-
     const response = await anthropic.messages.create({
       model: "claude-sonnet-4-6",
       max_tokens: 8192,
       system: [{ type: "text", text: system, cache_control: { type: "ephemeral" } }],
       tools: [WEB_SEARCH_TOOL as unknown as Anthropic.Tool, tool],
-      tool_choice: toolChoice,
+      tool_choice: { type: "auto" },
       messages,
     })
 
-    console.log(`[${tool.name}+search] turn=${turn + 1} stop=${response.stop_reason} blocks=${response.content.length}`)
+    console.log(`[${tool.name}+search] turn=${turn + 1} stop=${response.stop_reason} blocks=${JSON.stringify(response.content.map(b => b.type === "tool_use" ? `tool_use:${b.name}` : b.type))}`)
 
     // Target tool was called → done
     const targetBlock = response.content.find(
@@ -636,19 +631,29 @@ function buildResearchSystem(city: string): string {
 REGLAS ABSOLUTAS:
 - PROHIBIDO inventar nombres de empresas. Solo usá lo que encontrás en las búsquedas.
 - PROHIBIDO usar tu conocimiento de entrenamiento para nombres de empresas. Solo datos de búsqueda.
-- Si una búsqueda no devuelve competidores reales, hacé otra búsqueda diferente.
-- Si después de 3 búsquedas no encontrás competidores, incluí los que encontraste (aunque sean pocos) y dejá el array con lo real.
+- Si una búsqueda no devuelve resultados, cambiá los términos y volvé a buscar.
+- Es mejor devolver 2 competidores reales que 4 inventados.
+
+CÓMO DETERMINAR EL ALCANCE DE LA BÚSQUEDA:
+Primero analizá si el negocio es DIGITAL o FÍSICO:
+
+- DIGITAL (app, plataforma, SaaS, marketplace, servicio online): la competencia NO es local.
+  → Buscá en Argentina primero, luego expandí a latinoamérica y global si hay pocas opciones.
+  → Queries: "[idea] app Argentina", "[idea] plataforma", "[idea] app site:play.google.com", "[idea] startup"
+
+- FÍSICO (local, tienda, restaurante, servicio presencial): la competencia es local o regional.
+  → Buscá en ${city} y alrededores.
+  → Queries: "[idea] ${city}", "[idea] ${city} Instagram", "[idea] provincia"
+
+- HÍBRIDO (ej: delivery, consultoría, e-commerce): buscá ambos niveles.
 
 PROCESO:
-1. Primera búsqueda (ya ejecutada): buscaste la idea en ${city}
-2. Analizá los resultados: ¿encontraste empresas reales? ¿tienen sitio web o Instagram?
-3. Si necesitás más datos: buscá el nombre de cada empresa encontrada para obtener su URL y zona
-4. Para las zonas de lanzamiento: buscá actividad del sector en diferentes barrios de ${city}
-5. Registrá el sourceQuery exacto que usaste para encontrar cada competidor
+1. Primera búsqueda ya ejecutada — analizá si el negocio es digital, físico o híbrido
+2. Hacé 2-3 búsquedas con el alcance correcto según el tipo
+3. Para cada competidor encontrado: anotá su URL real y la query que lo encontró (sourceQuery)
+4. Para las zonas de lanzamiento: si es digital usá zonas donde hay más usuarios potenciales en ${city}; si es físico usá barrios reales
 
-IMPORTANTE: Es mejor devolver 2 competidores reales que 4 inventados.
-
-Llamá a generate_research con lo que encontraste.`
+Registrá sourceQuery exacto por cada competidor. Llamá a generate_research con lo que encontraste.`
 }
 
 export async function generateResearchSection(
@@ -693,7 +698,7 @@ export async function generateResearchSection(
       _isMock: false,
     }
   } catch (error) {
-    console.error("[generate_research] error:", (error as Error).message)
+    console.error("[generate_research] error:", error)
     // No mock fallback — return empty competitors so the UI shows "no encontrado"
     return {
       competitors: { competitors: [], mapCenter: mock.competitors.mapCenter, launchZones: [] },
