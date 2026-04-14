@@ -456,12 +456,17 @@ async function runToolLoopWithSearch(
   const messages: Anthropic.MessageParam[] = [{ role: "user", content: userMessage }]
 
   for (let turn = 0; turn < 12; turn++) {
+    // Force the very first turn to be a web_search so Claude can't skip it
+    const toolChoice = turn === 0
+      ? { type: "tool" as const, name: "web_search" }
+      : { type: "auto" as const }
+
     const response = await anthropic.messages.create({
       model: "claude-sonnet-4-6",
       max_tokens: 8192,
       system: [{ type: "text", text: system, cache_control: { type: "ephemeral" } }],
       tools: [WEB_SEARCH_TOOL as unknown as Anthropic.Tool, tool],
-      tool_choice: { type: "auto" },
+      tool_choice: toolChoice,
       messages,
     })
 
