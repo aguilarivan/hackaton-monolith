@@ -34,25 +34,33 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-background">
-      <Header />
-      {submitError && (
-        <div className="mx-auto w-full max-w-3xl px-4 pt-6">
-          <Card className="border-destructive/30 bg-destructive/5">
-            <CardContent className="space-y-2 p-4">
-              <p className="flex items-center gap-2 text-sm font-medium text-destructive">
-                <AlertTriangle className="h-4 w-4" />
-                Error al iniciar tu sesión
-              </p>
-              <p className="text-sm text-foreground/80">{submitError}</p>
-              {requestId && (
-                <p className="text-xs text-muted-foreground">Request ID: {requestId}</p>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      )}
-      <HeroInput onSubmit={handleSubmit} />
+    <main className="dz-hero-bg relative min-h-screen overflow-hidden">
+      {/* Atmospheric background — stars + noise (dark mode only) */}
+      <div className="pointer-events-none absolute inset-0 opacity-0 dark:opacity-100">
+        <div className="dz-stars absolute inset-0" />
+        <div className="dz-noise absolute inset-0" />
+      </div>
+
+      <div className="relative z-10">
+        <Header />
+        {submitError && (
+          <div className="mx-auto w-full max-w-3xl px-4 pt-6">
+            <Card className="border-destructive/30 bg-destructive/5">
+              <CardContent className="space-y-2 p-4">
+                <p className="flex items-center gap-2 text-sm font-medium text-destructive">
+                  <AlertTriangle className="h-4 w-4" />
+                  Error al iniciar tu sesión
+                </p>
+                <p className="text-sm text-foreground/80">{submitError}</p>
+                {requestId && (
+                  <p className="text-xs text-muted-foreground">Request ID: {requestId}</p>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        )}
+        <HeroInput onSubmit={handleSubmit} />
+      </div>
     </main>
   )
 }
