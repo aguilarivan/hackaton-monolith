@@ -1,6 +1,7 @@
 import type { StartupAnalysis } from "@/lib/mock-data"
 import type { BusinessInputData } from "@/components/hero-input"
 import type { ClaudeAnswer } from "@/lib/flow-storage"
+import type { ViabilitySection, DetailsSection, ResearchSection } from "@/lib/server/section-generators"
 
 type ApiErrorCode = "BAD_REQUEST" | "NOT_FOUND" | "INVALID_PAYLOAD" | "INTERNAL_ERROR"
 
@@ -135,16 +136,58 @@ export async function getFlowSession(flowId: string): Promise<FlowPayload> {
   return data.flow
 }
 
-export async function generateAnalysisFromApi(
+// ── Streaming analysis ────────────────────────────────────────────────────────
+
+export type AnalysisStreamEvent =
+  | { type: "viability"; data: ViabilitySection }
+  | { type: "details"; data: DetailsSection }
+  | { type: "research"; data: ResearchSection }
+  | { type: "complete" }
+  | { type: "error"; message: string }
+
+export async function* streamAnalysis(
   businessInput: BusinessInputData,
   claudeAnswers: ClaudeAnswer[]
-): Promise<StartupAnalysis> {
-  const data = await requestJson<{ analysis: StartupAnalysis }>("/api/analysis", {
+): AsyncGenerator<AnalysisStreamEvent> {
+  const response = await fetch("/api/analysis", {
     method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ businessInput, claudeAnswers }),
   })
 
-  return data.analysis
+  if (!response.ok || !response.body) {
+    throw new ApiClientError({
+      message: `Analysis stream failed (${response.status})`,
+      status: response.status,
+      code: "INTERNAL_ERROR",
+    })
+  }
+
+  const reader = response.body.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ""
+
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+
+    buffer += decoder.decode(value, { stream: true })
+    const lines = buffer.split("\n")
+    buffer = lines.pop() ?? ""
+
+    for (const line of lines) {
+      if (line.startsWith("data: ")) {
+        const json = line.slice(6).trim()
+        if (json) {
+          try {
+            yield JSON.parse(json) as AnalysisStreamEvent
+          } catch {
+            // malformed event, skip
+          }
+        }
+      }
+    }
+  }
 }
 
 export async function getClarificationQuestionsFromApi(

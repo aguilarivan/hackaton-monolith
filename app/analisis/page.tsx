@@ -1,43 +1,31 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { AlertTriangle, ArrowLeft, Bot, Loader2 } from "lucide-react"
 import { Header } from "@/components/header"
 import { StartupDashboard } from "@/components/startup-dashboard"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { generateAnalysisFromApi, getFlowSession, isApiClientError } from "@/lib/flow-api"
-import type { StartupAnalysis } from "@/lib/mock-data"
+import { streamAnalysis, isApiClientError, getFlowSession } from "@/lib/flow-api"
+import type { ViabilitySection, DetailsSection, ResearchSection } from "@/lib/server/section-generators"
 import { clearFlowStorage, getBusinessInput, getClaudeAnswers, getFlowId } from "@/lib/flow-storage"
 import type { BusinessInputData } from "@/components/hero-input"
 import { StepIndicator } from "@/components/step-indicator"
 
-const analysisMessages = [
-  "Claude esta evaluando mercado y competencia",
-  "Claude esta ajustando monetizacion con tus respuestas",
-  "Claude esta priorizando riesgos y roadmap",
-  "Claude esta preparando la recomendacion final",
-]
+export interface PartialAnalysis {
+  viability?: ViabilitySection
+  details?: DetailsSection
+  research?: ResearchSection
+}
 
 export default function AnalysisPage() {
   const router = useRouter()
   const [businessData, setBusinessData] = useState<BusinessInputData | null>(null)
-  const [analysisData, setAnalysisData] = useState<StartupAnalysis | null>(null)
-  const [isAnalyzing, setIsAnalyzing] = useState(true)
-  const [messageIndex, setMessageIndex] = useState(0)
+  const [partial, setPartial] = useState<PartialAnalysis>({})
+  const [isStreaming, setIsStreaming] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [requestId, setRequestId] = useState<string | null>(null)
-
-  const dataReadyRef = useRef(false)
-  const animationDoneRef = useRef(false)
-  const [, forceUpdate] = useState(0)
-
-  const tryReveal = () => {
-    if (dataReadyRef.current && animationDoneRef.current) {
-      forceUpdate((n) => n + 1) // trigger re-render to pick up refs
-    }
-  }
 
   useEffect(() => {
     let isMounted = true
@@ -45,13 +33,14 @@ export default function AnalysisPage() {
     const loadData = async () => {
       setLoadError(null)
       setRequestId(null)
-      setIsAnalyzing(true)
+      setIsStreaming(true)
+      setPartial({})
 
       const flowId = getFlowId()
       if (!flowId) {
         if (!isMounted) return
         setLoadError("No hay una sesion activa para generar el analisis.")
-        setIsAnalyzing(false)
+        setIsStreaming(false)
         return
       }
 
@@ -83,21 +72,40 @@ export default function AnalysisPage() {
 
         setBusinessData(input)
 
-        const analysis = await generateAnalysisFromApi(input, answers)
-        if (!isMounted) return
-        setAnalysisData(analysis)
-        dataReadyRef.current = true
-        tryReveal()
+        const stream = streamAnalysis(input, answers)
+
+        for await (const event of stream) {
+          if (!isMounted) break
+
+          if (event.type === "viability") {
+            setPartial((prev) => ({ ...prev, viability: event.data }))
+          } else if (event.type === "details") {
+            setPartial((prev) => ({ ...prev, details: event.data }))
+          } else if (event.type === "research") {
+            setPartial((prev) => ({ ...prev, research: event.data }))
+          } else if (event.type === "error") {
+            setLoadError(event.message)
+            setIsStreaming(false)
+            return
+          } else if (event.type === "complete") {
+            setIsStreaming(false)
+          }
+        }
+
+        if (isMounted) setIsStreaming(false)
       } catch (error) {
         if (!isMounted) return
 
-        if (isApiClientError(error)) {
+        if (isApiClientError(error) && error.status === 404) {
+          setLoadError("La sesion de analisis no existe o expiro. Inicia una nueva idea.")
+          setRequestId(error.requestId ?? null)
+        } else if (isApiClientError(error)) {
           setLoadError(error.message)
           setRequestId(error.requestId ?? null)
         } else {
           setLoadError("No se pudo generar el analisis desde backend.")
         }
-        setIsAnalyzing(false)
+        setIsStreaming(false)
       }
     }
 
@@ -107,29 +115,6 @@ export default function AnalysisPage() {
       isMounted = false
     }
   }, [router])
-
-  // Message cycling starts immediately on mount — decoupled from data arrival
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setMessageIndex((prev) => {
-        if (prev >= analysisMessages.length - 1) {
-          clearInterval(interval)
-          return prev
-        }
-        return prev + 1
-      })
-    }, 1800)
-
-    const animationEnd = setTimeout(() => {
-      animationDoneRef.current = true
-      tryReveal()
-    }, analysisMessages.length * 1800)
-
-    return () => {
-      clearInterval(interval)
-      clearTimeout(animationEnd)
-    }
-  }, [])
 
   const handleReset = () => {
     clearFlowStorage()
@@ -168,13 +153,7 @@ export default function AnalysisPage() {
     )
   }
 
-  if (!businessData) {
-    return null
-  }
-
-  const showDashboard = dataReadyRef.current && animationDoneRef.current
-
-  if (!showDashboard) {
+  if (!businessData || !partial.viability) {
     return (
       <main className="min-h-screen bg-background">
         <Header />
@@ -186,8 +165,12 @@ export default function AnalysisPage() {
                 <Bot className="h-7 w-7 text-primary" />
               </div>
               <div className="space-y-2">
-                <p className="text-lg font-semibold text-foreground">Claude esta construyendo tu analisis final</p>
-                <p className="text-sm text-muted-foreground">{analysisMessages[messageIndex]}...</p>
+                <p className="text-lg font-semibold text-foreground">
+                  Claude esta construyendo tu analisis
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Evaluando viabilidad, modelo de negocio y estructura legal...
+                </p>
               </div>
               <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -204,7 +187,12 @@ export default function AnalysisPage() {
     <main className="min-h-screen bg-background">
       <Header />
       <StepIndicator currentStep={3} />
-      <StartupDashboard data={businessData} analysisOverride={analysisData ?? undefined} onReset={handleReset} />
+      <StartupDashboard
+        data={businessData}
+        partial={partial}
+        isStreaming={isStreaming}
+        onReset={handleReset}
+      />
     </main>
   )
 }
