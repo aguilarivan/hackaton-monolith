@@ -1,7 +1,6 @@
 "use client"
 
-import { ExternalLink, MapPin, Search, ThumbsDown, ThumbsUp, TrendingUp, Users } from "lucide-react"
-import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
+import { ExternalLink, MapPin, Search, ThumbsDown, ThumbsUp, Users } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { CompetitorData } from "@/lib/mock-data"
 
@@ -18,28 +17,14 @@ export function CompetitorsSection({ data, city, isMock }: CompetitorsSectionPro
       <Card>
         <CardContent className="p-8 text-center">
           <Search className="mx-auto h-10 w-10 text-muted-foreground/40" />
-          <p className="mt-3 font-medium text-foreground">No se encontraron competidores</p>
+          <p className="mt-3 font-medium text-foreground">No encontramos resultados en esta búsqueda</p>
           <p className="mt-1 text-sm text-muted-foreground">
-            La búsqueda web no devolvió resultados para este rubro{city ? ` en ${city}` : ""}.
+            Las búsquedas web no arrojaron competidores claros para este rubro{city ? ` en ${city}` : ""}. Puede que existan pero no los encontramos.
           </p>
         </CardContent>
       </Card>
     )
   }
-
-  const shareData = data.competitors.map((c) => {
-    // Extract a percentage: look for "XX%" pattern first, otherwise take first number
-    const pctMatch = c.marketShare.match(/(\d+(?:\.\d+)?)\s*%/)
-    const raw = pctMatch
-      ? parseFloat(pctMatch[1])
-      : parseFloat(c.marketShare.replace(/[^0-9.]/g, "")) || 0
-    return {
-      name: c.name.length > 14 ? c.name.slice(0, 14) + "…" : c.name,
-      fullName: c.name,
-      share: Math.min(100, Math.max(0, raw)),
-      cityArea: c.cityArea,
-    }
-  })
 
   return (
     <div className="space-y-6">
@@ -133,44 +118,6 @@ export function CompetitorsSection({ data, city, isMock }: CompetitorsSectionPro
           ))}
         </CardContent>
       </Card>
-
-      {/* Market share bar chart */}
-      {shareData.some((d) => d.share > 0) && (
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[oklch(0.55_0.18_270_/_0.1)]">
-                <TrendingUp className="h-5 w-5 text-[oklch(0.55_0.18_270)]" />
-              </div>
-              <div>
-                <CardTitle className="text-xl">Participación de mercado estimada</CardTitle>
-                <p className="text-sm text-muted-foreground">Distribución relativa entre competidores</p>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="h-52">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={shareData} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                  <XAxis dataKey="name" tick={{ fontSize: 12, fill: "var(--muted-foreground)" }} />
-                  <YAxis tick={{ fontSize: 12, fill: "var(--muted-foreground)" }} unit="%" />
-                  <Tooltip
-                    contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8 }}
-                    formatter={(value: number) => [`${value}%`, "Cuota de mercado"]}
-                    labelFormatter={(_, payload) => payload?.[0]?.payload?.fullName ?? ""}
-                  />
-                  <Bar dataKey="share" radius={[4, 4, 0, 0]}>
-                    {shareData.map((_, i) => (
-                      <Cell key={i} fill={`oklch(0.55 0.18 ${270 + i * 30})`} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
     </div>
   )

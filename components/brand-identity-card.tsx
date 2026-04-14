@@ -80,6 +80,9 @@ export function BrandLogo({ config, size = "md" }: LogoProps) {
 // ── Main component ──────────────────────────────────────────────────────────
 interface BrandIdentityCardProps {
   businessData: BusinessInputData
+  businessLabel?: string
+  description?: string
+  className?: string
 }
 
 function getInitials(name: string): string {
@@ -91,7 +94,7 @@ function getInitials(name: string): string {
     .toUpperCase() || "??"
 }
 
-export function BrandIdentityCard({ businessData }: BrandIdentityCardProps) {
+export function BrandIdentityCard({ businessData, businessLabel, description, className }: BrandIdentityCardProps) {
   const fileRef = useRef<HTMLInputElement>(null)
 
   // ── State ──────────────────────────────────────────────────────────────
@@ -176,11 +179,16 @@ export function BrandIdentityCard({ businessData }: BrandIdentityCardProps) {
     setLogo((prev) => ({ ...prev, type: "builder", imageDataUrl: undefined }))
   }
 
-  const isDirty = name !== savedName
+  const [editingName, setEditingName] = useState(false)
+
+  const handleNameSave = () => {
+    handleSave()
+    setEditingName(false)
+  }
 
   // ── Render ──────────────────────────────────────────────────────────────
   return (
-    <div className="space-y-3 rounded-2xl border border-border/60 bg-card p-5 shadow-sm">
+    <div className={cn("space-y-3 rounded-2xl border border-border/60 bg-card p-5 shadow-sm", className)}>
       {/* Top row: logo + name + actions */}
       <div className="flex items-center gap-4">
         {/* Logo */}
@@ -195,43 +203,74 @@ export function BrandIdentityCard({ businessData }: BrandIdentityCardProps) {
           </button>
         </div>
 
-        {/* Name input */}
-        <div className="flex flex-1 flex-col gap-1.5">
-          <div className="flex items-center gap-1.5">
-            <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Nombre de tu marca
-            </label>
-            <button
-              onClick={fetchSuggestions}
-              className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
-              title="Sugerencias de nombre"
-            >
-              <HelpCircle className="h-3.5 w-3.5" />
-            </button>
-          </div>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Ej: La Moka Porteña"
-              className="flex-1 rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-            />
-            <Button
-              size="sm"
-              onClick={handleSave}
-              disabled={!name.trim() || (!isDirty && !saved)}
-              className="shrink-0 gap-1.5"
-            >
-              {saved ? (
-                <><Check className="h-3.5 w-3.5" /> Guardado</>
-              ) : (
-                "Guardar"
+        {/* Name */}
+        <div className="flex flex-1 flex-col gap-1">
+          {editingName ? (
+            <div className="flex items-center gap-2">
+              <input
+                autoFocus
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") handleNameSave(); if (e.key === "Escape") setEditingName(false) }}
+                placeholder="Ej: La Moka Porteña"
+                className="flex-1 rounded-lg border border-input bg-background px-3 py-2 text-lg font-semibold text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+              />
+              <button
+                onClick={handleNameSave}
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+              >
+                <Check className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => { setName(savedName); setEditingName(false) }}
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-border text-muted-foreground hover:bg-secondary transition-colors"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <h2 className="text-2xl font-bold tracking-tight text-foreground">
+                {savedName || <span className="text-muted-foreground font-normal text-base">Sin nombre todavía</span>}
+              </h2>
+              <button
+                onClick={() => setEditingName(true)}
+                className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-border bg-background shadow-sm hover:bg-secondary transition-colors"
+                title="Editar nombre"
+              >
+                <Pencil className="h-3 w-3 text-muted-foreground" />
+              </button>
+              <button
+                onClick={fetchSuggestions}
+                className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                title="Sugerencias de nombre"
+              >
+                <HelpCircle className="h-3.5 w-3.5" />
+              </button>
+              {saved && (
+                <span className="text-xs text-success flex items-center gap-1">
+                  <Check className="h-3 w-3" /> Guardado
+                </span>
               )}
-            </Button>
-          </div>
+            </div>
+          )}
         </div>
       </div>
+
+      {/* Business description */}
+      {(businessLabel || description) && (
+        <div className="space-y-1.5 border-t border-border/40 pt-3">
+          {businessLabel && (
+            <span className="inline-block rounded-full bg-primary/10 px-3 py-0.5 text-xs font-semibold text-primary">
+              {businessLabel}
+            </span>
+          )}
+          {description && (
+            <p className="text-sm leading-relaxed text-muted-foreground">{description}</p>
+          )}
+        </div>
+      )}
 
       {/* Name suggestions */}
       {showSuggestions && (
