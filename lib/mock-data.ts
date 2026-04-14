@@ -83,6 +83,7 @@ export interface Competitor {
   cityArea: string
   marketShare: string
   url?: string
+  sourceQuery?: string
   location?: {
     lat: number
     lng: number
