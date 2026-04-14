@@ -2,10 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
-import { AlertTriangle, ArrowLeft, ArrowRight, Brain, Loader2, Sparkles } from "lucide-react"
+import { AlertTriangle, ArrowLeft, ArrowRight, Loader2, Sparkles } from "lucide-react"
 import { Header } from "@/components/header"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Textarea } from "@/components/ui/textarea"
@@ -15,14 +15,14 @@ import {
   saveFlowAnswers,
   type ClarificationQuestion,
 } from "@/lib/flow-api"
-import { getBusinessInput, getFlowId, saveClaudeAnswers, type ClaudeAnswer } from "@/lib/flow-storage"
+import { getBusinessInput, getFlowId, saveClaudeAnswers, saveFlowId, type ClaudeAnswer } from "@/lib/flow-storage"
 
 const QUESTIONS_PER_PAGE = 5
 
-const askMessages = [
-  "Claude esta leyendo tu idea y detectando riesgos",
-  "Claude esta armando preguntas para reducir incertidumbre",
-  "Claude esta priorizando lo importante para tu caso",
+const loadingMessages = [
+  "Leyendo tu idea con atención...",
+  "Identificando los puntos clave de tu proyecto...",
+  "Preparando las preguntas más importantes para vos...",
 ]
 
 export default function ClaudeQuestionsPage() {
@@ -31,7 +31,6 @@ export default function ClaudeQuestionsPage() {
   const [messageIndex, setMessageIndex] = useState(0)
   const [businessData, setBusinessData] = useState<ReturnType<typeof getBusinessInput>>(null)
   const [questions, setQuestions] = useState<ClarificationQuestion[]>([])
-  const [noQuestionsNeeded, setNoQuestionsNeeded] = useState(false)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [requestId, setRequestId] = useState<string | null>(null)
@@ -76,11 +75,7 @@ export default function ClaudeQuestionsPage() {
     try {
       const flowId = getFlowId()
       const apiQuestions = await getClarificationQuestionsFromApi(input, flowId ?? undefined)
-      if (apiQuestions.length === 0) {
-        setNoQuestionsNeeded(true)
-      } else {
-        setQuestions(apiQuestions)
-      }
+      setQuestions(apiQuestions)
     } catch (error) {
       setQuestions([])
       if (isApiClientError(error)) {
@@ -99,7 +94,7 @@ export default function ClaudeQuestionsPage() {
 
     const interval = setInterval(() => {
       setMessageIndex((prev) => {
-        if (prev >= askMessages.length - 1) {
+        if (prev >= loadingMessages.length - 1) {
           clearInterval(interval)
           return prev
         }
@@ -109,27 +104,13 @@ export default function ClaudeQuestionsPage() {
 
     const reveal = setTimeout(() => {
       setIsPreparing(false)
-    }, askMessages.length * 1700)
+    }, loadingMessages.length * 1700)
 
     return () => {
       clearInterval(interval)
       clearTimeout(reveal)
     }
   }, [businessData])
-
-  // Auto-navigate when Claude determined no questions are needed
-  useEffect(() => {
-    if (isPreparing || !noQuestionsNeeded) return
-
-    const flowId = getFlowId()
-    if (!flowId) return
-
-    saveFlowAnswers(flowId, [])
-      .finally(() => {
-        saveClaudeAnswers([])
-        router.push("/analisis")
-      })
-  }, [isPreparing, noQuestionsNeeded, router])
 
   const handleOptionChange = (questionId: string, option: string) => {
     setAnswers((prev) => ({ ...prev, [questionId]: option }))
@@ -163,11 +144,12 @@ export default function ClaudeQuestionsPage() {
       const flowId = getFlowId()
 
       if (!flowId) {
-        setSubmitError("No existe una sesion activa. Volve al paso 1 para reiniciar el flujo.")
+        setSubmitError("No existe una sesión activa. Volvé al paso 1 para reiniciar el flujo.")
         return
       }
 
-      await saveFlowAnswers(flowId, payload)
+      const { newFlowId } = await saveFlowAnswers(flowId, payload, businessData ?? undefined)
+      if (newFlowId) saveFlowId(newFlowId)
       saveClaudeAnswers(payload)
       router.push("/analisis")
     } catch (error) {
@@ -182,27 +164,26 @@ export default function ClaudeQuestionsPage() {
     }
   }
 
-  if (!businessData) {
-    return null
-  }
+  if (!businessData) return null
 
+  // ── Loading state ──────────────────────────────────────────────────────────
   if (isPreparing) {
     return (
       <main className="min-h-screen bg-background">
         <Header />
-        <div className="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-3xl items-center justify-center px-4 py-16">
-          <Card className="w-full border-border/70">
-            <CardContent className="space-y-6 p-8 text-center">
-              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
-                <Brain className="h-7 w-7 text-primary" />
-              </div>
-              <div className="space-y-2">
-                <p className="text-lg font-semibold text-foreground">Claude esta preparando preguntas</p>
-                <p className="text-sm text-muted-foreground">{askMessages[messageIndex]}...</p>
+        <div className="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-3xl flex-col items-center justify-center gap-8 px-4 py-16">
+          <Card className="w-full border-border/60">
+            <CardContent className="space-y-5 p-8 text-center">
+              <div className="mx-auto text-5xl">🚀</div>
+              <div className="space-y-1.5">
+                <p className="text-lg font-semibold text-foreground">
+                  Estamos preparando tus preguntas
+                </p>
+                <p className="text-sm text-muted-foreground">{loadingMessages[messageIndex]}...</p>
               </div>
               <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Afinando el contexto de tu idea
+                Esto solo tarda unos segundos
               </div>
             </CardContent>
           </Card>
@@ -211,20 +192,19 @@ export default function ClaudeQuestionsPage() {
     )
   }
 
+  // ── Error state ────────────────────────────────────────────────────────────
   if (loadError) {
     return (
       <main className="min-h-screen bg-background">
         <Header />
-        <div className="mx-auto w-full max-w-3xl px-4 py-8">
+        <div className="mx-auto w-full max-w-3xl space-y-6 px-4 py-8">
           <Card className="border-destructive/30 bg-destructive/5">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-destructive">
                 <AlertTriangle className="h-5 w-5" />
-                Error al cargar preguntas de Claude
+                Algo salió mal al cargar las preguntas
               </CardTitle>
-              <CardDescription className="text-foreground/80">
-                {loadError}
-              </CardDescription>
+              <p className="text-sm text-foreground/80">{loadError}</p>
               {requestId && (
                 <p className="text-xs text-muted-foreground">Request ID: {requestId}</p>
               )}
@@ -232,7 +212,7 @@ export default function ClaudeQuestionsPage() {
             <CardContent className="flex flex-col gap-3 sm:flex-row sm:justify-between">
               <Button variant="outline" onClick={() => router.push("/")}>
                 <ArrowLeft className="mr-2 h-4 w-4" />
-                Volver al paso 1
+                Volver al inicio
               </Button>
               <Button onClick={() => businessData && loadQuestions(businessData)}>
                 Reintentar
@@ -244,36 +224,60 @@ export default function ClaudeQuestionsPage() {
     )
   }
 
+  // ── Main view ──────────────────────────────────────────────────────────────
   return (
     <main className="min-h-screen bg-background">
       <Header />
       <div className="mx-auto w-full max-w-4xl space-y-6 px-4 py-8">
-        <Card className="border-primary/20 bg-primary/5">
-          <CardHeader>
-            <CardTitle className="text-xl">Paso 2: responde las dudas de Claude</CardTitle>
-            <CardDescription>
-              Idea: {businessData.idea} | Ciudad: {businessData.city} | Inversion inicial: ${businessData.investment.toLocaleString("es-AR")}
-            </CardDescription>
-            {totalPages > 1 && (
-              <p className="text-sm text-muted-foreground">
-                Pagina {currentPage + 1} de {totalPages} ({questions.length} preguntas en total)
-              </p>
-            )}
-          </CardHeader>
+
+        {/* Warm intro */}
+        <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-violet-500/5">
+          <CardContent className="p-6">
+            <div className="flex gap-4">
+              <div className="shrink-0 text-4xl">🌎</div>
+              <div className="space-y-2">
+                <h2 className="text-lg font-bold text-foreground">
+                  ¡Excelente! Ya diste el primer paso 🎉
+                </h2>
+                <p className="text-sm leading-relaxed text-muted-foreground">
+                  Recibimos tu idea y ahora vamos a hacerte <strong className="text-foreground">unas preguntas cortas y simples</strong> para entender mejor tu proyecto.
+                  No te preocupes, no hay respuestas correctas ni incorrectas: solo queremos capturar tu visión tal como la imaginás.
+                </p>
+                <p className="text-sm leading-relaxed text-muted-foreground">
+                  Con lo que nos contés, vamos a ayudarte a avanzar con <strong className="text-foreground">todo lo que necesitás</strong> para llevar tu negocio adelante:
+                  desde la validación de la idea hasta el plan de acción concreto.
+                </p>
+                <p className="text-sm leading-relaxed text-muted-foreground">
+                  A lo largo de todo el proceso vas a contar con un <strong className="text-foreground">agente personal</strong> que te va a acompañar, responder tus dudas y orientarte en cada paso. 🤝
+                </p>
+                {totalPages > 1 && (
+                  <p className="text-sm text-muted-foreground">
+                    Página {currentPage + 1} de {totalPages} ({questions.length} preguntas en total)
+                  </p>
+                )}
+              </div>
+            </div>
+          </CardContent>
         </Card>
 
+        {/* Questions */}
         {pageQuestions.map((question) => {
           const globalIndex = questions.indexOf(question)
           const selected = answers[question.id]
           return (
-            <Card key={question.id} className="border-border/70">
-              <CardHeader>
-                <CardTitle className="text-base">
-                  {globalIndex + 1}. {question.title}
-                </CardTitle>
-                <CardDescription>{question.helper}</CardDescription>
+            <Card key={question.id} className="border-border/70 transition-shadow hover:shadow-md">
+              <CardHeader className="pb-3">
+                <div className="flex items-start gap-3">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
+                    {globalIndex + 1}
+                  </span>
+                  <div className="space-y-1">
+                    <CardTitle className="text-base leading-snug">{question.title}</CardTitle>
+                    <p className="text-sm text-muted-foreground">{question.helper}</p>
+                  </div>
+                </div>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-3 pl-10">
                 <RadioGroup
                   value={selected}
                   onValueChange={(value) => handleOptionChange(question.id, value)}
@@ -281,22 +285,22 @@ export default function ClaudeQuestionsPage() {
                   {question.options.map((option) => (
                     <Label
                       key={option.value}
-                      className="flex cursor-pointer items-start gap-3 rounded-lg border border-border p-3 text-sm transition-colors hover:bg-secondary/40"
+                      className="flex cursor-pointer items-start gap-3 rounded-xl border border-border p-3.5 text-sm transition-all hover:border-primary/40 hover:bg-primary/5 has-[[data-state=checked]]:border-primary/60 has-[[data-state=checked]]:bg-primary/5"
                     >
-                      <RadioGroupItem value={option.value} className="mt-0.5" />
-                      <span>{option.label}</span>
+                      <RadioGroupItem value={option.value} className="mt-0.5 shrink-0" />
+                      <span className="leading-snug">{option.label}</span>
                     </Label>
                   ))}
                 </RadioGroup>
 
                 {selected === "expand" && (
-                  <div className="space-y-2">
+                  <div className="space-y-2 pt-1">
                     <Label htmlFor={`${question.id}-details`} className="text-sm font-medium">
-                      Ampliar respuesta
+                      Contanos más 💬
                     </Label>
                     <Textarea
                       id={`${question.id}-details`}
-                      placeholder="Conta el contexto que necesites para que Claude afine el analisis..."
+                      placeholder="Escribí todo el contexto que quieras compartir. Cuanto más detalle, mejor puede ayudarte la IA..."
                       value={details[question.id] || ""}
                       onChange={(event) =>
                         setDetails((prev) => ({ ...prev, [question.id]: event.target.value }))
@@ -310,10 +314,11 @@ export default function ClaudeQuestionsPage() {
           )
         })}
 
+        {/* Actions */}
         <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
           <Button variant="outline" onClick={currentPage === 0 ? () => router.push("/") : handlePrevPage}>
             <ArrowLeft className="mr-2 h-4 w-4" />
-            {currentPage === 0 ? "Volver al paso 1" : "Anterior"}
+            {currentPage === 0 ? "Volver al inicio" : "Anterior"}
           </Button>
 
           {isLastPage ? (
@@ -340,7 +345,7 @@ export default function ClaudeQuestionsPage() {
 
         {submitError && (
           <Card className="border-destructive/30 bg-destructive/5">
-            <CardContent className="space-y-2 p-4">
+            <CardContent className="space-y-1 p-4">
               <p className="text-sm font-medium text-destructive">No se pudo continuar</p>
               <p className="text-sm text-foreground/80">{submitError}</p>
               {requestId && (
@@ -351,8 +356,8 @@ export default function ClaudeQuestionsPage() {
         )}
 
         <p className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Sparkles className="h-4 w-4" />
-          Siempre podes usar &quot;Quiero ampliar este punto&quot; para darle mas contexto a Claude.
+          <Sparkles className="h-4 w-4 shrink-0" />
+          Podés elegir &quot;Quiero ampliar este punto&quot; para darle más contexto a la IA en cualquier pregunta.
         </p>
       </div>
     </main>

@@ -3,6 +3,22 @@ import type { BusinessInputData } from "@/components/hero-input"
 const BUSINESS_INPUT_KEY = "dayzero.business-input"
 const CLAUDE_ANSWERS_KEY = "dayzero.claude-answers"
 const FLOW_ID_KEY = "dayzero.flow-id"
+const BRAND_IDENTITY_KEY = "dayzero.brand-identity"
+
+export type LogoShape = "circle" | "rounded" | "hexagon"
+
+export interface LogoConfig {
+  type: "builder" | "uploaded"
+  initials: string
+  color: string
+  shape: LogoShape
+  imageDataUrl?: string
+}
+
+export interface BrandIdentity {
+  name: string
+  logo?: LogoConfig
+}
 
 export interface ClaudeAnswer {
   questionId: string
@@ -48,11 +64,28 @@ export function getClaudeAnswers(): ClaudeAnswer[] {
   }
 }
 
+export function saveBrandIdentity(identity: BrandIdentity) {
+  if (!canUseStorage()) return
+  window.localStorage.setItem(BRAND_IDENTITY_KEY, JSON.stringify(identity))
+}
+
+export function getBrandIdentity(): BrandIdentity | null {
+  if (!canUseStorage()) return null
+  const raw = window.localStorage.getItem(BRAND_IDENTITY_KEY)
+  if (!raw) return null
+  try {
+    return JSON.parse(raw) as BrandIdentity
+  } catch {
+    return null
+  }
+}
+
 export function clearFlowStorage() {
   if (!canUseStorage()) return
   window.localStorage.removeItem(BUSINESS_INPUT_KEY)
   window.localStorage.removeItem(CLAUDE_ANSWERS_KEY)
   window.localStorage.removeItem(FLOW_ID_KEY)
+  window.localStorage.removeItem(BRAND_IDENTITY_KEY)
 }
 
 export function saveFlowId(flowId: string) {
