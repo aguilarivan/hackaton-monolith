@@ -116,7 +116,7 @@ export function StartupDashboard({ data, analysisOverride, onReset }: StartupDas
             className="mb-6 gap-2 text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back to dashboard
+            Volver al panel
           </Button>
 
           {/* Section Detail Content */}
@@ -256,7 +256,7 @@ export function StartupDashboard({ data, analysisOverride, onReset }: StartupDas
                 <ChevronRight className="h-5 w-5 text-muted-foreground transition-transform group-hover:translate-x-1" />
               </div>
               <div className="mt-6">
-                <p className="text-sm font-medium text-muted-foreground">Market Potential</p>
+                <p className="text-sm font-medium text-muted-foreground">Potencial de mercado</p>
                 <div className="mt-2 flex items-baseline gap-2">
                   <span className={cn("text-6xl font-bold", getScoreColor(analysis.viability.marketPotential))}>
                     {analysis.viability.marketPotential}
@@ -265,20 +265,20 @@ export function StartupDashboard({ data, analysisOverride, onReset }: StartupDas
                 </div>
                 <div className="mt-4 flex flex-wrap gap-2">
                   <span className="rounded-full bg-secondary px-3 py-1 text-xs font-medium">
-                    Competition: {analysis.viability.competitionLevel}
+                    Competencia: {getCompetitionLabel(analysis.viability.competitionLevel)}
                   </span>
                   <span className="rounded-full bg-secondary px-3 py-1 text-xs font-medium">
-                    Barrier: {analysis.viability.entryBarrier}
+                    Barrera: {analysis.viability.entryBarrier === "Low" ? "baja" : analysis.viability.entryBarrier === "Medium" ? "media" : "alta"}
                   </span>
                 </div>
                 <p className="mt-3 text-sm text-muted-foreground">
-                  Score based on live-like source signals
+                  Score basado en señales de mercado
                 </p>
               </div>
               <div className="mt-6 flex items-center gap-2 text-primary">
                 <Clock className="h-4 w-4" />
                 <span className="text-sm font-medium">
-                  First income: {analysis.viability.timeToFirstIncome}
+                  Primer ingreso: {analysis.viability.timeToFirstIncome}
                 </span>
               </div>
             </CardContent>
@@ -299,8 +299,8 @@ export function StartupDashboard({ data, analysisOverride, onReset }: StartupDas
                     <DollarSign className="h-5 w-5" style={{ color: "oklch(0.58 0.15 35)" }} />
                   </div>
                   <div>
-                    <p className="font-semibold text-foreground">Monetization</p>
-                    <p className="text-sm text-muted-foreground">Business model + suggested pricing</p>
+                    <p className="font-semibold text-foreground">Monetizacion</p>
+                    <p className="text-sm text-muted-foreground">Modelo de negocio y precios sugeridos</p>
                   </div>
                 </div>
                 <ChevronRight className="h-5 w-5 text-muted-foreground transition-transform group-hover:translate-x-1" />
@@ -340,7 +340,7 @@ export function StartupDashboard({ data, analysisOverride, onReset }: StartupDas
                   {analysis.competitors.competitors.length}
                 </p>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Main competitors
+                  Competidores principales
                 </p>
               </div>
             </CardContent>
@@ -368,7 +368,7 @@ export function StartupDashboard({ data, analysisOverride, onReset }: StartupDas
                     : analysis.clients.b2cSegments?.length || 0}
                 </p>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  {analysis.clients.type === "b2b" ? "Potential B2B clients" : "B2C segments"}
+                  {analysis.clients.type === "b2b" ? "Clientes B2B potenciales" : "Segmentos B2C"}
                 </p>
               </div>
             </CardContent>
@@ -391,9 +391,9 @@ export function StartupDashboard({ data, analysisOverride, onReset }: StartupDas
               </div>
               <div className="mt-4">
                 <p className="text-lg font-bold text-foreground">
-                  Legal & Taxes
+                  Marco legal
                 </p>
-                <p className="mt-1 text-sm text-muted-foreground">Recommended path</p>
+                <p className="mt-1 text-sm text-muted-foreground">Estructura recomendada</p>
                 <p className="mt-1 text-xs text-muted-foreground">
                   {analysis.legalStructure.structures.find((s) => s.recommended)?.name || "SAS"}
                 </p>
@@ -417,9 +417,9 @@ export function StartupDashboard({ data, analysisOverride, onReset }: StartupDas
                     <AlertTriangle className="h-5 w-5" style={{ color: "oklch(0.55 0.18 30)" }} />
                   </div>
                   <div>
-                    <p className="font-semibold text-foreground">Obstacles & Solutions</p>
+                    <p className="font-semibold text-foreground">Obstaculos y soluciones</p>
                     <p className="text-sm text-muted-foreground">
-                      {analysis.obstacles.length} risks identified
+                      {analysis.obstacles.length} riesgos identificados
                     </p>
                   </div>
                 </div>
@@ -457,9 +457,9 @@ export function StartupDashboard({ data, analysisOverride, onReset }: StartupDas
                     <Package className="h-5 w-5" style={{ color: "oklch(0.6 0.15 80)" }} />
                   </div>
                   <div>
-                    <p className="font-semibold text-foreground">Starter Kit</p>
+                    <p className="font-semibold text-foreground">Kit de arranque</p>
                     <p className="text-sm text-muted-foreground">
-                      {analysis.startupKit.items.length} essential products
+                      {analysis.startupKit.items.length} productos esenciales
                     </p>
                   </div>
                 </div>
@@ -503,9 +503,9 @@ export function StartupDashboard({ data, analysisOverride, onReset }: StartupDas
                     <Map className="h-5 w-5" style={{ color: "oklch(0.55 0.15 195)" }} />
                   </div>
                   <div>
-                    <p className="font-semibold text-foreground">Launch Roadmap</p>
+                    <p className="font-semibold text-foreground">Hoja de ruta</p>
                     <p className="text-sm text-muted-foreground">
-                      {analysis.validationPlan.length} validation steps + {analysis.roadmap.length} launch phases
+                      {analysis.validationPlan.length} pasos de validacion + {analysis.roadmap.length} fases de lanzamiento
                     </p>
                   </div>
                 </div>

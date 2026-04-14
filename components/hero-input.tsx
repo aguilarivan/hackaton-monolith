@@ -55,18 +55,18 @@ export function HeroInput({ onSubmit }: HeroInputProps) {
         <div className="flex justify-center">
           <div className="inline-flex items-center gap-2 rounded-full border border-border bg-secondary/50 px-4 py-1.5 text-sm text-muted-foreground">
             <Rocket className="h-3.5 w-3.5 text-primary" />
-            <span>AI-powered business idea validator for LATAM</span>
+            <span>Tu copiloto de lanzamiento para LATAM</span>
           </div>
         </div>
 
         {/* Heading */}
         <div className="space-y-4 text-center">
           <h1 className="text-balance text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
-            Validate your business idea{" "}
-            <span className="text-primary">in minutes</span>
+            Valida tu idea{" "}
+            <span className="text-primary">antes del despegue</span>
           </h1>
           <p className="mx-auto max-w-xl text-pretty text-lg text-muted-foreground">
-            Describe your idea, indicate your city and initial investment. AI analyzes everything and generates a comprehensive analysis tailored to your context.
+            Describi tu idea, indica tu ciudad e inversion inicial. La IA analiza todo y genera un plan de lanzamiento personalizado.
           </p>
         </div>
 
@@ -76,13 +76,13 @@ export function HeroInput({ onSubmit }: HeroInputProps) {
             {/* Idea Textarea */}
             <div className="space-y-2">
               <label htmlFor="idea" className="text-sm font-medium text-foreground">
-                Your business idea
+                Tu idea de negocio
               </label>
               <textarea
                 id="idea"
                 value={idea}
                 onChange={(e) => setIdea(e.target.value)}
-                placeholder="E.g., corporate catering service in Buenos Aires"
+                placeholder="Ej: servicio de catering corporativo en Buenos Aires"
                 className="min-h-[100px] w-full resize-none rounded-lg border border-input bg-background p-4 text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
               />
             </div>
@@ -110,7 +110,7 @@ export function HeroInput({ onSubmit }: HeroInputProps) {
               {/* City Input */}
               <div className="space-y-2">
                 <label htmlFor="city" className="text-sm font-medium text-foreground">
-                  City (optional)
+                  Ciudad (opcional)
                 </label>
                 <div className="relative">
                   <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -119,7 +119,7 @@ export function HeroInput({ onSubmit }: HeroInputProps) {
                     type="text"
                     value={city}
                     onChange={(e) => setCity(e.target.value)}
-                    placeholder="E.g., Buenos Aires"
+                    placeholder="Ej: Buenos Aires"
                     className="w-full rounded-lg border border-input bg-background py-2.5 pl-10 pr-4 text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                   />
                 </div>
@@ -128,7 +128,7 @@ export function HeroInput({ onSubmit }: HeroInputProps) {
               {/* Investment Input */}
               <div className="space-y-2">
                 <label htmlFor="investment" className="text-sm font-medium text-foreground">
-                  Initial investment
+                  Inversion inicial
                 </label>
                 <div className="relative">
                   <DollarSign className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -156,11 +156,11 @@ export function HeroInput({ onSubmit }: HeroInputProps) {
               disabled={!idea.trim()}
               className="h-12 px-8 text-base font-medium"
             >
-              Analyze my idea
+              Iniciar mision
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
             <p className="text-center text-sm text-muted-foreground">
-              AI analyzes market, competition and builds your personalized startup kit
+              La IA analiza mercado, competencia y arma tu kit de arranque personalizado
             </p>
           </div>
         </form>
