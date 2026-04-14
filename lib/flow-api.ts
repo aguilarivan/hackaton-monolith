@@ -2,7 +2,7 @@ import type { StartupAnalysis } from "@/lib/mock-data"
 import type { BusinessInputData } from "@/components/hero-input"
 import type { ClaudeAnswer } from "@/lib/flow-storage"
 import type { SectionPlan } from "@/lib/server/section-plan-prompt"
-import type { ViabilitySection, DetailsSection, ResearchSection } from "@/lib/server/section-generators"
+import type { ViabilitySection, DetailsSection, ResearchSection, MarketDataSection } from "@/lib/server/section-generators"
 
 type ApiErrorCode = "BAD_REQUEST" | "NOT_FOUND" | "INVALID_PAYLOAD" | "INTERNAL_ERROR"
 
@@ -156,6 +156,7 @@ export type AnalysisStreamEvent =
   | { type: "viability"; data: ViabilitySection }
   | { type: "details"; data: DetailsSection }
   | { type: "research"; data: ResearchSection }
+  | { type: "market-data"; data: MarketDataSection }
   | { type: "complete" }
   | { type: "error"; message: string }
 

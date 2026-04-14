@@ -141,7 +141,7 @@ export function StartupDashboard({ data, partial, isStreaming, sectionPlan, onRe
             Volver al panel
           </Button>
           <div className="animate-in fade-in slide-in-from-right-4 duration-300">
-            {activeSection === "viability" && v && <ViabilitySection data={v.viability} />}
+            {activeSection === "viability" && v && <ViabilitySection data={v.viability} isStreaming={isStreaming} />}
             {activeSection === "monetization" && v && <MonetizationSection data={v.viability} />}
             {activeSection === "competitors" && r && <CompetitorsSection data={r.competitors} city={data.city} isMock={r._isMock} />}
             {activeSection === "clients" && v && <ClientsSection data={v.clients} city={data.city} />}

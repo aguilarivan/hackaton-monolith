@@ -5,6 +5,7 @@ import {
   generateViabilitySection,
   generateDetailsSection,
   generateResearchSection,
+  fetchMarketData,
 } from "@/lib/server/section-generators"
 import type { SectionPlan } from "@/lib/server/section-plan-prompt"
 
@@ -100,11 +101,20 @@ export async function POST(request: Request) {
         })())
       }
 
-      // Research (Sonnet + web search) — runs in parallel with Haiku chain
+      // Sonnet tasks — each runs independently in parallel with everything else.
+      // Both use web search; each has its own try/catch so one failing doesn't block the other.
       if (needResearch) {
         tasks.push(
           generateResearchSection(input, answers, mock).then((data) =>
             emit({ type: "research", data })
+          )
+        )
+      }
+
+      if (needViability) {
+        tasks.push(
+          fetchMarketData(input, answers).then((data) =>
+            emit({ type: "market-data", data })
           )
         )
       }

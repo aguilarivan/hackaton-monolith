@@ -237,9 +237,9 @@ export function mergeWithComputedData(
     input,
     viability: {
       ...core.viability,
-      // Inject computed/mock data fields
+      // growthData from mock; real sourceSignals injected by route handler
       growthData: mock.viability.growthData,
-      sourceSignals: mock.viability.sourceSignals,
+      sourceSignals: [],
     },
     competitors: {
       competitors: competitorsWithLocations,

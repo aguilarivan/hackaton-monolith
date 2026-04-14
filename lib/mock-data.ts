@@ -237,20 +237,7 @@ function pseudoRange(seed: string, min: number, max: number): number {
   return min + (max - min) * normalized
 }
 
-function clamp(min: number, value: number, max: number): number {
-  return Math.max(min, Math.min(value, max))
-}
 
-function buildSignalHistory(base: number, seed: string, trend: "up" | "stable" | "down") {
-  const periods = ["M-5", "M-4", "M-3", "M-2", "M-1", "Ahora"]
-  const drift = trend === "up" ? 0.28 : trend === "down" ? -0.28 : 0.03
-
-  return periods.map((period, index) => {
-    const volatility = pseudoRange(`${seed}-${period}`, -0.18, 0.18)
-    const value = clamp(0.5, Number((base + (index - 2.5) * drift + volatility).toFixed(1)), 10)
-    return { period, value }
-  })
-}
 
 function generateSlug(idea: string): string {
   return idea
@@ -298,30 +285,13 @@ export function generateAnalysis(input: BusinessInputData): StartupAnalysis {
 
   const isFood = /catering|food|restaurant|kitchen|comida|restaurante/.test(lowerIdea)
   const isTech = /app|software|platform|saas|ia|ai|automation/.test(lowerIdea)
-  const isService = /service|cleaning|maintenance|servicio|consulting/.test(lowerIdea)
   const isB2B = /business|corporate|b2b|empresa/.test(lowerIdea) || isTech || isFood
 
-  const trendsScore = Math.round(pseudoRange(`${idea}-${normalizedCity}-trends`, 48, 92))
-  const meliListings = Math.round(pseudoRange(`${idea}-${normalizedCity}-meli`, 180, 3400))
-  const indecGrowth = Number(pseudoRange(`${idea}-indec`, -2, 18).toFixed(1))
-  const similarIdeasStrength = Math.round(pseudoRange(`${idea}-comparables`, 52, 93))
-
-  const dynamicMarketScore = clamp(
-    1,
-    Number(
-      (
-        trendsScore * 0.045 +
-        Math.min(meliListings / 780, 3.5) +
-        (indecGrowth + 3) * 0.17 +
-        similarIdeasStrength * 0.022
-      ).toFixed(1)
-    ),
-    10
-  )
-
-  const competitionLevel: "Low" | "Medium" | "High" = dynamicMarketScore > 7.5 ? "High" : dynamicMarketScore > 5.8 ? "Medium" : "Low"
-  const entryBarrier: "Low" | "Medium" | "High" = isTech ? "Medium" : isFood ? "Low" : "Low"
-  const trend: "up" | "stable" | "down" = indecGrowth > 8 ? "up" : indecGrowth > 3 ? "stable" : "down"
+  // Fallback defaults — real marketPotential comes from web search signals
+  const dynamicMarketScore = 5
+  const competitionLevel: "Low" | "Medium" | "High" = "Medium"
+  const entryBarrier: "Low" | "Medium" | "High" = isTech ? "Medium" : "Low"
+  const trend: "up" | "stable" | "down" = "stable"
 
   const businessModel: BusinessModel = isFood
     ? {
@@ -355,7 +325,7 @@ export function generateAnalysis(input: BusinessInputData): StartupAnalysis {
 
   const currentYear = new Date().getFullYear()
   const baseRevenue = isTech ? 1.8 : isFood ? 2.4 : 1.9
-  const growthFactor = 1 + indecGrowth / 100
+  const growthFactor = 1.05 // fallback 5% growth
   const growthData: GrowthData[] = [
     { year: currentYear - 3, revenue: Number((baseRevenue * 0.78).toFixed(1)) },
     { year: currentYear - 2, revenue: Number((baseRevenue * 0.93).toFixed(1)) },
@@ -366,10 +336,7 @@ export function generateAnalysis(input: BusinessInputData): StartupAnalysis {
   ]
 
   const baseMonthlyPrice = isFood ? 98000 : isTech ? 76000 : 68000
-  const competitionMultiplier = competitionLevel === "High" ? 0.93 : competitionLevel === "Medium" ? 1 : 1.09
-  const trendMultiplier = trend === "up" ? 1.06 : trend === "stable" ? 1 : 0.94
-  const scoreMultiplier = dynamicMarketScore >= 7.5 ? 1.05 : dynamicMarketScore >= 6 ? 1 : 0.95
-  const anchorPrice = Math.round((baseMonthlyPrice * competitionMultiplier * trendMultiplier * scoreMultiplier) / 500) * 500
+  const anchorPrice = Math.round(baseMonthlyPrice / 500) * 500
 
   const monetization: MonetizationData = {
     strategy:
@@ -398,93 +365,15 @@ export function generateAnalysis(input: BusinessInputData): StartupAnalysis {
       lowArs: Math.round((anchorPrice * 0.8) / 500) * 500,
       medianArs: Math.round((anchorPrice * 1.03) / 500) * 500,
       highArs: Math.round((anchorPrice * 1.37) / 500) * 500,
-      note: `Rango estimado basado en competencia ${competitionLevel === "Low" ? "baja" : competitionLevel === "Medium" ? "moderada" : "alta"} y tendencia ${trend === "up" ? "alcista" : trend === "stable" ? "estable" : "bajista"}.`,
+      note: "Rango estimado basado en el mercado argentino.",
     },
   }
 
-  const sourceSignals: MarketSignal[] = [
-    {
-      source: "Google Trends / Serp snapshot",
-      metric: "Impulso de demanda",
-      value: `${trendsScore}/100`,
-      scoreImpact: Number((trendsScore / 12).toFixed(1)),
-      trend: trendsScore > 72 ? "up" : trendsScore > 58 ? "stable" : "down",
-      history: buildSignalHistory(Number((trendsScore / 12).toFixed(1)), `${idea}-trends-history`, trendsScore > 72 ? "up" : trendsScore > 58 ? "stable" : "down"),
-      lastUpdated: "2026-04-12",
-      url: "https://trends.google.com/",
-    },
-    {
-      source: "Mercado Libre API pública",
-      metric: "Publicaciones activas",
-      value: `${meliListings.toLocaleString("es-AR")} publicaciones`,
-      scoreImpact: Number((Math.min(meliListings / 900, 3.3)).toFixed(1)),
-      trend: meliListings > 1800 ? "up" : meliListings > 900 ? "stable" : "down",
-      history: buildSignalHistory(Number((Math.min(meliListings / 900, 3.3)).toFixed(1)), `${idea}-meli-history`, meliListings > 1800 ? "up" : meliListings > 900 ? "stable" : "down"),
-      lastUpdated: "2026-04-12",
-      url: "https://developers.mercadolibre.com.ar/",
-    },
-    {
-      source: "INDEC estimación sectorial",
-      metric: "Crecimiento interanual del sector",
-      value: `${indecGrowth}% YoY`,
-      scoreImpact: Number(((indecGrowth + 2) / 5).toFixed(1)),
-      trend: indecGrowth > 8 ? "up" : indecGrowth > 3 ? "stable" : "down",
-      history: buildSignalHistory(Number(((indecGrowth + 2) / 5).toFixed(1)), `${idea}-indec-history`, indecGrowth > 8 ? "up" : indecGrowth > 3 ? "stable" : "down"),
-      lastUpdated: "2026-04-11",
-      url: "https://www.indec.gob.ar/",
-    },
-  ]
+  // Real sourceSignals are fetched via web search at runtime; mock provides empty fallback
+  const sourceSignals: MarketSignal[] = []
 
-  const similarIdeas: SimilarIdeaBenchmark[] = isTech
-    ? [
-        {
-          idea: "Nubity (automatización B2B)",
-          market: "PyMEs LATAM",
-          annualGrowth: "+29%",
-          traction: "Alcanzó 500 cuentas pagas en 14 meses",
-          matchScore: 86,
-        },
-        {
-          idea: "Herramientas estilo Mural para workflows",
-          market: "Colaboración remota",
-          annualGrowth: "+18%",
-          traction: "Escaló con crecimiento liderado por producto",
-          matchScore: 79,
-        },
-      ]
-    : isFood
-    ? [
-        {
-          idea: "Cocina de Barrio",
-          market: "Catering corporativo urbano",
-          annualGrowth: "+21%",
-          traction: "De 8 a 60 clientes corporativos recurrentes",
-          matchScore: 82,
-        },
-        {
-          idea: "Suscripciones de almuerzo saludable",
-          market: "Bienestar corporativo",
-          annualGrowth: "+17%",
-          traction: "Se asoció con 3 cadenas de coworking",
-          matchScore: 76,
-        },
-      ]
-    : [
-        {
-          idea: "UrbanFix Services",
-          market: "Servicios para el hogar a demanda",
-          annualGrowth: "+16%",
-          traction: "Escaló con referidos locales",
-          matchScore: 78,
-        },
-        {
-          idea: "ProAssist B2B",
-          market: "Operaciones PyME",
-          annualGrowth: "+14%",
-          traction: "Fuerte base de contratos recurrentes",
-          matchScore: 74,
-        },
-      ]
+  // Real similarIdeas are fetched via web search at runtime; mock provides empty fallback
+  const similarIdeas: SimilarIdeaBenchmark[] = []
 
   const viability: ViabilityData = {
     marketPotential: dynamicMarketScore,
@@ -503,7 +392,7 @@ export function generateAnalysis(input: BusinessInputData): StartupAnalysis {
       },
       {
         type: "caution",
-        text: `Ideas comparables exitosas puntúan ${similarIdeasStrength}/100 en similitud, pero el posicionamiento debe ser más afilado que los competidores locales.`,
+        text: `El posicionamiento debe ser más afilado que los competidores locales para capturar mercado.`,
       },
       {
         type: "risk",
