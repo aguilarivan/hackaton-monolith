@@ -519,7 +519,7 @@ async function runToolLoopWithSearch(
 
 const RESEARCH_TOOL: Anthropic.Tool = {
   name: "generate_research",
-  description: "Genera análisis de competidores reales (encontrados via web search) y kit de inicio.",
+  description: "Registra los competidores encontrados via búsqueda web y el kit de inicio.",
   input_schema: {
     type: "object" as const,
     properties: {
@@ -528,31 +528,33 @@ const RESEARCH_TOOL: Anthropic.Tool = {
         properties: {
           competitors: {
             type: "array",
-            description: "4 competidores REALES encontrados via búsqueda web. Cada uno debe tener URL verificable.",
+            description: "Competidores encontrados via búsqueda web. Solo incluir los que encontraste realmente.",
             items: {
               type: "object",
               properties: {
-                name: { type: "string", description: "Nombre real de la empresa/emprendimiento encontrado en la búsqueda" },
-                description: { type: "string" },
-                strengths: { type: "array", items: { type: "string" } },
-                weaknesses: { type: "array", items: { type: "string" } },
-                cityArea: { type: "string", description: "Barrio o zona real donde opera" },
-                marketShare: { type: "string", description: "Estimación de market share. Ej: '15-20%'" },
-                url: { type: "string", description: "URL real del sitio web o perfil en redes del competidor, encontrada en la búsqueda" },
+                name: { type: "string", description: "Nombre exacto tal como aparece en la búsqueda" },
+                description: { type: "string", description: "Descripción basada en lo que encontraste en su sitio o perfil" },
+                strengths: { type: "array", items: { type: "string" }, description: "Fortalezas observadas en la búsqueda" },
+                weaknesses: { type: "array", items: { type: "string" }, description: "Debilidades observadas" },
+                cityArea: { type: "string", description: "Zona o barrio donde opera, tal como aparece en sus datos" },
+                marketShare: { type: "string", description: "Estimación de presencia relativa. Ej: 'Alta', 'Media', '~20%'" },
+                url: { type: "string", description: "URL exacta del sitio web, Instagram u otro perfil encontrado" },
+                sourceQuery: { type: "string", description: "Query exacta que usaste para encontrar este competidor. Ej: 'tinder perros Buenos Aires'" },
               },
-              required: ["name", "description", "strengths", "weaknesses", "cityArea", "marketShare"],
+              required: ["name", "description", "strengths", "weaknesses", "cityArea", "marketShare", "sourceQuery"],
             },
           },
           launchZones: {
             type: "array",
+            description: "4 zonas reales de la ciudad evaluadas según lo que encontraste sobre actividad comercial y competencia",
             items: {
               type: "object",
               properties: {
-                zone: { type: "string", description: "Nombre real de barrio/zona de la ciudad" },
-                competitorDensity: { type: "number" },
-                demandSignal: { type: "number" },
-                launchScore: { type: "number" },
-                color: { type: "string", description: "hex: verde #22c55e si >7.5, amarillo #f59e0b si 5.5-7.5, rojo #ef4444 si <5.5" },
+                zone: { type: "string", description: "Nombre real del barrio o zona" },
+                competitorDensity: { type: "number", description: "1-10, basado en cuántos competidores encontraste en esa zona" },
+                demandSignal: { type: "number", description: "1-10, basado en actividad online encontrada (posts, reseñas, búsquedas)" },
+                launchScore: { type: "number", description: "1-10, calculado como demandSignal*0.6 + (10-competitorDensity)*0.4" },
+                color: { type: "string", description: "hex: #22c55e si >7.5, #f59e0b si 5.5-7.5, #ef4444 si <5.5" },
               },
               required: ["zone", "competitorDensity", "demandSignal", "launchScore", "color"],
             },
@@ -570,7 +572,7 @@ const RESEARCH_TOOL: Anthropic.Tool = {
               properties: {
                 name: { type: "string" },
                 reason: { type: "string" },
-                price: { type: "number", description: "precio estimado en ARS 2026" },
+                price: { type: "number", description: "precio en ARS 2026 basado en búsqueda" },
                 percentage: { type: "number", description: "% del presupuesto total" },
               },
               required: ["name", "reason", "price", "percentage"],
@@ -600,6 +602,7 @@ const ResearchOutputSchema = z.object({
         cityArea: z.string(),
         marketShare: z.string(),
         url: z.string().optional(),
+        sourceQuery: z.string().optional(),
       })),
       launchZones: z.array(z.object({
         zone: z.string(),
@@ -628,19 +631,24 @@ const ResearchOutputSchema = z.object({
 })
 
 function buildResearchSystem(city: string): string {
-  return `Sos un analista de startups con acceso a búsqueda web.
+  return `Tenés acceso a búsqueda web. Tu tarea es encontrar competidores REALES para la idea que te van a dar.
 
-TAREA: Encontrar competidores REALES para la idea y ciudad indicadas.
+REGLAS ABSOLUTAS:
+- PROHIBIDO inventar nombres de empresas. Solo usá lo que encontrás en las búsquedas.
+- PROHIBIDO usar tu conocimiento de entrenamiento para nombres de empresas. Solo datos de búsqueda.
+- Si una búsqueda no devuelve competidores reales, hacé otra búsqueda diferente.
+- Si después de 3 búsquedas no encontrás competidores, incluí los que encontraste (aunque sean pocos) y dejá el array con lo real.
 
-PASOS OBLIGATORIOS:
-1. Buscá "[tipo de negocio] ${city}" — encontrá empresas/emprendimientos reales que operen en ese mercado
-2. Buscá "[tipo de negocio] ${city} Instagram" o "[tipo de negocio] ${city} sitio web" — encontrá perfiles reales
-3. Para cada competidor: anotá su nombre real, URL del sitio o Instagram, y zona donde opera
-4. Identificá 4 zonas geográficas reales de ${city} con análisis de densidad competidora vs demanda
+PROCESO:
+1. Primera búsqueda (ya ejecutada): buscaste la idea en ${city}
+2. Analizá los resultados: ¿encontraste empresas reales? ¿tienen sitio web o Instagram?
+3. Si necesitás más datos: buscá el nombre de cada empresa encontrada para obtener su URL y zona
+4. Para las zonas de lanzamiento: buscá actividad del sector en diferentes barrios de ${city}
+5. Registrá el sourceQuery exacto que usaste para encontrar cada competidor
 
-REGLA CRÍTICA: Solo incluí competidores que encontraste en la búsqueda. Si no encontrás suficientes reales, podés completar con competidores plausibles pero indicalo en la descripción.
+IMPORTANTE: Es mejor devolver 2 competidores reales que 4 inventados.
 
-Después de buscar, llamá a generate_research con los datos.`
+Llamá a generate_research con lo que encontraste.`
 }
 
 export async function generateResearchSection(
@@ -657,10 +665,7 @@ export async function generateResearchSection(
     console.log("[generate_research] raw block.input:", JSON.stringify(block.input, null, 2))
     const parsed = ResearchOutputSchema.parse(deepParse(block.input))
 
-    const competitorsWithLocations: Competitor[] = parsed.competitors.competitors.map((c, i) => ({
-      ...c,
-      location: mock.competitors.competitors[i]?.location,
-    }))
+    const competitors: Competitor[] = parsed.competitors.competitors.map((c) => ({ ...c }))
 
     const kitItems: StartupKitItem[] = parsed.startupKit.items.map((item, i) => ({
       ...item,
@@ -672,7 +677,7 @@ export async function generateResearchSection(
 
     return {
       competitors: {
-        competitors: competitorsWithLocations,
+        competitors,
         mapCenter: mock.competitors.mapCenter,
         launchZones: parsed.competitors.launchZones,
       },
@@ -680,15 +685,20 @@ export async function generateResearchSection(
         items: kitItems,
         operationalReserve: mock.startupKit.operationalReserve,
         budgetDistribution: [
-          { category: "Equipment & Setup", percentage: totalItemPct, color: "var(--section-kit)" },
+          { category: "Equipamiento", percentage: totalItemPct, color: "var(--section-kit)" },
           { category: "Marketing", percentage: 20, color: "var(--section-roadmap)" },
-          { category: "Reserve", percentage: reservePct, color: "var(--section-viability)" },
+          { category: "Reserva", percentage: reservePct, color: "var(--section-viability)" },
         ],
       },
       _isMock: false,
     }
   } catch (error) {
     console.error("[generate_research] error:", (error as Error).message)
-    return { competitors: mock.competitors, startupKit: mock.startupKit, _isMock: true }
+    // No mock fallback — return empty competitors so the UI shows "no encontrado"
+    return {
+      competitors: { competitors: [], mapCenter: mock.competitors.mapCenter, launchZones: [] },
+      startupKit: mock.startupKit,
+      _isMock: false,
+    }
   }
 }

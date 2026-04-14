@@ -1,6 +1,6 @@
 "use client"
 
-import { ExternalLink, MapPin, Target, ThumbsDown, ThumbsUp, TrendingUp, Users } from "lucide-react"
+import { ExternalLink, MapPin, Search, Target, ThumbsDown, ThumbsUp, TrendingUp, Users } from "lucide-react"
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { CompetitorData } from "@/lib/mock-data"
@@ -20,6 +20,20 @@ function scoreColor(score: number) {
 export function CompetitorsSection({ data, city, isMock }: CompetitorsSectionProps) {
   const sorted = [...data.launchZones].sort((a, b) => b.launchScore - a.launchScore)
   const best = sorted[0]
+
+  if (data.competitors.length === 0) {
+    return (
+      <Card>
+        <CardContent className="p-8 text-center">
+          <Search className="mx-auto h-10 w-10 text-muted-foreground/40" />
+          <p className="mt-3 font-medium text-foreground">No se encontraron competidores</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            La búsqueda web no devolvió resultados para este rubro{city ? ` en ${city}` : ""}.
+          </p>
+        </CardContent>
+      </Card>
+    )
+  }
 
   const shareData = data.competitors.map((c) => ({
     name: c.name.length > 14 ? c.name.slice(0, 14) + "…" : c.name,
@@ -77,6 +91,12 @@ export function CompetitorsSection({ data, city, isMock }: CompetitorsSectionPro
                     )}
                   </div>
                   <p className="mt-1 text-sm text-muted-foreground">{competitor.description}</p>
+                  {competitor.sourceQuery && (
+                    <p className="mt-1 inline-flex items-center gap-1 text-xs text-muted-foreground/60">
+                      <Search className="h-3 w-3" />
+                      búsqueda: "{competitor.sourceQuery}"
+                    </p>
+                  )}
                 </div>
               </div>
 
