@@ -17,6 +17,9 @@ import {
   DollarSign,
   ArrowLeft,
   Target,
+  Zap,
+  ShieldAlert,
+  ArrowUpRight,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -60,8 +63,35 @@ export function StartupDashboard({ data, analysisOverride, onReset }: StartupDas
     return "text-destructive"
   }
 
+  const getScoreBgColor = (score: number) => {
+    if (score >= 7) return "bg-success/15 border-success/30"
+    if (score >= 5) return "bg-warning/15 border-warning/30"
+    return "bg-destructive/15 border-destructive/30"
+  }
+
+  const getVerdictLevel = (score: number) => {
+    if (score >= 7) return "alto"
+    if (score >= 5) return "moderado"
+    return "bajo"
+  }
+
+  const getTrendLabel = (trend: "up" | "stable" | "down") => {
+    if (trend === "up") return "en crecimiento"
+    if (trend === "stable") return "estable"
+    return "en contraccion"
+  }
+
+  const getCompetitionLabel = (level: "Low" | "Medium" | "High") => {
+    if (level === "Low") return "baja"
+    if (level === "Medium") return "moderada"
+    return "alta"
+  }
+
   const getSeverityCount = (severity: "High" | "Medium" | "Low") =>
     analysis.obstacles.filter((o) => o.severity === severity).length
+
+  const topOpportunity = analysis.viability.findings.find((f) => f.type === "opportunity")
+  const topRisk = analysis.obstacles.find((o) => o.severity === "High")
 
   // Handle section navigation
   const handleSectionClick = (section: SectionKey) => {
@@ -108,37 +138,99 @@ export function StartupDashboard({ data, analysisOverride, onReset }: StartupDas
   return (
     <div className="min-h-screen bg-background">
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-        {/* Header */}
+        {/* Hero Verdict */}
         <div
           className={cn(
             "mb-8 transition-all duration-500",
             isLoaded ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
           )}
         >
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-            <div className="space-y-3">
-              <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-                {analysis.appName} Analysis
-              </h1>
-              <p className="max-w-2xl text-base text-muted-foreground leading-relaxed">
-                {data.idea}
-              </p>
-              <div className="flex flex-wrap items-center gap-3">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1.5 text-sm font-medium text-primary">
-                  <MapPin className="h-3.5 w-3.5" />
-                  {data.city}
-                </span>
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1.5 text-sm font-medium text-muted-foreground">
-                  <DollarSign className="h-3.5 w-3.5" />
-                  {formatInvestment(data.investment)}
-                </span>
-              </div>
-            </div>
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0 flex-1" />
             <Button variant="outline" size="sm" onClick={onReset} className="shrink-0">
               <RefreshCw className="mr-2 h-4 w-4" />
-              New idea
+              Nueva idea
             </Button>
           </div>
+
+          <Card className={cn("mt-4 border", getScoreBgColor(analysis.viability.marketPotential))}>
+            <CardContent className="p-6 sm:p-8">
+              <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:gap-8">
+                {/* Score circle */}
+                <div className="flex shrink-0 flex-col items-center gap-2">
+                  <div
+                    className={cn(
+                      "flex h-24 w-24 items-center justify-center rounded-full border-4",
+                      analysis.viability.marketPotential >= 7
+                        ? "border-success/40 bg-success/10"
+                        : analysis.viability.marketPotential >= 5
+                        ? "border-warning/40 bg-warning/10"
+                        : "border-destructive/40 bg-destructive/10"
+                    )}
+                  >
+                    <div className="text-center">
+                      <span className={cn("text-4xl font-bold", getScoreColor(analysis.viability.marketPotential))}>
+                        {analysis.viability.marketPotential}
+                      </span>
+                      <span className="text-sm text-muted-foreground">/10</span>
+                    </div>
+                  </div>
+                  <span className="text-xs font-medium text-muted-foreground">Potencial</span>
+                </div>
+
+                {/* Verdict text */}
+                <div className="min-w-0 flex-1 space-y-4">
+                  <div>
+                    <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+                      {analysis.appName} tiene potencial {getVerdictLevel(analysis.viability.marketPotential)} en {data.city}
+                    </h1>
+                    <p className="mt-2 text-base leading-relaxed text-muted-foreground">
+                      El mercado esta {getTrendLabel(analysis.viability.trend)} con competencia {getCompetitionLabel(analysis.viability.competitionLevel)}.
+                      {" "}Tiempo estimado al primer ingreso: {analysis.viability.timeToFirstIncome}.
+                    </p>
+                  </div>
+
+                  {/* Quick stats row */}
+                  <div className="flex flex-wrap gap-3">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-background/80 px-3 py-1.5 text-sm font-medium text-foreground shadow-sm ring-1 ring-border">
+                      <MapPin className="h-3.5 w-3.5 text-primary" />
+                      {data.city}
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-background/80 px-3 py-1.5 text-sm font-medium text-foreground shadow-sm ring-1 ring-border">
+                      <DollarSign className="h-3.5 w-3.5 text-primary" />
+                      {formatInvestment(data.investment)}
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-background/80 px-3 py-1.5 text-sm font-medium text-foreground shadow-sm ring-1 ring-border">
+                      <Clock className="h-3.5 w-3.5 text-primary" />
+                      {analysis.viability.timeToFirstIncome}
+                    </span>
+                  </div>
+
+                  {/* Opportunity and risk highlights */}
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {topOpportunity && (
+                      <div className="flex items-start gap-2.5 rounded-lg bg-background/60 p-3 ring-1 ring-border">
+                        <ArrowUpRight className="mt-0.5 h-4 w-4 shrink-0 text-success" />
+                        <div>
+                          <p className="text-xs font-semibold text-success">Oportunidad clave</p>
+                          <p className="mt-0.5 text-sm text-muted-foreground">{topOpportunity.text}</p>
+                        </div>
+                      </div>
+                    )}
+                    {topRisk && (
+                      <div className="flex items-start gap-2.5 rounded-lg bg-background/60 p-3 ring-1 ring-border">
+                        <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
+                        <div>
+                          <p className="text-xs font-semibold text-destructive">Riesgo principal</p>
+                          <p className="mt-0.5 text-sm text-muted-foreground">{topRisk.title}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Bento Grid Dashboard */}
