@@ -10,7 +10,7 @@ import {
 function isBusinessInputData(value: unknown): value is BusinessInputData {
   if (!value || typeof value !== "object") return false
   const p = value as Record<string, unknown>
-  return typeof p.idea === "string" && typeof p.city === "string" && typeof p.investment === "number"
+  return typeof p.idea === "string" && (p.city === undefined || typeof p.city === "string") && (p.investment === undefined || typeof p.investment === "number")
 }
 
 function isClaudeAnswerArray(value: unknown): value is ClaudeAnswer[] {

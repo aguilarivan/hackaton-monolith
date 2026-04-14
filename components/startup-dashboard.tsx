@@ -92,9 +92,10 @@ export function StartupDashboard({ data, partial, isStreaming, onReset }: Startu
   }
 
   const getVerdictSentence = (score: number) => {
-    if (score >= 7) return `${displayName} tiene órbita alta en ${data.city} — las condiciones de lanzamiento son favorables.`
-    if (score >= 5) return `${displayName} tiene trayectoria viable en ${data.city} — hay turbulencia pero el camino existe.`
-    return `${displayName} enfrenta gravedad fuerte en ${data.city} — necesitás repensar la misión.`
+    const cityLabel = data.city ? ` en ${data.city}` : ""
+    if (score >= 7) return `${displayName} tiene órbita alta${cityLabel} — las condiciones de lanzamiento son favorables.`
+    if (score >= 5) return `${displayName} tiene trayectoria viable${cityLabel} — hay turbulencia pero el camino existe.`
+    return `${displayName} enfrenta gravedad fuerte${cityLabel} — necesitás repensar la misión.`
   }
 
   const getCompetitionLabel = (level: string) => {
@@ -214,14 +215,18 @@ export function StartupDashboard({ data, partial, isStreaming, onReset }: Startu
 
                     {/* Quick stats row */}
                     <div className="flex flex-wrap gap-3">
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-background/80 px-3 py-1.5 text-sm font-medium text-foreground shadow-sm ring-1 ring-border">
-                        <MapPin className="h-3.5 w-3.5 text-primary" />
-                        {data.city}
-                      </span>
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-background/80 px-3 py-1.5 text-sm font-medium text-foreground shadow-sm ring-1 ring-border">
-                        <DollarSign className="h-3.5 w-3.5 text-primary" />
-                        {formatInvestment(data.investment)}
-                      </span>
+                      {data.city && (
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-background/80 px-3 py-1.5 text-sm font-medium text-foreground shadow-sm ring-1 ring-border">
+                          <MapPin className="h-3.5 w-3.5 text-primary" />
+                          {data.city}
+                        </span>
+                      )}
+                      {data.investment && (
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-background/80 px-3 py-1.5 text-sm font-medium text-foreground shadow-sm ring-1 ring-border">
+                          <DollarSign className="h-3.5 w-3.5 text-primary" />
+                          {formatInvestment(data.investment)}
+                        </span>
+                      )}
                       <span className="inline-flex items-center gap-1.5 rounded-full bg-background/80 px-3 py-1.5 text-sm font-medium text-foreground shadow-sm ring-1 ring-border">
                         <Clock className="h-3.5 w-3.5 text-primary" />
                         {v.viability.timeToFirstIncome}

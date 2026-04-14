@@ -301,7 +301,8 @@ function getMapCenter(city: string): { lat: number; lng: number } {
 }
 
 export function generateAnalysis(input: BusinessInputData): StartupAnalysis {
-  const { idea, city, investment } = input
+  const { idea, city } = input
+  const investment = input.investment ?? 500000
   const normalizedCity = city || "Buenos Aires"
   const lowerIdea = idea.toLowerCase()
   const appName = generateAppName(idea)

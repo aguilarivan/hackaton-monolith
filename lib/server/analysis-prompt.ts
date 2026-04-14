@@ -398,10 +398,12 @@ export function buildAnalysisUserMessage(
           .join("\n")
       : "No se requirieron preguntas adicionales (la descripción fue suficientemente detallada)."
 
+  const infoLines = [`- Descripción: ${input.idea}`]
+  if (input.city) infoLines.push(`- Ciudad: ${input.city}`)
+  if (input.investment) infoLines.push(`- Inversión inicial disponible: ARS ${input.investment.toLocaleString("es-AR")}`)
+
   return `IDEA DE NEGOCIO A ANALIZAR:
-- Descripción: ${input.idea}
-- Ciudad: ${input.city || "Buenos Aires"}
-- Inversión inicial disponible: ARS ${input.investment.toLocaleString("es-AR")}
+${infoLines.join("\n")}
 
 INFORMACIÓN ADICIONAL DEL FUNDADOR:
 ${answersText}

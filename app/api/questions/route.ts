@@ -12,8 +12,8 @@ function isBusinessInputData(value: unknown): value is BusinessInputData {
   const payload = value as Record<string, unknown>
   return (
     typeof payload.idea === "string" &&
-    typeof payload.city === "string" &&
-    typeof payload.investment === "number"
+    (payload.city === undefined || typeof payload.city === "string") &&
+    (payload.investment === undefined || typeof payload.investment === "number")
   )
 }
 

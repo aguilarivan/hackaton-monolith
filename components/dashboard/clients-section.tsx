@@ -8,15 +8,15 @@ import type { ClientData } from "@/lib/mock-data"
 
 interface ClientsSectionProps {
   data: ClientData
-  city: string
+  city?: string
 }
 
-function buildB2BEmail(clientName: string, city: string, role: string, context: string): string {
+function buildB2BEmail(clientName: string, city: string | undefined, role: string, context: string): string {
   return `Subject: Quick idea to improve results at ${clientName}
 
 Hi ${role},
 
-I noticed ${clientName} is growing in ${city}. I help teams like yours improve outcomes with a practical, low-risk rollout that starts with a short pilot.
+I noticed ${clientName}${city ? ` is growing in ${city}` : ""}. I help teams like yours improve outcomes with a practical, low-risk rollout that starts with a short pilot.
 
 Why this can be relevant for you:
 - ${context}
@@ -30,14 +30,15 @@ Best regards,
 DayZero Founder`
 }
 
-function buildB2CMessage(segment: string, city: string): string {
+function buildB2CMessage(segment: string, city: string | undefined): string {
+  const locationSuffix = city ? ` in ${city}` : ""
   return `Campaign Draft for ${segment}
 
-Headline: Better everyday solutions for ${segment.toLowerCase()} in ${city}
+Headline: Better everyday solutions for ${segment.toLowerCase()}${locationSuffix}
 CTA: Join our early access list and get the first-month launch benefit.
 
 Message:
-We built this specifically for ${segment.toLowerCase()} in ${city}. Sign up today and be first to get priority onboarding, launch pricing, and concierge support during the first weeks.`
+We built this specifically for ${segment.toLowerCase()}${locationSuffix}. Sign up today and be first to get priority onboarding, launch pricing, and concierge support during the first weeks.`
 }
 
 export function ClientsSection({ data, city }: ClientsSectionProps) {
@@ -56,7 +57,7 @@ export function ClientsSection({ data, city }: ClientsSectionProps) {
             {isB2B ? <Building2 className="h-5 w-5 text-[oklch(0.55_0.18_270)]" /> : <Users className="h-5 w-5 text-[oklch(0.55_0.18_270)]" />}
           </div>
           <CardTitle className="text-xl">
-            {isB2B ? `B2B Clients Identified in ${city}` : `Customer Segments in ${city}`}
+            {isB2B ? `B2B Clients Identified${city ? ` in ${city}` : ""}` : `Customer Segments${city ? ` in ${city}` : ""}`}
           </CardTitle>
         </div>
       </CardHeader>

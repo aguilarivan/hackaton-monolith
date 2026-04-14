@@ -77,10 +77,21 @@ Usá estas como base, adaptando título, helper y opciones al contexto específi
   Opciones tipo: precio más bajo | mejor calidad/experiencia | nicho específico | expand.
   Impacta: sección 1 (viabilidad), sección 2 (competidores), sección 3 (clientes).
 
+[ciudad] "¿En qué ciudad o zona vas a operar?"
+  Cuándo: el usuario no indicó ciudad.
+  Opciones tipo: 3-4 ciudades argentinas relevantes para la idea + expand.
+  Impacta: sección 2 (competidores/zonas), sección 4 (legal), sección 5 (kit).
+
+[inversion-inicial] "¿Cuánto tenés disponible para invertir al inicio?"
+  Cuándo: el usuario no indicó inversión inicial.
+  Opciones tipo: 3-4 rangos de inversión realistas para la idea (ej: "Menos de $200.000", "$200.000 – $500.000", "$500.000 – $1.500.000", "Más de $1.500.000") + expand.
+  Impacta: sección 5 (kit de inicio), sección 4 (legal), sección 6 (roadmap).
+
 Podes crear preguntas adicionales si identificás un dato crítico que no encaja en estas categorías, siguiendo el mismo formato de opciones y siempre con "expand" como última opción.
 
 ═══ REGLAS FINALES ═══
 
+- Si el usuario no proporcionó ciudad o inversión inicial, SIEMPRE incluí la pregunta correspondiente del catálogo
 - Devolvé la cantidad de preguntas necesarias para obtener todos los datos requeridos, ordenadas por impacto en el análisis
 - Cada pregunta: 3 a 4 opciones claras y mutuamente excluyentes
 - La última opción de CADA pregunta SIEMPRE debe ser: value "expand", label "Quiero ampliar este punto"
@@ -107,10 +118,12 @@ Ejemplo:
 // ── Per-request message builder ───────────────────────────────────────────────
 
 export function buildQuestionsUserMessage(input: BusinessInputData): string {
+  const lines = [`- Descripción: ${input.idea}`]
+  if (input.city) lines.push(`- Ciudad: ${input.city}`)
+  if (input.investment) lines.push(`- Inversión inicial disponible: ARS ${input.investment.toLocaleString("es-AR")}`)
+
   return `IDEA DE NEGOCIO:
-- Descripción: ${input.idea}
-- Ciudad: ${input.city || "Buenos Aires"}
-- Inversión inicial disponible: ARS ${input.investment.toLocaleString("es-AR")}
+${lines.join("\n")}
 
 Analizá esta idea evaluando qué necesita cada sección del análisis. Devolvé SOLO el array JSON con las preguntas de clarificación necesarias, o un array vacío [] si podés inferir todo con confianza.`
 }

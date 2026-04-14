@@ -6,7 +6,7 @@ import type { StartupKitData } from "@/lib/mock-data"
 
 interface KitSectionProps {
   data: StartupKitData
-  investment: number
+  investment?: number
 }
 
 export function KitSection({ data, investment }: KitSectionProps) {
@@ -21,7 +21,7 @@ export function KitSection({ data, investment }: KitSectionProps) {
           </div>
           <div>
             <CardTitle className="text-xl">Starter Kit for Your Investment</CardTitle>
-            <p className="mt-1 text-sm text-muted-foreground">How to distribute ARS {investment.toLocaleString("en-US")}</p>
+            {investment && <p className="mt-1 text-sm text-muted-foreground">How to distribute ARS {investment.toLocaleString("en-US")}</p>}
           </div>
         </div>
       </CardHeader>

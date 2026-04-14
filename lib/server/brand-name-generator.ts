@@ -42,11 +42,11 @@ const SPANISH_PATTERNS = [
 ]
 
 export function generateBrandNames(input: BusinessInputData): string[] {
-  const seed = hashStr(input.idea + input.city)
+  const seed = hashStr(input.idea + (input.city ?? ""))
   const keywords = extractKeywords(input.idea)
 
   if (keywords.length === 0) {
-    const word = input.city.split(" ")[0] || "Mi"
+    const word = input.city?.split(" ")[0] || "Mi"
     keywords.push(word.toLowerCase())
   }
 

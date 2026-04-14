@@ -9,8 +9,8 @@ export type BusinessType = "fisica" | "digital" | "ambos"
 
 export interface BusinessInputData {
   idea: string
-  city: string
-  investment: number
+  city?: string
+  investment?: number
   brandName?: string
   businessType?: BusinessType
 }
@@ -48,8 +48,8 @@ export function HeroInput({ onSubmit }: HeroInputProps) {
 
     onSubmit({
       idea,
-      city: city || "Buenos Aires",
-      investment: parseNumber(investment) || 500000,
+      city: city.trim() || undefined,
+      investment: parseNumber(investment) || undefined,
       brandName: brandName.trim() || undefined,
       businessType: businessType ?? undefined,
     })
@@ -118,7 +118,7 @@ export function HeroInput({ onSubmit }: HeroInputProps) {
               {/* City Input */}
               <div className="space-y-2">
                 <label htmlFor="city" className="text-sm font-medium text-foreground">
-                  Ciudad <span className="font-normal text-muted-foreground">(opcional)</span>
+                  Ciudad
                 </label>
                 <div className="relative">
                   <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -145,7 +145,7 @@ export function HeroInput({ onSubmit }: HeroInputProps) {
                     type="text"
                     value={investment}
                     onChange={handleInvestmentChange}
-                    placeholder="500,000"
+                    placeholder="Ej: 500,000"
                     className="w-full rounded-lg border border-input bg-background py-2.5 pl-10 pr-4 text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">

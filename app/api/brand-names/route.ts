@@ -5,7 +5,7 @@ import type { BusinessInputData } from "@/components/hero-input"
 function isBusinessInput(v: unknown): v is BusinessInputData {
   if (!v || typeof v !== "object") return false
   const p = v as Record<string, unknown>
-  return typeof p.idea === "string" && typeof p.city === "string" && typeof p.investment === "number"
+  return typeof p.idea === "string" && (p.city === undefined || typeof p.city === "string") && (p.investment === undefined || typeof p.investment === "number")
 }
 
 export async function POST(request: Request) {

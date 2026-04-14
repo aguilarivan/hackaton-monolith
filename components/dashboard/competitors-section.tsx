@@ -8,7 +8,7 @@ import type { CompetitorData } from "@/lib/mock-data"
 
 interface CompetitorsSectionProps {
   data: CompetitorData
-  city: string
+  city?: string
 }
 
 type Coordinate = {
@@ -153,7 +153,7 @@ function buildBuenosAiresGrid(competitorLocations: Coordinate[]): GridZone[] {
 }
 
 export function CompetitorsSection({ data, city }: CompetitorsSectionProps) {
-  const normalizedCity = city.trim().toLowerCase()
+  const normalizedCity = (city ?? "").trim().toLowerCase()
   const isBuenosAires = normalizedCity.includes("buenos aires") || normalizedCity.includes("caba")
 
   const mapCenter = isBuenosAires ? BA_CENTER : data.mapCenter
@@ -181,7 +181,7 @@ export function CompetitorsSection({ data, city }: CompetitorsSectionProps) {
             </div>
             <div>
               <CardTitle className="text-xl">Competitor Analysis</CardTitle>
-              <p className="text-sm text-muted-foreground">{data.competitors.length} main competitors in {city}</p>
+              <p className="text-sm text-muted-foreground">{data.competitors.length} main competitors{city ? ` in ${city}` : ""}</p>
             </div>
           </div>
         </CardHeader>
