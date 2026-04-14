@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react"
 import {
-  RefreshCw,
   Gauge,
   Users,
   Scale,
@@ -169,9 +168,6 @@ export function StartupDashboard({ data, partial, isStreaming, onReset }: Startu
                 </span>
               )}
             </div>
-            <Button variant="outline" size="sm" onClick={onReset} className="shrink-0">
-              <RefreshCw className="mr-2 h-4 w-4" />Nueva idea
-            </Button>
           </div>
 
           {v ? (
