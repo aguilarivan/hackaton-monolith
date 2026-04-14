@@ -11,6 +11,7 @@ import { generateAnalysisFromApi, getFlowSession, isApiClientError } from "@/lib
 import type { StartupAnalysis } from "@/lib/mock-data"
 import { clearFlowStorage, getBusinessInput, getClaudeAnswers, getFlowId } from "@/lib/flow-storage"
 import type { BusinessInputData } from "@/components/hero-input"
+import { StepIndicator } from "@/components/step-indicator"
 
 const analysisMessages = [
   "Claude esta evaluando mercado y competencia",
@@ -139,6 +140,7 @@ export default function AnalysisPage() {
     return (
       <main className="min-h-screen bg-background">
         <Header />
+        <StepIndicator currentStep={3} />
         <div className="mx-auto w-full max-w-3xl px-4 py-8">
           <Card className="border-destructive/30 bg-destructive/5">
             <CardHeader>
@@ -176,7 +178,8 @@ export default function AnalysisPage() {
     return (
       <main className="min-h-screen bg-background">
         <Header />
-        <div className="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-3xl items-center justify-center px-4 py-16">
+        <StepIndicator currentStep={3} />
+        <div className="mx-auto flex min-h-[calc(100vh-6rem)] w-full max-w-3xl items-center justify-center px-4 py-16">
           <Card className="w-full border-border/70">
             <CardContent className="space-y-6 p-8 text-center">
               <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
@@ -200,6 +203,7 @@ export default function AnalysisPage() {
   return (
     <main className="min-h-screen bg-background">
       <Header />
+      <StepIndicator currentStep={3} />
       <StartupDashboard data={businessData} analysisOverride={analysisData ?? undefined} onReset={handleReset} />
     </main>
   )
