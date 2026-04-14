@@ -17,9 +17,9 @@ export function CompetitorsSection({ data, city, isMock }: CompetitorsSectionPro
       <Card>
         <CardContent className="p-8 text-center">
           <Search className="mx-auto h-10 w-10 text-muted-foreground/40" />
-          <p className="mt-3 font-medium text-foreground">No se encontraron competidores</p>
+          <p className="mt-3 font-medium text-foreground">No encontramos resultados en esta búsqueda</p>
           <p className="mt-1 text-sm text-muted-foreground">
-            La búsqueda web no devolvió resultados para este rubro{city ? ` en ${city}` : ""}.
+            Las búsquedas web no arrojaron competidores claros para este rubro{city ? ` en ${city}` : ""}. Puede que existan pero no los encontramos.
           </p>
         </CardContent>
       </Card>
