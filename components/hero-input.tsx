@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { ArrowRight, MapPin, DollarSign, Rocket, Tag } from "lucide-react"
+import { ArrowRight, MapPin, DollarSign, Tag } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
@@ -61,23 +61,15 @@ export function HeroInput({ onSubmit }: HeroInputProps) {
   }
 
   return (
-    <div className="flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center px-4 py-16">
-      <div className="mx-auto w-full max-w-3xl space-y-8">
-        {/* Badge */}
-        <div className="flex justify-center">
-          <div className="inline-flex items-center gap-2 rounded-full border border-border bg-secondary/50 px-4 py-1.5 text-sm text-muted-foreground">
-            <Rocket className="h-3.5 w-3.5 text-primary" />
-            <span>Paso 1 · Validá tu idea de negocio</span>
-          </div>
-        </div>
-
+    <div className="flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center px-4 py-8">
+      <div className="mx-auto w-full max-w-3xl space-y-5">
         {/* Heading */}
-        <div className="space-y-4 text-center">
-          <h1 className="text-balance text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
+        <div className="space-y-2 text-center">
+          <h1 className="text-balance text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
             Empezá el negocio{" "}
             <span className="text-primary">que siempre soñaste</span>
           </h1>
-          <p className="mx-auto max-w-xl text-pretty text-base text-muted-foreground">
+          <p className="mx-auto max-w-xl text-pretty text-sm text-muted-foreground">
             Describí tu idea, tu ciudad y tu inversión inicial. La IA analiza todo y genera un informe completo adaptado a tu contexto.
           </p>
         </div>
@@ -119,38 +111,6 @@ export function HeroInput({ onSubmit }: HeroInputProps) {
                 placeholder="Ej: servicio de catering corporativo en Buenos Aires"
                 className="min-h-[100px] w-full resize-none rounded-lg border border-input bg-background p-4 text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
               />
-            </div>
-
-            {/* Business Type Selector */}
-            <div className="mt-5 space-y-2">
-              <label className="text-sm font-medium text-foreground">
-                ¿Cómo va a funcionar tu negocio?{" "}
-                <span className="font-normal text-muted-foreground">(opcional)</span>
-              </label>
-              <div className="grid grid-cols-3 gap-2">
-                {BUSINESS_TYPES.map((t) => (
-                  <button
-                    key={t.value}
-                    type="button"
-                    onClick={() => setBusinessType(businessType === t.value ? null : t.value)}
-                    className={cn(
-                      "flex flex-col items-center gap-1.5 rounded-xl border px-2 py-3 text-center transition-all",
-                      businessType === t.value
-                        ? "border-primary bg-primary/10 shadow-sm"
-                        : "border-border bg-background hover:border-primary/40 hover:bg-secondary/40"
-                    )}
-                  >
-                    <span className="text-2xl">{t.emoji}</span>
-                    <span className={cn(
-                      "text-xs font-semibold leading-tight",
-                      businessType === t.value ? "text-primary" : "text-foreground"
-                    )}>
-                      {t.label}
-                    </span>
-                    <span className="text-[10px] leading-tight text-muted-foreground">{t.desc}</span>
-                  </button>
-                ))}
-              </div>
             </div>
 
             {/* City and Investment Row */}
