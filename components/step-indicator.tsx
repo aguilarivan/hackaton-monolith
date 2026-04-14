@@ -3,9 +3,9 @@
 import { cn } from "@/lib/utils"
 
 const steps = [
-  { label: "Tu idea", path: "/" },
-  { label: "Preguntas", path: "/preguntas-claude" },
-  { label: "Analisis", path: "/analisis" },
+  { label: "Mision", path: "/" },
+  { label: "Calibracion", path: "/preguntas-claude" },
+  { label: "Despegue", path: "/analisis" },
 ]
 
 interface StepIndicatorProps {

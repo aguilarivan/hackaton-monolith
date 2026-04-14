@@ -69,10 +69,10 @@ export function StartupDashboard({ data, analysisOverride, onReset }: StartupDas
     return "bg-destructive/15 border-destructive/30"
   }
 
-  const getVerdictLevel = (score: number) => {
-    if (score >= 7) return "alto"
-    if (score >= 5) return "moderado"
-    return "bajo"
+  const getVerdictSentence = (score: number) => {
+    if (score >= 7) return `${analysis.appName} tiene orbita alta en ${data.city} — las condiciones de lanzamiento son favorables.`
+    if (score >= 5) return `${analysis.appName} tiene trayectoria viable en ${data.city} — hay turbulencia pero el camino existe.`
+    return `${analysis.appName} enfrenta gravedad fuerte en ${data.city} — necesitas repensar la mision.`
   }
 
   const getTrendLabel = (trend: "up" | "stable" | "down") => {
@@ -182,10 +182,10 @@ export function StartupDashboard({ data, analysisOverride, onReset }: StartupDas
                 <div className="min-w-0 flex-1 space-y-4">
                   <div>
                     <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-                      {analysis.appName} tiene potencial {getVerdictLevel(analysis.viability.marketPotential)} en {data.city}
+                      {getVerdictSentence(analysis.viability.marketPotential)}
                     </h1>
                     <p className="mt-2 text-base leading-relaxed text-muted-foreground">
-                      El mercado esta {getTrendLabel(analysis.viability.trend)} con competencia {getCompetitionLabel(analysis.viability.competitionLevel)}.
+                      Mercado {getTrendLabel(analysis.viability.trend)}, competencia {getCompetitionLabel(analysis.viability.competitionLevel)}.
                       {" "}Tiempo estimado al primer ingreso: {analysis.viability.timeToFirstIncome}.
                     </p>
                   </div>

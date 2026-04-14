@@ -28,14 +28,14 @@ import { cn } from "@/lib/utils"
 import { StepIndicator } from "@/components/step-indicator"
 
 const analysisSteps = [
-  { icon: Gauge, label: "Analizando mercado y demanda" },
-  { icon: TrendingUp, label: "Evaluando competencia" },
-  { icon: Users, label: "Identificando clientes ideales" },
-  { icon: DollarSign, label: "Diseñando modelo de monetizacion" },
+  { icon: Gauge, label: "Escaneando el mercado objetivo" },
+  { icon: TrendingUp, label: "Mapeando la competencia" },
+  { icon: Users, label: "Identificando primeros clientes" },
+  { icon: DollarSign, label: "Calculando trayectoria de monetizacion" },
   { icon: Scale, label: "Revisando estructura legal" },
-  { icon: Package, label: "Calculando kit de arranque" },
-  { icon: Map, label: "Armando roadmap de lanzamiento" },
-  { icon: AlertTriangle, label: "Priorizando riesgos y soluciones" },
+  { icon: Package, label: "Armando kit de arranque" },
+  { icon: Map, label: "Preparando plan de lanzamiento" },
+  { icon: AlertTriangle, label: "Evaluando riesgos de mision" },
 ]
 
 const STEP_INTERVAL_MS = 1400
@@ -197,10 +197,10 @@ export default function AnalysisPage() {
                   <Bot className="h-7 w-7 text-primary" />
                 </div>
                 <p className="text-lg font-semibold text-foreground">
-                  Claude esta construyendo tu analisis
+                  Preparando secuencia de lanzamiento
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  Analizando datos para {businessData.city || "tu ciudad"}
+                  Checklist pre-despegue para {businessData.city || "tu ciudad"}
                 </p>
               </div>
 
