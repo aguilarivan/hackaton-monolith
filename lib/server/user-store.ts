@@ -9,17 +9,25 @@ export interface User {
   createdAt: number
 }
 
-// In-memory store — resets on every server restart (consistent with flow-store.ts)
-const usersByEmail = new Map<string, User>()
-
-const demoUser: User = {
-  id: randomUUID(),
-  email: "demo@dayzero.app",
-  passwordHash: bcrypt.hashSync("password123", 10),
-  name: "Demo User",
-  createdAt: Date.now(),
+// Anclar el Map a globalThis para que sobreviva hot-reloads en dev mode
+declare global {
+  // eslint-disable-next-line no-var
+  var __usersByEmail: Map<string, User> | undefined
 }
-usersByEmail.set(demoUser.email, demoUser)
+
+const usersByEmail: Map<string, User> =
+  globalThis.__usersByEmail ?? (globalThis.__usersByEmail = new Map())
+
+// Seed demo user si no existe todavía
+if (!usersByEmail.has("demo@dayzero.app")) {
+  usersByEmail.set("demo@dayzero.app", {
+    id: randomUUID(),
+    email: "demo@dayzero.app",
+    passwordHash: bcrypt.hashSync("password123", 10),
+    name: "Demo User",
+    createdAt: Date.now(),
+  })
+}
 
 export async function findUserByEmail(email: string): Promise<User | undefined> {
   return usersByEmail.get(email.toLowerCase().trim())
