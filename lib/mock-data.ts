@@ -90,21 +90,12 @@ export interface Competitor {
   }
 }
 
-export interface LaunchZone {
-  zone: string
-  competitorDensity: number
-  demandSignal: number
-  launchScore: number
-  color: string
-}
-
 export interface CompetitorData {
   competitors: Competitor[]
   mapCenter: {
     lat: number
     lng: number
   }
-  launchZones: LaunchZone[]
 }
 
 export interface B2BClient {
@@ -588,12 +579,6 @@ export function generateAnalysis(input: BusinessInputData): StartupAnalysis {
       },
     ],
     mapCenter: center,
-    launchZones: [
-      { zone: "Corredor Norte", competitorDensity: 8.4, demandSignal: 9.1, launchScore: 6.4, color: "#f59e0b" },
-      { zone: "Zona Residencial Oeste", competitorDensity: 4.2, demandSignal: 7.9, launchScore: 8.2, color: "#22c55e" },
-      { zone: "Centro / Microcentro", competitorDensity: 9.3, demandSignal: 8.8, launchScore: 5.9, color: "#ef4444" },
-      { zone: "Zona Sur / Logística", competitorDensity: 5.1, demandSignal: 7.2, launchScore: 7.6, color: "#84cc16" },
-    ],
   }
 
   const clients: ClientData = isB2B

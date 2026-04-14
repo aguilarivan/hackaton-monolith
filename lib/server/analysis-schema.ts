@@ -248,7 +248,6 @@ export function mergeWithComputedData(
     competitors: {
       competitors: competitorsWithLocations,
       mapCenter: mock.competitors.mapCenter,
-      launchZones: core.competitors.launchZones,
     },
     clients: core.clients,
     legalStructure: {

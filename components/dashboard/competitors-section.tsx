@@ -1,6 +1,6 @@
 "use client"
 
-import { ExternalLink, MapPin, Search, Target, ThumbsDown, ThumbsUp, TrendingUp, Users } from "lucide-react"
+import { ExternalLink, MapPin, Search, ThumbsDown, ThumbsUp, TrendingUp, Users } from "lucide-react"
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { CompetitorData } from "@/lib/mock-data"
@@ -11,16 +11,8 @@ interface CompetitorsSectionProps {
   isMock?: boolean
 }
 
-function scoreColor(score: number) {
-  if (score >= 7.5) return { bg: "bg-success/10", border: "border-success/30", text: "text-success", bar: "#22c55e" }
-  if (score >= 5.5) return { bg: "bg-warning/10", border: "border-warning/30", text: "text-warning", bar: "#f59e0b" }
-  return { bg: "bg-destructive/10", border: "border-destructive/30", text: "text-destructive", bar: "#ef4444" }
-}
 
 export function CompetitorsSection({ data, city, isMock }: CompetitorsSectionProps) {
-  const sorted = [...data.launchZones].sort((a, b) => b.launchScore - a.launchScore)
-  const best = sorted[0]
-
   if (data.competitors.length === 0) {
     return (
       <Card>
@@ -173,71 +165,6 @@ export function CompetitorsSection({ data, city, isMock }: CompetitorsSectionPro
         </Card>
       )}
 
-      {/* Launch zones */}
-      {sorted.length > 0 && (
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[oklch(0.55_0.18_270_/_0.1)]">
-                <Target className="h-5 w-5 text-[oklch(0.55_0.18_270)]" />
-              </div>
-              <div>
-                <CardTitle className="text-xl">Zonas de lanzamiento</CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  Densidad competidora vs demanda por zona{city ? ` en ${city}` : ""}
-                </p>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-3 sm:grid-cols-2">
-              {sorted.map((zone, i) => {
-                const c = scoreColor(zone.launchScore)
-                return (
-                  <div key={i} className={`rounded-lg border p-4 ${c.bg} ${c.border}`}>
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="font-semibold text-foreground">{zone.zone}</p>
-                      <span className={`text-lg font-bold ${c.text}`}>{zone.launchScore}/10</span>
-                    </div>
-                    <div className="mt-3 space-y-2">
-                      <div>
-                        <div className="mb-1 flex justify-between text-xs text-muted-foreground">
-                          <span>Demanda</span>
-                          <span>{zone.demandSignal}/10</span>
-                        </div>
-                        <div className="h-1.5 w-full overflow-hidden rounded-full bg-border">
-                          <div className="h-full rounded-full bg-success" style={{ width: `${zone.demandSignal * 10}%` }} />
-                        </div>
-                      </div>
-                      <div>
-                        <div className="mb-1 flex justify-between text-xs text-muted-foreground">
-                          <span>Competencia</span>
-                          <span>{zone.competitorDensity}/10</span>
-                        </div>
-                        <div className="h-1.5 w-full overflow-hidden rounded-full bg-border">
-                          <div className="h-full rounded-full bg-destructive" style={{ width: `${zone.competitorDensity * 10}%` }} />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-
-            {best && (
-              <div className="rounded-lg border border-success/30 bg-success/5 p-4">
-                <p className="inline-flex items-center gap-2 text-sm font-semibold text-success">
-                  <Target className="h-4 w-4" />
-                  Mejor zona para lanzar: {best.zone} (score {best.launchScore}/10)
-                </p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Menor presión competidora combinada con mayor señal de demanda.
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
     </div>
   )
 }

@@ -539,23 +539,8 @@ const RESEARCH_TOOL: Anthropic.Tool = {
               required: ["name", "description", "strengths", "weaknesses", "cityArea", "marketShare", "sourceQuery"],
             },
           },
-          launchZones: {
-            type: "array",
-            description: "4 zonas reales de la ciudad evaluadas según lo que encontraste sobre actividad comercial y competencia",
-            items: {
-              type: "object",
-              properties: {
-                zone: { type: "string", description: "Nombre real del barrio o zona" },
-                competitorDensity: { type: "number", description: "1-10, basado en cuántos competidores encontraste en esa zona" },
-                demandSignal: { type: "number", description: "1-10, basado en actividad online encontrada (posts, reseñas, búsquedas)" },
-                launchScore: { type: "number", description: "1-10, calculado como demandSignal*0.6 + (10-competitorDensity)*0.4" },
-                color: { type: "string", description: "hex: #22c55e si >7.5, #f59e0b si 5.5-7.5, #ef4444 si <5.5" },
-              },
-              required: ["zone", "competitorDensity", "demandSignal", "launchScore", "color"],
-            },
-          },
         },
-        required: ["competitors", "launchZones"],
+        required: ["competitors"],
       },
       startupKit: {
         type: "object",
@@ -585,7 +570,7 @@ const ResearchOutputSchema = z.object({
   competitors: z.preprocess(
     (val) => {
       const v = typeof val === "string" ? (() => { try { return JSON.parse(val) } catch { return val } })() : val
-      if (Array.isArray(v)) return { competitors: v, launchZones: [] }
+      if (Array.isArray(v)) return { competitors: v }
       return v
     },
     z.object({
@@ -599,13 +584,6 @@ const ResearchOutputSchema = z.object({
         url: z.string().optional(),
         sourceQuery: z.string().optional(),
       })),
-      launchZones: z.array(z.object({
-        zone: z.string(),
-        competitorDensity: z.number(),
-        demandSignal: z.number(),
-        launchScore: z.number(),
-        color: z.string(),
-      })).default([]),
     })
   ),
   startupKit: z.preprocess(
@@ -651,8 +629,6 @@ PROCESO:
 1. Primera búsqueda ya ejecutada — analizá si el negocio es digital, físico o híbrido
 2. Hacé 2-3 búsquedas con el alcance correcto según el tipo
 3. Para cada competidor encontrado: anotá su URL real y la query que lo encontró (sourceQuery)
-4. Para las zonas de lanzamiento: si es digital usá zonas donde hay más usuarios potenciales en ${city}; si es físico usá barrios reales
-
 Registrá sourceQuery exacto por cada competidor. Llamá a generate_research con lo que encontraste.`
 }
 
@@ -684,7 +660,6 @@ export async function generateResearchSection(
       competitors: {
         competitors,
         mapCenter: mock.competitors.mapCenter,
-        launchZones: parsed.competitors.launchZones,
       },
       startupKit: {
         items: kitItems,
@@ -701,7 +676,7 @@ export async function generateResearchSection(
     console.error("[generate_research] error:", error)
     // No mock fallback — return empty competitors so the UI shows "no encontrado"
     return {
-      competitors: { competitors: [], mapCenter: mock.competitors.mapCenter, launchZones: [] },
+      competitors: { competitors: [], mapCenter: mock.competitors.mapCenter },
       startupKit: mock.startupKit,
       _isMock: false,
     }
