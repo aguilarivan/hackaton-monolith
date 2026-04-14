@@ -1,20 +1,16 @@
 "use client"
 
 import { useState } from "react"
+import { useTranslations } from "next-intl"
 import { Zap, ArrowRight, Layout, MessageSquare, Search, Smartphone, Upload, HelpCircle } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 
-const features = [
-  { icon: Layout, label: "Sección principal con propuesta de valor" },
-  { icon: Layout, label: "Sección de servicios" },
-  { icon: MessageSquare, label: "Formulario WhatsApp" },
-  { icon: Search, label: "SEO básico" },
-  { icon: Smartphone, label: "Prioridad móvil" },
-  { icon: Upload, label: "Lista para publicar" },
-]
+const featureIcons = [Layout, Layout, MessageSquare, Search, Smartphone, Upload]
+const featureKeys = ["heroSection", "servicesSection", "whatsappForm", "basicSeo", "mobilePriority", "readyToPublish"] as const
 
 export function LandingCTA() {
+  const t = useTranslations("landingCta")
   const [toastVisible, setToastVisible] = useState(false)
 
   const handleClick = () => {
@@ -34,25 +30,28 @@ export function LandingCTA() {
               </div>
               <div>
                 <h3 className="text-xl font-bold text-foreground sm:text-2xl">
-                  Tu análisis está completo. Ahora aterrizá tu idea.
+                  {t("title")}
                 </h3>
                 <p className="mt-1 text-muted-foreground">
-                  La IA ya tiene todo el contexto de tu análisis y puede generar una página lista para publicar.
+                  {t("description")}
                 </p>
               </div>
             </div>
 
             {/* Feature chips */}
             <div className="flex flex-wrap gap-2">
-              {features.map((feature, index) => (
-                <div
-                  key={index}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-border bg-secondary/50 px-3 py-1.5 text-xs font-medium text-muted-foreground"
-                >
-                  <feature.icon className="h-3 w-3" />
-                  {feature.label}
-                </div>
-              ))}
+              {featureKeys.map((key, index) => {
+                const Icon = featureIcons[index]
+                return (
+                  <div
+                    key={key}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-border bg-secondary/50 px-3 py-1.5 text-xs font-medium text-muted-foreground"
+                  >
+                    <Icon className="h-3 w-3" />
+                    {t(`features.${key}`)}
+                  </div>
+                )
+              })}
             </div>
           </div>
 
@@ -60,18 +59,18 @@ export function LandingCTA() {
           <div className="flex flex-col gap-3 sm:flex-row lg:flex-col lg:items-end">
             <div className="relative">
               <Button size="lg" className="h-12 px-6 text-base font-semibold" onClick={handleClick}>
-                Crear mi página
+                {t("createPage")}
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
               {toastVisible && (
                 <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-lg bg-foreground px-3 py-1.5 text-xs font-medium text-background shadow-lg">
-                  Próximamente: generá tu página automáticamente
+                  {t("comingSoon")}
                 </div>
               )}
             </div>
             <button className="inline-flex items-center justify-center gap-1.5 text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">
               <HelpCircle className="h-3.5 w-3.5" />
-              ¿Cómo publicarla gratis?
+              {t("howToPublish")}
             </button>
           </div>
         </div>

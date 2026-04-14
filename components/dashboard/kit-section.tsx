@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations, useLocale } from "next-intl"
 import { Package, ExternalLink, Wallet, Columns3 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { StartupKitData } from "@/lib/mock-data"
@@ -10,7 +11,9 @@ interface KitSectionProps {
 }
 
 export function KitSection({ data, investment }: KitSectionProps) {
-  const formatPrice = (price: number) => `ARS ${price.toLocaleString("es-AR")}`
+  const t = useTranslations("kitSection")
+  const locale = useLocale()
+  const formatPrice = (price: number) => `ARS ${price.toLocaleString(locale === "es" ? "es-AR" : "en-US")}`
 
   return (
     <Card>
@@ -20,8 +23,8 @@ export function KitSection({ data, investment }: KitSectionProps) {
             <Package className="h-5 w-5 text-[oklch(0.6_0.15_80)]" />
           </div>
           <div>
-            <CardTitle className="text-xl">Kit de Inicio para tu Inversión</CardTitle>
-            {investment && <p className="mt-1 text-sm text-muted-foreground">Cómo distribuir ARS {investment.toLocaleString("es-AR")}</p>}
+            <CardTitle className="text-xl">{t("title")}</CardTitle>
+            {investment && <p className="mt-1 text-sm text-muted-foreground">{t("subtitle", { investment: investment.toLocaleString(locale === "es" ? "es-AR" : "en-US") })}</p>}
           </div>
         </div>
       </CardHeader>
@@ -70,7 +73,7 @@ export function KitSection({ data, investment }: KitSectionProps) {
               <div className="mt-4 rounded-md border border-border bg-background p-3">
                 <p className="mb-2 inline-flex items-center gap-1.5 text-xs font-semibold text-foreground">
                   <Columns3 className="h-3.5 w-3.5 text-primary" />
-                  Comparación de productos entre plataformas
+                  {t("productComparison")}
                 </p>
                 <div className="space-y-2">
                   {item.offers.map((offer, offerIndex) => (
@@ -78,14 +81,14 @@ export function KitSection({ data, investment }: KitSectionProps) {
                       <p className="font-medium text-foreground">{offer.platform}</p>
                       <p className="text-muted-foreground">{offer.title}</p>
                       <p className="font-semibold text-primary">{formatPrice(offer.price)}</p>
-                      <p className="text-muted-foreground">{offer.rating.toFixed(1)}★ • {offer.delivery}</p>
+                      <p className="text-muted-foreground">{t("ratingDelivery", { rating: offer.rating.toFixed(1), delivery: offer.delivery })}</p>
                       <a
                         href={offer.url}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1 text-primary hover:underline"
                       >
-                        Ver
+                        {t("view")}
                         <ExternalLink className="h-3 w-3" />
                       </a>
                     </div>
@@ -102,7 +105,7 @@ export function KitSection({ data, investment }: KitSectionProps) {
               <Wallet className="h-5 w-5 text-info" />
             </div>
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Reserva operativa recomendada</p>
+              <p className="text-sm font-medium text-muted-foreground">{t("operatingReserve")}</p>
               <p className="text-xl font-bold text-info">{formatPrice(data.operationalReserve)}</p>
             </div>
           </div>

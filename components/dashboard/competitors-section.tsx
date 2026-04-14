@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations, useLocale } from "next-intl"
 import { ExternalLink, MapPin, Search, ThumbsDown, ThumbsUp, TrendingUp, Users } from "lucide-react"
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -13,14 +14,17 @@ interface CompetitorsSectionProps {
 
 
 export function CompetitorsSection({ data, city, isMock }: CompetitorsSectionProps) {
+  const t = useTranslations("competitorsSection")
+  const locale = useLocale()
+
   if (data.competitors.length === 0) {
     return (
       <Card>
         <CardContent className="p-8 text-center">
           <Search className="mx-auto h-10 w-10 text-muted-foreground/40" />
-          <p className="mt-3 font-medium text-foreground">No se encontraron competidores</p>
+          <p className="mt-3 font-medium text-foreground">{t("noCompetitors")}</p>
           <p className="mt-1 text-sm text-muted-foreground">
-            La búsqueda web no devolvió resultados para este rubro{city ? ` en ${city}` : ""}.
+            {t("noCompetitorsDesc", { city: city ? ` en ${city}` : "" })}
           </p>
         </CardContent>
       </Card>
@@ -53,11 +57,11 @@ export function CompetitorsSection({ data, city, isMock }: CompetitorsSectionPro
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <CardTitle className="text-xl">Competidores identificados</CardTitle>
+                <CardTitle className="text-xl">{t("title")}</CardTitle>
                 {isMock && <span className="rounded bg-yellow-400/20 px-1.5 py-0.5 text-xs font-bold text-yellow-600">MOCK</span>}
               </div>
               <p className="text-sm text-muted-foreground">
-                {data.competitors.length} competidores{city ? ` en ${city}` : ""}
+                {t("count", { count: data.competitors.length, city: city ? ` en ${city}` : "" })}
               </p>
             </div>
           </div>
@@ -85,7 +89,7 @@ export function CompetitorsSection({ data, city, isMock }: CompetitorsSectionPro
                         onClick={(e) => e.stopPropagation()}
                       >
                         <ExternalLink className="h-3 w-3" />
-                        Verificar
+                        {t("verify")}
                       </a>
                     )}
                   </div>
@@ -93,7 +97,7 @@ export function CompetitorsSection({ data, city, isMock }: CompetitorsSectionPro
                   {competitor.sourceQuery && (
                     <p className="mt-1 inline-flex items-center gap-1 text-xs text-muted-foreground/60">
                       <Search className="h-3 w-3" />
-                      búsqueda: "{competitor.sourceQuery}"
+                      {t("searchQuery", { query: competitor.sourceQuery })}
                     </p>
                   )}
                 </div>
@@ -103,7 +107,7 @@ export function CompetitorsSection({ data, city, isMock }: CompetitorsSectionPro
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
                     <ThumbsUp className="h-4 w-4 text-success" />
-                    <span className="text-sm font-medium text-success">Fortalezas</span>
+                    <span className="text-sm font-medium text-success">{t("strengths")}</span>
                   </div>
                   <ul className="space-y-1">
                     {competitor.strengths.map((s, idx) => (
@@ -117,7 +121,7 @@ export function CompetitorsSection({ data, city, isMock }: CompetitorsSectionPro
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
                     <ThumbsDown className="h-4 w-4 text-destructive" />
-                    <span className="text-sm font-medium text-destructive">Debilidades</span>
+                    <span className="text-sm font-medium text-destructive">{t("weaknesses")}</span>
                   </div>
                   <ul className="space-y-1">
                     {competitor.weaknesses.map((w, idx) => (
@@ -143,8 +147,8 @@ export function CompetitorsSection({ data, city, isMock }: CompetitorsSectionPro
                 <TrendingUp className="h-5 w-5 text-[oklch(0.55_0.18_270)]" />
               </div>
               <div>
-                <CardTitle className="text-xl">Participación de mercado estimada</CardTitle>
-                <p className="text-sm text-muted-foreground">Distribución relativa entre competidores</p>
+                <CardTitle className="text-xl">{t("marketShareTitle")}</CardTitle>
+                <p className="text-sm text-muted-foreground">{t("marketShareDesc")}</p>
               </div>
             </div>
           </CardHeader>
@@ -157,7 +161,7 @@ export function CompetitorsSection({ data, city, isMock }: CompetitorsSectionPro
                   <YAxis tick={{ fontSize: 12, fill: "var(--muted-foreground)" }} unit="%" />
                   <Tooltip
                     contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8 }}
-                    formatter={(value: number) => [`${value}%`, "Cuota de mercado"]}
+                    formatter={(value: number) => [`${value}%`, t("marketShareLabel")]}
                     labelFormatter={(_, payload) => payload?.[0]?.payload?.fullName ?? ""}
                   />
                   <Bar dataKey="share" radius={[4, 4, 0, 0]}>

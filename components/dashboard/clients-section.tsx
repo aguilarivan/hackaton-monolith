@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useTranslations, useLocale } from "next-intl"
 import { Building2, Users, Mail, Wand2 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -42,6 +43,8 @@ Creamos esto específicamente para ${segment.toLowerCase()}${locationSuffix}. Re
 }
 
 export function ClientsSection({ data, city }: ClientsSectionProps) {
+  const t = useTranslations("clientsSection")
+  const locale = useLocale()
   const isB2B = data.type === "b2b"
   const [generatedContent, setGeneratedContent] = useState<Record<string, string>>({})
 
@@ -57,7 +60,7 @@ export function ClientsSection({ data, city }: ClientsSectionProps) {
             {isB2B ? <Building2 className="h-5 w-5 text-[oklch(0.55_0.18_270)]" /> : <Users className="h-5 w-5 text-[oklch(0.55_0.18_270)]" />}
           </div>
           <CardTitle className="text-xl">
-            {isB2B ? `Clientes B2B Identificados${city ? ` en ${city}` : ""}` : `Segmentos de Clientes${city ? ` en ${city}` : ""}`}
+            {isB2B ? t("b2bTitle", { city: city ? ` en ${city}` : "" }) : t("b2cTitle", { city: city ? ` en ${city}` : "" })}
           </CardTitle>
         </div>
       </CardHeader>
@@ -72,10 +75,10 @@ export function ClientsSection({ data, city }: ClientsSectionProps) {
                   <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{client.reason}</p>
                   <div className="mt-3 rounded-md bg-secondary/50 p-2.5 text-xs text-muted-foreground">
                     <p>
-                      <span className="font-semibold text-foreground">Cómo abordarlo:</span> {client.approach}
+                      <span className="font-semibold text-foreground">{t("approach")}</span> {client.approach}
                     </p>
                     <p className="mt-1">
-                      <span className="font-semibold text-foreground">Mejor rol de contacto:</span> {client.contactRole}
+                      <span className="font-semibold text-foreground">{t("contactRole")}</span> {client.contactRole}
                     </p>
                   </div>
 
@@ -88,7 +91,7 @@ export function ClientsSection({ data, city }: ClientsSectionProps) {
                       onClick={() => handleGenerate(contentKey, buildB2BEmail(client.name, city, client.contactRole, client.companyContext))}
                     >
                       <Mail className="h-4 w-4" />
-                      Generar email específico
+                      {t("generateEmail")}
                     </Button>
                   </div>
 
@@ -114,7 +117,7 @@ export function ClientsSection({ data, city }: ClientsSectionProps) {
                     </span>
                   </div>
                   <div className="mt-3 rounded-md bg-secondary/50 p-2.5 text-xs text-muted-foreground">
-                    <span className="font-semibold text-foreground">Cómo llegar:</span> {segment.reachStrategy}
+                    <span className="font-semibold text-foreground">{t("approach")}</span> {segment.reachStrategy}
                   </div>
                   <div className="mt-3">
                     <Button
@@ -125,7 +128,7 @@ export function ClientsSection({ data, city }: ClientsSectionProps) {
                       onClick={() => handleGenerate(contentKey, buildB2CMessage(segment.segment, city))}
                     >
                       <Wand2 className="h-4 w-4" />
-                      Generar mensaje
+                      {t("generateMessage")}
                     </Button>
                   </div>
                   {generatedContent[contentKey] && (
