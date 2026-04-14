@@ -287,12 +287,12 @@ export function StartupDashboard({ data, partial, isStreaming, onReset }: Startu
                   <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-1" />
                 </div>
                 <div className="mt-4">
-                  <p className={cn("text-2xl font-bold", getScoreColor(v.viability.marketPotential))}>
-                    {v.viability.marketPotential}/10
-                  </p>
-                  <p className="text-sm font-medium text-foreground">Viabilidad</p>
+                  <div className="flex items-baseline gap-2">
+                    <p className="text-sm font-semibold text-foreground">Viabilidad</p>
+                    <span className={cn("text-sm font-bold", getScoreColor(v.viability.marketPotential))}>{v.viability.marketPotential}/10</span>
+                  </div>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Competencia {getCompetitionLabel(v.viability.competitionLevel)}, tendencia {getTrendLabel(v.viability.trend)}
+                    Señales de mercado, modelo de negocio y proyecciones de crecimiento
                   </p>
                 </div>
               </CardContent>
@@ -310,11 +310,10 @@ export function StartupDashboard({ data, partial, isStreaming, onReset }: Startu
                   <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-1" />
                 </div>
                 <div className="mt-4">
-                  <p className="text-2xl font-bold text-foreground">
-                    ${v.viability.monetization.plans[1].monthlyPriceArs.toLocaleString("es-AR")}
+                  <p className="text-sm font-semibold text-foreground">Monetización</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {v.viability.monetization.plans.length} planes de precio sugeridos y benchmark de mercado
                   </p>
-                  <p className="text-sm font-medium text-foreground">Monetización</p>
-                  <p className="mt-1 text-xs text-muted-foreground">Plan {v.viability.monetization.plans[1].name} recomendado</p>
                 </div>
               </CardContent>
             </Card>
@@ -331,9 +330,10 @@ export function StartupDashboard({ data, partial, isStreaming, onReset }: Startu
                   <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-1" />
                 </div>
                 <div className="mt-4">
-                  <p className="text-2xl font-bold text-foreground">{r.competitors.competitors.length}</p>
-                  <p className="text-sm font-medium text-foreground">Competidores</p>
-                  <p className="mt-1 text-xs text-muted-foreground">Identificados en {data.city}</p>
+                  <p className="text-sm font-semibold text-foreground">Competidores</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {r.competitors.competitors.length} identificados — fortalezas, debilidades y mapa de zonas
+                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -350,12 +350,11 @@ export function StartupDashboard({ data, partial, isStreaming, onReset }: Startu
                   <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-1" />
                 </div>
                 <div className="mt-4">
-                  <p className="text-2xl font-bold text-foreground">
-                    {v.clients.type === "b2b" ? v.clients.b2bClients?.length || 0 : v.clients.b2cSegments?.length || 0}
-                  </p>
-                  <p className="text-sm font-medium text-foreground">Clientes</p>
+                  <p className="text-sm font-semibold text-foreground">Clientes</p>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    {v.clients.type === "b2b" ? "Clientes B2B potenciales" : "Segmentos B2C identificados"}
+                    {v.clients.type === "b2b"
+                      ? `${v.clients.b2bClients?.length || 0} clientes B2B — perfiles y cómo abordarlos`
+                      : `${v.clients.b2cSegments?.length || 0} segmentos — perfiles y canales de llegada`}
                   </p>
                 </div>
               </CardContent>
@@ -373,11 +372,10 @@ export function StartupDashboard({ data, partial, isStreaming, onReset }: Startu
                   <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-1" />
                 </div>
                 <div className="mt-4">
-                  <p className="text-2xl font-bold text-foreground">
-                    {d.legalStructure.structures.find((s) => s.recommended)?.name || "SAS"}
+                  <p className="text-sm font-semibold text-foreground">Legal & Impuestos</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {d.legalStructure.structures.find((s) => s.recommended)?.name || "SAS"} recomendada — régimen fiscal y trámites
                   </p>
-                  <p className="text-sm font-medium text-foreground">Legal & Impuestos</p>
-                  <p className="mt-1 text-xs text-muted-foreground">{d.legalStructure.taxInfo.regime}</p>
                 </div>
               </CardContent>
             </Card>
@@ -394,11 +392,10 @@ export function StartupDashboard({ data, partial, isStreaming, onReset }: Startu
                   <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-1" />
                 </div>
                 <div className="mt-4">
-                  <p className="text-2xl font-bold text-foreground">
-                    ${r.startupKit.items.reduce((sum, item) => sum + item.price, 0).toLocaleString("es-AR")}
+                  <p className="text-sm font-semibold text-foreground">Kit de inicio</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {r.startupKit.items.length} items esenciales — qué comprar, dónde y a qué precio
                   </p>
-                  <p className="text-sm font-medium text-foreground">Kit de inicio</p>
-                  <p className="mt-1 text-xs text-muted-foreground">{r.startupKit.items.length} productos esenciales</p>
                 </div>
               </CardContent>
             </Card>
@@ -415,19 +412,10 @@ export function StartupDashboard({ data, partial, isStreaming, onReset }: Startu
                   <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-1" />
                 </div>
                 <div className="mt-4">
-                  <p className="text-2xl font-bold text-foreground">{d.obstacles.length}</p>
-                  <p className="text-sm font-medium text-foreground">Obstáculos</p>
-                  <div className="mt-1 flex gap-1.5">
-                    <span className="inline-flex items-center gap-1 rounded-full bg-destructive/10 px-2 py-0.5 text-[11px] font-medium text-destructive">
-                      <span className="h-1.5 w-1.5 rounded-full bg-destructive" />{getSeverityCount("High")}
-                    </span>
-                    <span className="inline-flex items-center gap-1 rounded-full bg-warning/10 px-2 py-0.5 text-[11px] font-medium text-warning">
-                      <span className="h-1.5 w-1.5 rounded-full bg-warning" />{getSeverityCount("Medium")}
-                    </span>
-                    <span className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-[11px] font-medium text-success">
-                      <span className="h-1.5 w-1.5 rounded-full bg-success" />{getSeverityCount("Low")}
-                    </span>
-                  </div>
+                  <p className="text-sm font-semibold text-foreground">Obstáculos</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {d.obstacles.length} riesgos ({getSeverityCount("High")} críticos) — mitigación y casos reales
+                  </p>
                 </div>
               </CardContent>
             </Card>
