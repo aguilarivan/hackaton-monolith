@@ -433,12 +433,79 @@ export async function generateDetailsSection(
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// SECTION 3 — Competitors + Kit
+// SECTION 3 — Competitors + Kit  (Sonnet + web search)
 // ══════════════════════════════════════════════════════════════════════════════
+
+const WEB_SEARCH_TOOL = { type: "web_search_20260209" as const, name: "web_search" } as const
+
+/**
+ * Like runToolLoop but also handles web_search tool calls transparently.
+ * Claude may call web_search multiple times before calling the target tool.
+ * For each web_search tool_use we send back an empty tool_result; Anthropic's
+ * server-side infrastructure injects the real search results.
+ */
+async function runToolLoopWithSearch(
+  system: string,
+  userMessage: string,
+  tool: Anthropic.Tool,
+): Promise<Anthropic.ToolUseBlock> {
+  const messages: Anthropic.MessageParam[] = [{ role: "user", content: userMessage }]
+
+  for (let turn = 0; turn < 12; turn++) {
+    const response = await anthropic.messages.create({
+      model: "claude-sonnet-4-6",
+      max_tokens: 8192,
+      system: [{ type: "text", text: system, cache_control: { type: "ephemeral" } }],
+      tools: [WEB_SEARCH_TOOL as unknown as Anthropic.Tool, tool],
+      tool_choice: { type: "auto" },
+      messages,
+    })
+
+    console.log(`[${tool.name}+search] turn=${turn + 1} stop=${response.stop_reason} blocks=${response.content.length}`)
+
+    // Target tool was called → done
+    const targetBlock = response.content.find(
+      (b): b is Anthropic.ToolUseBlock => b.type === "tool_use" && b.name === tool.name
+    )
+    if (targetBlock) return targetBlock
+
+    if (response.stop_reason === "end_turn") {
+      // Claude finished without calling the tool — nudge it
+      messages.push({ role: "assistant", content: response.content })
+      messages.push({ role: "user", content: `Ahora llamá a ${tool.name} con toda la información que encontraste.` })
+      continue
+    }
+
+    // stop_reason === "tool_use" — handle web_search tool_use blocks
+    const webSearchBlocks = response.content.filter(
+      (b): b is Anthropic.ToolUseBlock => b.type === "tool_use" && b.name === "web_search"
+    )
+
+    if (webSearchBlocks.length > 0) {
+      messages.push({ role: "assistant", content: response.content })
+      // Acknowledge each web_search call; server injects real results
+      messages.push({
+        role: "user",
+        content: webSearchBlocks.map((b) => ({
+          type: "tool_result" as const,
+          tool_use_id: b.id,
+          content: [],
+        })),
+      })
+      continue
+    }
+
+    // Unknown stop — nudge
+    messages.push({ role: "assistant", content: response.content })
+    messages.push({ role: "user", content: `Llamá a ${tool.name} con el análisis completo.` })
+  }
+
+  throw new Error(`${tool.name} not called after max turns`)
+}
 
 const RESEARCH_TOOL: Anthropic.Tool = {
   name: "generate_research",
-  description: "Genera análisis de competidores y kit de inicio.",
+  description: "Genera análisis de competidores reales (encontrados via web search) y kit de inicio.",
   input_schema: {
     type: "object" as const,
     properties: {
@@ -447,15 +514,17 @@ const RESEARCH_TOOL: Anthropic.Tool = {
         properties: {
           competitors: {
             type: "array",
+            description: "4 competidores REALES encontrados via búsqueda web. Cada uno debe tener URL verificable.",
             items: {
               type: "object",
               properties: {
-                name: { type: "string" },
+                name: { type: "string", description: "Nombre real de la empresa/emprendimiento encontrado en la búsqueda" },
                 description: { type: "string" },
                 strengths: { type: "array", items: { type: "string" } },
                 weaknesses: { type: "array", items: { type: "string" } },
-                cityArea: { type: "string" },
-                marketShare: { type: "string" },
+                cityArea: { type: "string", description: "Barrio o zona real donde opera" },
+                marketShare: { type: "string", description: "Estimación de market share. Ej: '15-20%'" },
+                url: { type: "string", description: "URL real del sitio web o perfil en redes del competidor, encontrada en la búsqueda" },
               },
               required: ["name", "description", "strengths", "weaknesses", "cityArea", "marketShare"],
             },
@@ -465,7 +534,7 @@ const RESEARCH_TOOL: Anthropic.Tool = {
             items: {
               type: "object",
               properties: {
-                zone: { type: "string" },
+                zone: { type: "string", description: "Nombre real de barrio/zona de la ciudad" },
                 competitorDensity: { type: "number" },
                 demandSignal: { type: "number" },
                 launchScore: { type: "number" },
@@ -487,7 +556,7 @@ const RESEARCH_TOOL: Anthropic.Tool = {
               properties: {
                 name: { type: "string" },
                 reason: { type: "string" },
-                price: { type: "number", description: "precio estimado en ARS" },
+                price: { type: "number", description: "precio estimado en ARS 2026" },
                 percentage: { type: "number", description: "% del presupuesto total" },
               },
               required: ["name", "reason", "price", "percentage"],
@@ -505,7 +574,6 @@ const ResearchOutputSchema = z.object({
   competitors: z.preprocess(
     (val) => {
       const v = typeof val === "string" ? (() => { try { return JSON.parse(val) } catch { return val } })() : val
-      // Haiku a veces devuelve el array directo en lugar del objeto wrapper
       if (Array.isArray(v)) return { competitors: v, launchZones: [] }
       return v
     },
@@ -517,6 +585,7 @@ const ResearchOutputSchema = z.object({
         weaknesses: z.array(z.string()),
         cityArea: z.string(),
         marketShare: z.string(),
+        url: z.string().optional(),
       })),
       launchZones: z.array(z.object({
         zone: z.string(),
@@ -544,14 +613,28 @@ const ResearchOutputSchema = z.object({
   ),
 })
 
+const RESEARCH_SYSTEM = `Sos un analista de startups argentinos con acceso a búsqueda web.
+
+TAREA: Encontrar competidores REALES para la idea y ciudad indicadas.
+
+PASOS OBLIGATORIOS:
+1. Buscá "[tipo de negocio] [ciudad] Argentina" — encontrá empresas/emprendimientos reales que operen en ese mercado
+2. Buscá "[tipo de negocio] Argentina Instagram" o "[tipo de negocio] Buenos Aires" — encontrá perfiles reales
+3. Para cada competidor: anotá su nombre real, URL del sitio o Instagram, y zona donde opera
+4. Identificá 4 zonas geográficas reales de la ciudad con análisis de densidad competidora vs demanda
+
+REGLA CRÍTICA: Solo incluí competidores que encontraste en la búsqueda. Si no encontrás suficientes reales, podés completar con competidores plausibles pero indicalo en la descripción.
+
+Después de buscar, llamá a generate_research con los datos.`
+
 export async function generateResearchSection(
   input: BusinessInputData,
   answers: ClaudeAnswer[],
   mock: StartupAnalysis
 ): Promise<ResearchSection> {
   try {
-    const block = await runToolLoop(
-      `Sos un analista de startups argentinos. Generá 4 competidores reales o plausibles para la ciudad indicada, 4 zonas de lanzamiento con scores, y 3 ítems del kit de inicio con precios en ARS 2026. Usá zonas geográficas reales. Llamá a generate_research.`,
+    const block = await runToolLoopWithSearch(
+      RESEARCH_SYSTEM,
       buildAnalysisUserMessage(input, answers),
       RESEARCH_TOOL
     )

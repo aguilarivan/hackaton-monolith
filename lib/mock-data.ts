@@ -82,6 +82,7 @@ export interface Competitor {
   weaknesses: string[]
   cityArea: string
   marketShare: string
+  url?: string
   location?: {
     lat: number
     lng: number
