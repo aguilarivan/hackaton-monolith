@@ -2,9 +2,9 @@ import type Anthropic from "@anthropic-ai/sdk"
 import type { BusinessInputData } from "@/components/hero-input"
 import type { ClaudeAnswer } from "@/lib/server/flow-store"
 
-// ── System prompt (must contain ZERO dynamic content for prompt caching) ──────
+// ── System prompt — Spanish ──────────────────────────────────────────────────
 
-export const ANALYSIS_SYSTEM_PROMPT = `Sos un analista senior especializado en startups y negocios del mercado argentino. Generás análisis profundos, realistas y accionables para emprendedores en etapa de lanzamiento.
+const ANALYSIS_SYSTEM_PROMPT_ES = `Sos un analista senior especializado en startups y negocios del mercado argentino. Generás análisis profundos, realistas y accionables para emprendedores en etapa de lanzamiento.
 
 INSTRUCCIÓN CRÍTICA — BÚSQUEDA WEB OBLIGATORIA:
 Tenés acceso a búsqueda web. USALA ACTIVAMENTE para obtener datos reales y actualizados. No uses tu conocimiento de entrenamiento para datos que pueden estar desactualizados (precios, competidores, productos). El análisis debe estar basado en datos reales encontrados en internet.
@@ -36,6 +36,50 @@ REGLAS DE ANÁLISIS:
 
 INSTRUCCIÓN DE RESPUESTA:
 Primero hacé las búsquedas necesarias, luego llamá a generate_analysis con el análisis completo basado en datos reales. No respondas con texto libre.`
+
+// ── System prompt — English ──────────────────────────────────────────────────
+
+const ANALYSIS_SYSTEM_PROMPT_EN = `You are a senior analyst specializing in startups and businesses in the Argentine market. You generate deep, realistic, and actionable analyses for entrepreneurs at the launch stage.
+
+CRITICAL INSTRUCTION — MANDATORY WEB SEARCH:
+You have access to web search. USE IT ACTIVELY to obtain real, up-to-date data. Do not use your training knowledge for data that may be outdated (prices, competitors, products). The analysis must be based on real data found on the internet.
+
+SEARCHES YOU MUST PERFORM BEFORE GENERATING THE ANALYSIS:
+1. Real competitors: search "[business type] [city] Argentina" -> find 3-4 real companies/ventures operating in that market
+2. Market prices: search "[service type] price Argentina 2025" or "how much does [business type] charge Argentina" -> real current price benchmarks
+3. Starter kit products: for each necessary item in the startup kit, search "[product name] Mercado Libre Argentina" -> get real product URLs with updated prices
+
+RULES FOR USING REAL DATA:
+- Competitors: use real company names found in searches, not invented names
+- Prices and monetization: base numbers on real data found, not on training estimates
+- Startup kit: include offers with real URLs from Mercado Libre or other Argentine stores, found in searches
+- If you cannot find a specific data point, indicate it in the analysis but do not invent it
+
+ARGENTINE MARKET CONTEXT:
+- Currency: ARS (Argentine pesos)
+- Main cities: Buenos Aires (CABA/GBA), Cordoba, Rosario, Mendoza, Tucuman, Salta
+- Legal frameworks: Monotributo (up to ~ARS 8M annually), SAS (recommended for startups), SRL, SA
+- Relevant platforms: Mercado Libre, TiendaNube, Instagram Shopping, WhatsApp Business
+- Fintech: Mercado Pago, Uala, Brubank, Naranja X
+
+ANALYSIS RULES:
+1. Use real geographic zones of the indicated city (in Buenos Aires: Palermo, Belgrano, Caballito, Villa Crespo, San Telmo, etc.)
+2. For obstacles with failureCase: cite real startups that failed for similar reasons (Homejoy, Webvan, Fab.com, Zirtual, etc.)
+3. The roadmap must be specific and actionable, not generic
+4. The appName must be creative and appropriate for the Hispanic market
+5. If B2B/B2C was not specified, determine it based on the nature of the business
+
+RESPONSE INSTRUCTION:
+First perform the necessary searches, then call generate_analysis with the complete analysis based on real data. Do not respond with free text.`
+
+// ── System prompt selector ───────────────────────────────────────────────────
+
+export function getAnalysisSystemPrompt(locale: string): string {
+  return locale === "en" ? ANALYSIS_SYSTEM_PROMPT_EN : ANALYSIS_SYSTEM_PROMPT_ES
+}
+
+/** @deprecated Use getAnalysisSystemPrompt(locale) instead */
+export const ANALYSIS_SYSTEM_PROMPT = ANALYSIS_SYSTEM_PROMPT_ES
 
 // ── Web search tool (server-side, Anthropic-managed) ─────────────────────────
 
@@ -386,8 +430,33 @@ export const ANALYSIS_TOOL_DEFINITION: Anthropic.Tool = {
 
 export function buildAnalysisUserMessage(
   input: BusinessInputData,
-  answers: ClaudeAnswer[]
+  answers: ClaudeAnswer[],
+  locale: string = "es"
 ): string {
+  if (locale === "en") {
+    const answersText =
+      answers.length > 0
+        ? answers
+            .map(
+              (a) =>
+                `- ${a.questionId}: "${a.option}"${a.details ? ` — additional detail: "${a.details}"` : ""}`
+            )
+            .join("\n")
+        : "No additional questions were required (the description was sufficiently detailed)."
+
+    const infoLines = [`- Description: ${input.idea}`]
+    if (input.city) infoLines.push(`- City: ${input.city}`)
+    if (input.investment) infoLines.push(`- Initial investment available: ARS ${input.investment.toLocaleString("es-AR")}`)
+
+    return `BUSINESS IDEA TO ANALYZE:
+${infoLines.join("\n")}
+
+ADDITIONAL FOUNDER INFORMATION:
+${answersText}
+
+Generate a complete, specific, and actionable analysis for this idea. For any aspect not explicitly specified (customer type, pricing, revenue model, zones, etc.), make the best recommendation based on your knowledge of the Argentine market in 2026. Act as an expert consultant: recommend, do not wait for the founder to figure everything out.`
+  }
+
   const answersText =
     answers.length > 0
       ? answers

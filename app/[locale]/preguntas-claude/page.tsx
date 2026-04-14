@@ -24,6 +24,7 @@ export default function ClaudeQuestionsPage() {
   const router = useRouter()
   const t = useTranslations("questions")
   const tCommon = useTranslations("common")
+  const locale = useLocale()
 
   const loadingMessages = [t("loadingMessages.0"), t("loadingMessages.1"), t("loadingMessages.2")]
   const [isPreparing, setIsPreparing] = useState(true)
@@ -73,7 +74,7 @@ export default function ClaudeQuestionsPage() {
 
     try {
       const flowId = getFlowId()
-      const apiQuestions = await getClarificationQuestionsFromApi(input, flowId ?? undefined)
+      const apiQuestions = await getClarificationQuestionsFromApi(input, flowId ?? undefined, locale)
       setQuestions(apiQuestions)
     } catch (error) {
       setQuestions([])
@@ -147,7 +148,7 @@ export default function ClaudeQuestionsPage() {
         return
       }
 
-      const { newFlowId } = await saveFlowAnswers(flowId, payload, businessData ?? undefined)
+      const { newFlowId } = await saveFlowAnswers(flowId, payload, businessData ?? undefined, locale)
       if (newFlowId) saveFlowId(newFlowId)
       saveClaudeAnswers(payload)
       router.push("/analisis")

@@ -4,7 +4,7 @@ import { generateClarificationQuestions } from "@/lib/server/question-generator"
 import { apiError, apiSuccess, parseJsonBody } from "@/lib/server/api-response"
 import { anthropic } from "@/lib/server/claude-client"
 import { ClarificationQuestionArraySchema } from "@/lib/server/analysis-schema"
-import { QUESTIONS_SYSTEM_PROMPT, buildQuestionsUserMessage } from "@/lib/server/questions-prompt"
+import { getQuestionsSystemPrompt, buildQuestionsUserMessage } from "@/lib/server/questions-prompt"
 
 function isBusinessInputData(value: unknown): value is BusinessInputData {
   if (!value || typeof value !== "object") return false
@@ -17,7 +17,7 @@ function isBusinessInputData(value: unknown): value is BusinessInputData {
   )
 }
 
-async function generateQuestionsWithClaude(input: BusinessInputData) {
+async function generateQuestionsWithClaude(input: BusinessInputData, locale: string = "es") {
   const fallback = generateClarificationQuestions(input)
 
   try {
@@ -27,14 +27,14 @@ async function generateQuestionsWithClaude(input: BusinessInputData) {
       system: [
         {
           type: "text",
-          text: QUESTIONS_SYSTEM_PROMPT,
+          text: getQuestionsSystemPrompt(locale),
           cache_control: { type: "ephemeral" },
         },
       ],
       messages: [
         {
           role: "user",
-          content: buildQuestionsUserMessage(input),
+          content: buildQuestionsUserMessage(input, locale),
         },
       ],
     })
@@ -94,7 +94,8 @@ export async function POST(request: Request) {
       })
     }
 
-    const questions = await generateQuestionsWithClaude(input)
+    const locale = request.headers.get("X-Locale") ?? "es"
+    const questions = await generateQuestionsWithClaude(input, locale)
 
     // Empty array is a valid response: Claude determined the idea has enough context
     return apiSuccess({ questions })

@@ -24,6 +24,7 @@ export default function AnalysisPage() {
   const router = useRouter()
   const t = useTranslations("analysis")
   const tCommon = useTranslations("common")
+  const locale = useLocale()
 
   const planningMessages = [t("planningMessages.0"), t("planningMessages.1")]
   const loadingMessages = [t("loadingMessages.0"), t("loadingMessages.1"), t("loadingMessages.2"), t("loadingMessages.3")]
@@ -71,7 +72,7 @@ export default function AnalysisPage() {
         let answers: import("@/lib/flow-storage").ClaudeAnswer[] = []
 
         try {
-          const session = await getFlowSession(flowId)
+          const session = await getFlowSession(flowId, locale)
           if (!isMounted) return
           input = session.businessInput
           answers = session.claudeAnswers
@@ -97,7 +98,7 @@ export default function AnalysisPage() {
         // ── Phase 1: Section plan (fast Haiku call) ──────────────────────
         let plan: SectionPlan | null = null
         try {
-          plan = await fetchSectionPlan(input, answers)
+          plan = await fetchSectionPlan(input, answers, locale)
           if (!isMounted) return
           setSectionPlan(plan)
           saveSectionPlan(plan)
@@ -107,7 +108,7 @@ export default function AnalysisPage() {
         setIsPlanning(false)
 
         // ── Phase 2: Stream analysis (only enabled sections) ─────────────
-        const stream = streamAnalysis(input, answers, plan ?? undefined)
+        const stream = streamAnalysis(input, answers, plan ?? undefined, locale)
 
         for await (const event of stream) {
           if (!isMounted) break
