@@ -532,7 +532,7 @@ const RESEARCH_TOOL: Anthropic.Tool = {
                 strengths: { type: "array", items: { type: "string" }, description: "Fortalezas observadas en la búsqueda" },
                 weaknesses: { type: "array", items: { type: "string" }, description: "Debilidades observadas" },
                 cityArea: { type: "string", description: "Zona o barrio donde opera, tal como aparece en sus datos" },
-                marketShare: { type: "string", description: "Estimación de presencia relativa. Ej: 'Alta', 'Media', '~20%'" },
+                marketShare: { type: "string", description: "Estimación de cuota de mercado como porcentaje entre 0 y 100. Siempre incluir el símbolo %. Ej: '~45%', '~20%', '~10%'. No usar números de usuarios ni facturación." },
                 url: { type: "string", description: "URL exacta del sitio web, Instagram u otro perfil encontrado" },
                 sourceQuery: { type: "string", description: "Query exacta que usaste para encontrar este competidor. Ej: 'tinder perros Buenos Aires'" },
               },

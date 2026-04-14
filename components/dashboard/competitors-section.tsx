@@ -27,12 +27,19 @@ export function CompetitorsSection({ data, city, isMock }: CompetitorsSectionPro
     )
   }
 
-  const shareData = data.competitors.map((c) => ({
-    name: c.name.length > 14 ? c.name.slice(0, 14) + "…" : c.name,
-    fullName: c.name,
-    share: parseFloat(c.marketShare.replace(/[^0-9.]/g, "")) || 0,
-    cityArea: c.cityArea,
-  }))
+  const shareData = data.competitors.map((c) => {
+    // Extract a percentage: look for "XX%" pattern first, otherwise take first number
+    const pctMatch = c.marketShare.match(/(\d+(?:\.\d+)?)\s*%/)
+    const raw = pctMatch
+      ? parseFloat(pctMatch[1])
+      : parseFloat(c.marketShare.replace(/[^0-9.]/g, "")) || 0
+    return {
+      name: c.name.length > 14 ? c.name.slice(0, 14) + "…" : c.name,
+      fullName: c.name,
+      share: Math.min(100, Math.max(0, raw)),
+      cityArea: c.cityArea,
+    }
+  })
 
   return (
     <div className="space-y-6">
