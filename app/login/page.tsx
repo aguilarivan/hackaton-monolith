@@ -1,8 +1,7 @@
 "use client"
 
 import { Suspense, useState } from "react"
-import { useRouter } from "@/i18n/navigation"
-import { useTranslations } from "next-intl"
+import { useRouter } from "next/navigation"
 import { Eye, EyeOff, Loader2, LogIn } from "lucide-react"
 import { Header } from "@/components/header"
 import { Button } from "@/components/ui/button"
@@ -12,7 +11,6 @@ import { Label } from "@/components/ui/label"
 
 function LoginForm() {
   const router = useRouter()
-  const t = useTranslations("login")
   const redirectTo = "/"
 
   const [email, setEmail] = useState("")
@@ -36,13 +34,13 @@ function LoginForm() {
       const json = await res.json()
 
       if (!json.ok) {
-        setError(json.error?.message ?? t("loginError"))
+        setError(json.error?.message ?? "Login failed.")
         return
       }
 
       router.push(redirectTo)
     } catch {
-      setError(t("connectionError"))
+      setError("Could not connect to the server.")
     } finally {
       setIsLoading(false)
     }
@@ -51,15 +49,15 @@ function LoginForm() {
   return (
     <Card className="w-full border-border/70">
       <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl">{t("title")}</CardTitle>
+        <CardTitle className="text-2xl">{"Log in"}</CardTitle>
         <CardDescription>
-          {t("subtitle")}
+          {"Enter your credentials to continue"}
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email">{t("emailLabel")}</Label>
+            <Label htmlFor="email">{"Email"}</Label>
             <Input
               id="email"
               type="email"
@@ -73,7 +71,7 @@ function LoginForm() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password">{t("passwordLabel")}</Label>
+            <Label htmlFor="password">{"Password"}</Label>
             <div className="relative">
               <Input
                 id="password"
@@ -88,7 +86,7 @@ function LoginForm() {
               />
               <button
                 type="button"
-                aria-label={showPassword ? t("hidePassword") : t("showPassword")}
+                aria-label={showPassword ? "Hide password" : "Show password"}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                 onClick={() => setShowPassword((v) => !v)}
                 tabIndex={-1}
@@ -110,7 +108,7 @@ function LoginForm() {
             ) : (
               <LogIn className="mr-2 h-4 w-4" />
             )}
-            {t("submitButton")}
+            {"Log in"}
           </Button>
 
           <p className="text-center text-xs text-muted-foreground">

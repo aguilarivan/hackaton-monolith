@@ -1,8 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import { useRouter } from "@/i18n/navigation"
-import { useTranslations, useLocale } from "next-intl"
+import { useRouter } from "next/navigation"
 import { AlertTriangle, ArrowLeft, ArrowRight, Loader2, Sparkles } from "lucide-react"
 import { Header } from "@/components/header"
 import { Button } from "@/components/ui/button"
@@ -22,10 +21,12 @@ const QUESTIONS_PER_PAGE = 5
 
 export default function ClaudeQuestionsPage() {
   const router = useRouter()
-  const t = useTranslations("questions")
-  const tCommon = useTranslations("common")
 
-  const loadingMessages = [t("loadingMessages.0"), t("loadingMessages.1"), t("loadingMessages.2")]
+  const loadingMessages = [
+    "Reading your idea carefully...",
+    "Identifying the key points of your mission...",
+    "Calibrating the most important questions for you...",
+  ]
   const [isPreparing, setIsPreparing] = useState(true)
   const [messageIndex, setMessageIndex] = useState(0)
   const [businessData, setBusinessData] = useState<ReturnType<typeof getBusinessInput>>(null)
@@ -143,7 +144,7 @@ export default function ClaudeQuestionsPage() {
       const flowId = getFlowId()
 
       if (!flowId) {
-        setSubmitError(t("noSession"))
+        setSubmitError("No active session found. Go back to the initial mission to restart the flow.")
         return
       }
 
@@ -156,7 +157,7 @@ export default function ClaudeQuestionsPage() {
         setSubmitError(error.message)
         setRequestId(error.requestId ?? null)
       } else {
-        setSubmitError(t("saveError"))
+        setSubmitError("Could not save your answers to the backend.")
       }
     } finally {
       setIsSubmitting(false)
@@ -176,13 +177,13 @@ export default function ClaudeQuestionsPage() {
               <div className="mx-auto text-5xl">🚀</div>
               <div className="space-y-1.5">
                 <p className="text-lg font-semibold text-foreground">
-                  {t("calibrating")}
+                  {"Calibrating your mission"}
                 </p>
                 <p className="text-sm text-muted-foreground">{loadingMessages[messageIndex]}...</p>
               </div>
               <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
                 <Loader2 className="h-4 w-4 animate-spin" />
-                {t("calibratingHint")}
+                {"This only takes a few seconds"}
               </div>
             </CardContent>
           </Card>
@@ -201,7 +202,7 @@ export default function ClaudeQuestionsPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-destructive">
                 <AlertTriangle className="h-5 w-5" />
-                {t("loadError")}
+                {"Something went wrong loading the questions"}
               </CardTitle>
               <p className="text-sm text-foreground/80">{loadError}</p>
               {requestId && (
@@ -211,10 +212,10 @@ export default function ClaudeQuestionsPage() {
             <CardContent className="flex flex-col gap-3 sm:flex-row sm:justify-between">
               <Button variant="outline" onClick={() => router.push("/")}>
                 <ArrowLeft className="mr-2 h-4 w-4" />
-                {tCommon("backToStart")}
+                {"Back to start"}
               </Button>
               <Button onClick={() => businessData && loadQuestions(businessData)}>
-                {tCommon("retry")}
+                {"Retry"}
               </Button>
             </CardContent>
           </Card>
@@ -236,14 +237,14 @@ export default function ClaudeQuestionsPage() {
               <div className="shrink-0 text-4xl">🌎</div>
               <div className="space-y-2">
                 <h2 className="text-lg font-bold text-foreground">
-                  {t("introTitle")}
+                  {"Before generating your analysis, we need to better understand your idea."}
                 </h2>
                 <p className="text-sm leading-relaxed text-muted-foreground">
-                  {t("introDescription")}
+                  {"Answer these questions so AI can give you a more precise and personalized analysis."}
                 </p>
                 {totalPages > 1 && (
                   <p className="text-sm text-muted-foreground">
-                    {t("pageIndicator", { currentPage: currentPage + 1, totalPages })}
+                    {`Page ${currentPage + 1} of ${totalPages}`}
                   </p>
                 )}
               </div>
@@ -287,11 +288,11 @@ export default function ClaudeQuestionsPage() {
                 {selected === "expand" && (
                   <div className="space-y-2 pt-1">
                     <Label htmlFor={`${question.id}-details`} className="text-sm font-medium">
-                      {t("detailsPlaceholder")}
+                      {"Tell us more \ud83d\udcac"}
                     </Label>
                     <Textarea
                       id={`${question.id}-details`}
-                      placeholder={t("detailsTextarea")}
+                      placeholder="Write all the context you want to share..."
                       value={details[question.id] || ""}
                       onChange={(event) =>
                         setDetails((prev) => ({ ...prev, [question.id]: event.target.value }))
@@ -309,7 +310,7 @@ export default function ClaudeQuestionsPage() {
         <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
           <Button variant="outline" onClick={currentPage === 0 ? () => router.push("/") : handlePrevPage}>
             <ArrowLeft className="mr-2 h-4 w-4" />
-            {currentPage === 0 ? tCommon("backToStart") : tCommon("previous")}
+            {currentPage === 0 ? "Back to start" : "Previous"}
           </Button>
 
           {isLastPage ? (
@@ -317,18 +318,18 @@ export default function ClaudeQuestionsPage() {
               {isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {tCommon("saving")}
+                  {"Saving..."}
                 </>
               ) : (
                 <>
-                  {t("continueToAnalysis")}
+                  {"Continue to analysis"}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </>
               )}
             </Button>
           ) : (
             <Button onClick={handleNextPage} disabled={!isCurrentPageValid}>
-              {t("nextButton")}
+              {"Next"}
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           )}
@@ -337,7 +338,7 @@ export default function ClaudeQuestionsPage() {
         {submitError && (
           <Card className="border-destructive/30 bg-destructive/5">
             <CardContent className="space-y-1 p-4">
-              <p className="text-sm font-medium text-destructive">{t("continueError")}</p>
+              <p className="text-sm font-medium text-destructive">{"Could not continue"}</p>
               <p className="text-sm text-foreground/80">{submitError}</p>
               {requestId && (
                 <p className="text-xs text-muted-foreground">Request ID: {requestId}</p>
@@ -348,7 +349,7 @@ export default function ClaudeQuestionsPage() {
 
         <p className="flex items-center gap-2 text-sm text-muted-foreground">
           <Sparkles className="h-4 w-4 shrink-0" />
-          {t("expandHint")}
+          {'You can choose "I want to expand on this point" to give more context on any question.'}
         </p>
       </div>
     </main>

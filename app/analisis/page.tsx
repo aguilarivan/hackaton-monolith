@@ -1,8 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { useRouter } from "@/i18n/navigation"
-import { useTranslations, useLocale } from "next-intl"
+import { useRouter } from "next/navigation"
 import { AlertTriangle, ArrowLeft, Bot, Loader2, Rocket } from "lucide-react"
 import { Header } from "@/components/header"
 import { StartupDashboard } from "@/components/startup-dashboard"
@@ -22,11 +21,17 @@ export interface PartialAnalysis {
 
 export default function AnalysisPage() {
   const router = useRouter()
-  const t = useTranslations("analysis")
-  const tCommon = useTranslations("common")
 
-  const planningMessages = [t("planningMessages.0"), t("planningMessages.1")]
-  const loadingMessages = [t("loadingMessages.0"), t("loadingMessages.1"), t("loadingMessages.2"), t("loadingMessages.3")]
+  const planningMessages = [
+    "Evaluating which sections apply to your idea...",
+    "Determining the scope of the analysis...",
+  ]
+  const loadingMessages = [
+    "Analyzing viability and market potential...",
+    "Evaluating competition and opportunities...",
+    "Designing your monetization strategy...",
+    "Building your starter kit and roadmap...",
+  ]
   const [businessData, setBusinessData] = useState<BusinessInputData | null>(null)
   const [sectionPlan, setSectionPlan] = useState<SectionPlan | null>(null)
   const [isPlanning, setIsPlanning] = useState(true)
@@ -60,7 +65,7 @@ export default function AnalysisPage() {
       const flowId = getFlowId()
       if (!flowId) {
         if (!isMounted) return
-        setLoadError(t("noSession"))
+        setLoadError("No active session to generate the analysis.")
         setIsPlanning(false)
         setIsStreaming(false)
         return
@@ -132,13 +137,13 @@ export default function AnalysisPage() {
         if (!isMounted) return
 
         if (isApiClientError(error) && error.status === 404) {
-          setLoadError(t("sessionExpired"))
+          setLoadError("The analysis session doesn't exist or has expired. Start a new idea.")
           setRequestId(error.requestId ?? null)
         } else if (isApiClientError(error)) {
           setLoadError(error.message)
           setRequestId(error.requestId ?? null)
         } else {
-          setLoadError(t("backendError"))
+          setLoadError("Could not generate the analysis from the backend.")
         }
         setIsPlanning(false)
         setIsStreaming(false)
@@ -166,7 +171,7 @@ export default function AnalysisPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-destructive">
                 <AlertTriangle className="h-5 w-5" />
-                {t("errorTitle")}
+                {"Error building the analysis"}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -177,9 +182,9 @@ export default function AnalysisPage() {
               <div className="flex flex-col gap-3 sm:flex-row sm:justify-between">
                 <Button variant="outline" onClick={handleReset}>
                   <ArrowLeft className="mr-2 h-4 w-4" />
-                  {tCommon("backToStart")}
+                  {"Back to start"}
                 </Button>
-                <Button onClick={() => router.refresh()}>{tCommon("retry")}</Button>
+                <Button onClick={() => router.refresh()}>{"Retry"}</Button>
               </div>
             </CardContent>
           </Card>
@@ -203,7 +208,7 @@ export default function AnalysisPage() {
               </div>
               <div className="space-y-2">
                 <p className="text-lg font-semibold text-foreground">
-                  {isPlanning ? t("preparing") : t("generating")}
+                  {isPlanning ? "Preparing the analysis" : "Generating your analysis"}
                 </p>
                 <p className="text-sm text-muted-foreground">
                   {currentMessage}
@@ -211,7 +216,7 @@ export default function AnalysisPage() {
               </div>
               <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
                 <Loader2 className="h-4 w-4 animate-spin" />
-                {isPlanning ? t("planningHint") : t("generatingHint")}
+                {isPlanning ? "This only takes a few seconds" : "This may take a moment"}
               </div>
             </CardContent>
           </Card>
