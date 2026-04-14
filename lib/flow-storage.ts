@@ -6,6 +6,9 @@ const CLAUDE_ANSWERS_KEY = "dayzero.claude-answers"
 const FLOW_ID_KEY = "dayzero.flow-id"
 const BRAND_IDENTITY_KEY = "dayzero.brand-identity"
 const SECTION_PLAN_KEY = "dayzero.section-plan"
+const LANDING_PROGRESS_KEY = "dayzero.landing-progress"
+
+export const LANDING_PROGRESS_EVENT = "dayzero:landing-progress"
 
 export type LogoShape = "circle" | "rounded" | "hexagon"
 
@@ -105,6 +108,7 @@ export function clearFlowStorage() {
   window.localStorage.removeItem(FLOW_ID_KEY)
   window.localStorage.removeItem(BRAND_IDENTITY_KEY)
   window.localStorage.removeItem(SECTION_PLAN_KEY)
+  window.localStorage.removeItem(LANDING_PROGRESS_KEY)
 }
 
 export function saveFlowId(flowId: string) {
@@ -115,4 +119,36 @@ export function saveFlowId(flowId: string) {
 export function getFlowId(): string | null {
   if (!canUseStorage()) return null
   return window.localStorage.getItem(FLOW_ID_KEY)
+}
+
+// --- Landing progress (step 4: "Aterrizaje") ---
+
+export interface LandingProgress {
+  completedSteps: number[] // indices of checked validation-plan items
+  totalSteps: number
+  landingGenerated: boolean
+  domainChecked: boolean
+}
+
+export function getLandingProgress(): LandingProgress | null {
+  if (!canUseStorage()) return null
+  const raw = window.localStorage.getItem(LANDING_PROGRESS_KEY)
+  if (!raw) return null
+  try {
+    return JSON.parse(raw) as LandingProgress
+  } catch {
+    return null
+  }
+}
+
+export function saveLandingProgress(progress: LandingProgress) {
+  if (!canUseStorage()) return
+  window.localStorage.setItem(LANDING_PROGRESS_KEY, JSON.stringify(progress))
+  window.dispatchEvent(new CustomEvent(LANDING_PROGRESS_EVENT))
+}
+
+export function landingProgressRatio(p: LandingProgress): { done: number; total: number } {
+  const done = p.completedSteps.length + (p.landingGenerated ? 1 : 0) + (p.domainChecked ? 1 : 0)
+  const total = p.totalSteps + 2 // +2 for the two action buttons
+  return { done, total }
 }
