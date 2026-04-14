@@ -1,5 +1,6 @@
 "use client"
 
+import dynamic from "next/dynamic"
 import { Users, ThumbsUp, ThumbsDown, MapPin, Target } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { CompetitorData } from "@/lib/mock-data"
@@ -9,17 +10,160 @@ interface CompetitorsSectionProps {
   city: string
 }
 
-function toCanvasPosition(lat: number, lng: number, centerLat: number, centerLng: number) {
-  const x = 50 + (lng - centerLng) * 1200
-  const y = 50 - (lat - centerLat) * 1200
-  return {
-    x: Math.max(8, Math.min(92, x)),
-    y: Math.max(10, Math.min(90, y)),
+type Coordinate = {
+  lat: number
+  lng: number
+}
+
+type GridZone = {
+  zone: string
+  center: Coordinate
+  competitorDensity: number
+  demandSignal: number
+  launchScore: number
+  color: string
+}
+
+const MapContainer = dynamic(async () => (await import("react-leaflet")).MapContainer, { ssr: false })
+const TileLayer = dynamic(async () => (await import("react-leaflet")).TileLayer, { ssr: false })
+const Circle = dynamic(async () => (await import("react-leaflet")).Circle, { ssr: false })
+const CircleMarker = dynamic(async () => (await import("react-leaflet")).CircleMarker, { ssr: false })
+const Popup = dynamic(async () => (await import("react-leaflet")).Popup, { ssr: false })
+const Tooltip = dynamic(async () => (await import("react-leaflet")).Tooltip, { ssr: false })
+
+const BA_CENTER: Coordinate = { lat: -34.6037, lng: -58.3816 }
+const BA_BOUNDS = {
+  north: -34.53,
+  south: -34.72,
+  west: -58.53,
+  east: -58.34,
+}
+
+const BA_FALLBACK_COMPETITORS = [
+  {
+    name: "ScaleOps",
+    cityArea: "Microcentro",
+    location: { lat: -34.6024, lng: -58.3789 },
+  },
+  {
+    name: "FlowPilot",
+    cityArea: "Palermo",
+    location: { lat: -34.5885, lng: -58.4305 },
+  },
+  {
+    name: "LegacySuite",
+    cityArea: "Belgrano",
+    location: { lat: -34.5621, lng: -58.4562 },
+  },
+  {
+    name: "NicheCloud",
+    cityArea: "Caballito",
+    location: { lat: -34.6195, lng: -58.4432 },
+  },
+  {
+    name: "UrbanAssist",
+    cityArea: "Barracas",
+    location: { lat: -34.6469, lng: -58.3743 },
+  },
+]
+
+const DEMAND_HOTSPOTS = [
+  { lat: -34.5885, lng: -58.4305, weight: 9.4 },
+  { lat: -34.5975, lng: -58.3728, weight: 9.0 },
+  { lat: -34.6039, lng: -58.4108, weight: 8.7 },
+  { lat: -34.5621, lng: -58.4562, weight: 8.1 },
+  { lat: -34.6242, lng: -58.4119, weight: 7.8 },
+]
+
+function toLeafletPosition(point: Coordinate): [number, number] {
+  return [point.lat, point.lng]
+}
+
+function toRadians(value: number) {
+  return (value * Math.PI) / 180
+}
+
+function haversineKm(a: Coordinate, b: Coordinate) {
+  const earthRadiusKm = 6371
+  const dLat = toRadians(b.lat - a.lat)
+  const dLng = toRadians(b.lng - a.lng)
+  const lat1 = toRadians(a.lat)
+  const lat2 = toRadians(b.lat)
+  const haversine =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2
+  return 2 * earthRadiusKm * Math.asin(Math.sqrt(haversine))
+}
+
+function colorForLaunchScore(score: number) {
+  if (score >= 8) {
+    return { fill: "#22c55e", stroke: "#15803d" }
   }
+  if (score >= 7) {
+    return { fill: "#84cc16", stroke: "#4d7c0f" }
+  }
+  if (score >= 6) {
+    return { fill: "#f59e0b", stroke: "#b45309" }
+  }
+  return { fill: "#ef4444", stroke: "#b91c1c" }
+}
+
+function buildBuenosAiresGrid(competitorLocations: Coordinate[]): GridZone[] {
+  const rows = 4
+  const cols = 4
+  const latStep = (BA_BOUNDS.north - BA_BOUNDS.south) / rows
+  const lngStep = (BA_BOUNDS.east - BA_BOUNDS.west) / cols
+  const zones: GridZone[] = []
+
+  for (let row = 0; row < rows; row += 1) {
+    for (let col = 0; col < cols; col += 1) {
+      const zoneCenter = {
+        lat: BA_BOUNDS.north - latStep * (row + 0.5),
+        lng: BA_BOUNDS.west + lngStep * (col + 0.5),
+      }
+
+      const nearbyCompetitors = competitorLocations.filter((location) => haversineKm(location, zoneCenter) <= 2.8)
+      const densityScore = Math.min(10, nearbyCompetitors.length * 2.6)
+
+      const demandContrib = DEMAND_HOTSPOTS.map((hotspot) => {
+        const distance = Math.max(0.4, haversineKm(zoneCenter, hotspot))
+        return hotspot.weight / distance
+      })
+      const demandSignal = Math.min(
+        10,
+        demandContrib.reduce((acc, current) => acc + current, 0) / 4.5
+      )
+
+      const launchScore = Number((demandSignal * 0.6 + (10 - densityScore) * 0.4).toFixed(1))
+      const color = colorForLaunchScore(launchScore)
+
+      zones.push({
+        zone: `Grid ${String.fromCharCode(65 + row)}${col + 1}`,
+        center: zoneCenter,
+        competitorDensity: Number(densityScore.toFixed(1)),
+        demandSignal: Number(demandSignal.toFixed(1)),
+        launchScore,
+        color: color.fill,
+      })
+    }
+  }
+
+  return zones
 }
 
 export function CompetitorsSection({ data, city }: CompetitorsSectionProps) {
-  const bestZone = [...data.launchZones].sort((a, b) => b.launchScore - a.launchScore)[0]
+  const normalizedCity = city.trim().toLowerCase()
+  const isBuenosAires = normalizedCity.includes("buenos aires") || normalizedCity.includes("caba")
+
+  const mapCenter = isBuenosAires ? BA_CENTER : data.mapCenter
+  const validCompetitorLocations = data.competitors
+    .filter((competitor) => competitor.location)
+    .map((competitor) => competitor.location as Coordinate)
+
+  const fallbackLocations = BA_FALLBACK_COMPETITORS.map((competitor) => competitor.location)
+  const competitorLocations = validCompetitorLocations.length > 0 ? validCompetitorLocations : fallbackLocations
+  const launchZones = buildBuenosAiresGrid(competitorLocations)
+  const bestZone = [...launchZones].sort((a, b) => b.launchScore - a.launchScore)[0]
 
   return (
     <div className="space-y-6">
@@ -98,42 +242,86 @@ export function CompetitorsSection({ data, city }: CompetitorsSectionProps) {
             </div>
             <div>
               <CardTitle className="text-xl">Launch Opportunity Map</CardTitle>
-              <p className="text-sm text-muted-foreground">Zone color indicates where it is better to start</p>
+              <p className="text-sm text-muted-foreground">
+                Grid map in Buenos Aires. Colors are calculated from nearby competitors and demand hotspots.
+              </p>
             </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="rounded-lg border border-border bg-card p-4">
-            <div className="relative h-72 overflow-hidden rounded-lg bg-gradient-to-br from-slate-100 via-emerald-50 to-cyan-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-              <div className="absolute left-[8%] top-[10%] h-24 w-24 rounded-full bg-red-400/25" />
-              <div className="absolute right-[10%] top-[18%] h-20 w-20 rounded-full bg-amber-400/25" />
-              <div className="absolute bottom-[10%] left-[14%] h-24 w-24 rounded-full bg-lime-400/25" />
-              <div className="absolute bottom-[16%] right-[12%] h-28 w-28 rounded-full bg-emerald-400/25" />
+            <div className="h-80 overflow-hidden rounded-lg border border-border">
+              <MapContainer center={toLeafletPosition(mapCenter)} zoom={12} scrollWheelZoom={false} className="h-full w-full">
+                <TileLayer
+                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                />
 
-              {data.competitors.map((competitor, index) => {
-                if (!competitor.location) return null
-                const point = toCanvasPosition(
-                  competitor.location.lat,
-                  competitor.location.lng,
-                  data.mapCenter.lat,
-                  data.mapCenter.lng
-                )
-                return (
-                  <div key={index} className="absolute -translate-x-1/2 -translate-y-1/2" style={{ left: `${point.x}%`, top: `${point.y}%` }}>
-                    <div className="group relative">
-                      <div className="h-3.5 w-3.5 rounded-full border-2 border-background bg-primary shadow" />
-                      <div className="pointer-events-none absolute left-1/2 top-5 z-10 w-44 -translate-x-1/2 rounded-md border border-border bg-card/95 px-2 py-1 text-xs text-foreground opacity-0 shadow-md transition-opacity group-hover:opacity-100">
-                        {competitor.name}
-                      </div>
-                    </div>
-                  </div>
-                )
-              })}
+                {launchZones.map((zone) => {
+                  const color = colorForLaunchScore(zone.launchScore)
+                  return (
+                    <Circle
+                      key={zone.zone}
+                      center={toLeafletPosition(zone.center)}
+                      radius={1450}
+                      pathOptions={{ color: color.stroke, weight: 1.25, fillColor: color.fill, fillOpacity: 0.28 }}
+                    >
+                      <Tooltip direction="top" offset={[0, -8]}>
+                        <div className="text-xs">
+                          <p className="font-semibold">{zone.zone}</p>
+                          <p>Opportunity: {zone.launchScore}/10</p>
+                        </div>
+                      </Tooltip>
+                    </Circle>
+                  )
+                })}
+
+                {data.competitors.map((competitor, index) => {
+                  const position = competitor.location
+                    ? toLeafletPosition(competitor.location)
+                    : toLeafletPosition(fallbackLocations[index % fallbackLocations.length])
+
+                  return (
+                    <CircleMarker
+                      key={`${competitor.name}-${index}`}
+                      center={position}
+                      radius={6}
+                      pathOptions={{ color: "#1d4ed8", weight: 2, fillColor: "#3b82f6", fillOpacity: 0.9 }}
+                    >
+                      <Popup>
+                        <div className="space-y-1 text-xs">
+                          <p className="font-semibold text-foreground">{competitor.name}</p>
+                          <p className="text-muted-foreground">{competitor.cityArea}</p>
+                          <p className="text-muted-foreground">Share: {competitor.marketShare}</p>
+                        </div>
+                      </Popup>
+                    </CircleMarker>
+                  )
+                })}
+              </MapContainer>
+            </div>
+            <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+              <span className="inline-flex items-center gap-2">
+                <span className="h-2.5 w-2.5 rounded-full bg-[#22c55e]" />
+                High opportunity
+              </span>
+              <span className="inline-flex items-center gap-2">
+                <span className="h-2.5 w-2.5 rounded-full bg-[#84cc16]" />
+                Medium-high
+              </span>
+              <span className="inline-flex items-center gap-2">
+                <span className="h-2.5 w-2.5 rounded-full bg-[#f59e0b]" />
+                Medium
+              </span>
+              <span className="inline-flex items-center gap-2">
+                <span className="h-2.5 w-2.5 rounded-full bg-[#ef4444]" />
+                Low opportunity
+              </span>
             </div>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2">
-            {data.launchZones.map((zone, index) => (
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {launchZones.map((zone, index) => (
               <div key={index} className="rounded-lg border border-border bg-card p-3">
                 <div className="flex items-center justify-between gap-3">
                   <p className="font-medium text-foreground">{zone.zone}</p>

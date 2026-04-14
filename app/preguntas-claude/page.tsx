@@ -2,26 +2,20 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, ArrowRight, Brain, Loader2, Sparkles } from "lucide-react"
+import { AlertTriangle, ArrowLeft, ArrowRight, Brain, Loader2, Sparkles } from "lucide-react"
 import { Header } from "@/components/header"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Textarea } from "@/components/ui/textarea"
-import { getBusinessInput, saveClaudeAnswers, type ClaudeAnswer } from "@/lib/flow-storage"
-
-type QuestionOption = {
-  value: string
-  label: string
-}
-
-type ClarificationQuestion = {
-  id: string
-  title: string
-  helper: string
-  options: QuestionOption[]
-}
+import {
+  getClarificationQuestionsFromApi,
+  isApiClientError,
+  saveFlowAnswers,
+  type ClarificationQuestion,
+} from "@/lib/flow-api"
+import { getBusinessInput, getFlowId, saveClaudeAnswers, type ClaudeAnswer } from "@/lib/flow-storage"
 
 const askMessages = [
   "Claude esta leyendo tu idea y detectando riesgos",
@@ -29,47 +23,16 @@ const askMessages = [
   "Claude esta priorizando lo importante para tu caso",
 ]
 
-const questions: ClarificationQuestion[] = [
-  {
-    id: "target-audience",
-    title: "A quien queres apuntar primero?",
-    helper: "Esto impacta el modelo comercial y los canales de venta iniciales.",
-    options: [
-      { value: "b2b", label: "Empresas (B2B)" },
-      { value: "b2c", label: "Consumidor final (B2C)" },
-      { value: "mixed", label: "Mixto, pero empiezo por un nicho" },
-      { value: "expand", label: "Quiero ampliar este punto" },
-    ],
-  },
-  {
-    id: "execution-time",
-    title: "Cuanto tiempo semanal podes dedicar al proyecto?",
-    helper: "Con esto Claude ajusta roadmap y expectativas de traccion.",
-    options: [
-      { value: "low", label: "Menos de 10 horas" },
-      { value: "medium", label: "Entre 10 y 25 horas" },
-      { value: "high", label: "Mas de 25 horas" },
-      { value: "expand", label: "Quiero ampliar este punto" },
-    ],
-  },
-  {
-    id: "advantage",
-    title: "Cual seria tu ventaja principal frente a otros?",
-    helper: "Le permite a Claude evaluar barreras de entrada y posicionamiento.",
-    options: [
-      { value: "price", label: "Precio mas competitivo" },
-      { value: "speed", label: "Mejor velocidad o servicio" },
-      { value: "specialization", label: "Especializacion en un problema puntual" },
-      { value: "expand", label: "Quiero ampliar este punto" },
-    ],
-  },
-]
-
 export default function ClaudeQuestionsPage() {
   const router = useRouter()
   const [isPreparing, setIsPreparing] = useState(true)
   const [messageIndex, setMessageIndex] = useState(0)
   const [businessData, setBusinessData] = useState<ReturnType<typeof getBusinessInput>>(null)
+  const [questions, setQuestions] = useState<ClarificationQuestion[]>([])
+  const [loadError, setLoadError] = useState<string | null>(null)
+  const [submitError, setSubmitError] = useState<string | null>(null)
+  const [requestId, setRequestId] = useState<string | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [answers, setAnswers] = useState<Record<string, string>>({})
   const [details, setDetails] = useState<Record<string, string>>({})
 
@@ -82,8 +45,30 @@ export default function ClaudeQuestionsPage() {
     setBusinessData(data)
   }, [router])
 
+  const loadQuestions = async (input: NonNullable<typeof businessData>) => {
+    setLoadError(null)
+    setSubmitError(null)
+    setRequestId(null)
+
+    try {
+      const flowId = getFlowId()
+      const apiQuestions = await getClarificationQuestionsFromApi(input, flowId ?? undefined)
+      setQuestions(apiQuestions)
+    } catch (error) {
+      setQuestions([])
+      if (isApiClientError(error)) {
+        setLoadError(error.message)
+        setRequestId(error.requestId ?? null)
+      } else {
+        setLoadError("No se pudieron cargar las preguntas desde el backend.")
+      }
+    }
+  }
+
   useEffect(() => {
     if (!businessData) return
+
+    loadQuestions(businessData)
 
     const interval = setInterval(() => {
       setMessageIndex((prev) => {
@@ -106,13 +91,13 @@ export default function ClaudeQuestionsPage() {
   }, [businessData])
 
   const isValid = useMemo(
-    () => questions.every((question) => {
+    () => questions.length > 0 && questions.every((question) => {
       const selected = answers[question.id]
       if (!selected) return false
       if (selected !== "expand") return true
       return Boolean(details[question.id]?.trim())
     }),
-    [answers, details]
+    [answers, details, questions]
   )
 
   const handleOptionChange = (questionId: string, option: string) => {
@@ -122,15 +107,38 @@ export default function ClaudeQuestionsPage() {
     }
   }
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
+    setSubmitError(null)
+    setRequestId(null)
+    setIsSubmitting(true)
+
     const payload: ClaudeAnswer[] = questions.map((question) => ({
       questionId: question.id,
       option: answers[question.id],
       details: details[question.id]?.trim() || undefined,
     }))
 
-    saveClaudeAnswers(payload)
-    router.push("/analisis")
+    try {
+      const flowId = getFlowId()
+
+      if (!flowId) {
+        setSubmitError("No existe una sesion activa. Volve al paso 1 para reiniciar el flujo.")
+        return
+      }
+
+      await saveFlowAnswers(flowId, payload)
+      saveClaudeAnswers(payload)
+      router.push("/analisis")
+    } catch (error) {
+      if (isApiClientError(error)) {
+        setSubmitError(error.message)
+        setRequestId(error.requestId ?? null)
+      } else {
+        setSubmitError("No se pudieron guardar tus respuestas en el backend.")
+      }
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   if (!businessData) {
@@ -155,6 +163,39 @@ export default function ClaudeQuestionsPage() {
                 <Loader2 className="h-4 w-4 animate-spin" />
                 Afinando el contexto de tu idea
               </div>
+            </CardContent>
+          </Card>
+        </div>
+      </main>
+    )
+  }
+
+  if (loadError) {
+    return (
+      <main className="min-h-screen bg-background">
+        <Header />
+        <div className="mx-auto w-full max-w-3xl px-4 py-8">
+          <Card className="border-destructive/30 bg-destructive/5">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-destructive">
+                <AlertTriangle className="h-5 w-5" />
+                Error al cargar preguntas de Claude
+              </CardTitle>
+              <CardDescription className="text-foreground/80">
+                {loadError}
+              </CardDescription>
+              {requestId && (
+                <p className="text-xs text-muted-foreground">Request ID: {requestId}</p>
+              )}
+            </CardHeader>
+            <CardContent className="flex flex-col gap-3 sm:flex-row sm:justify-between">
+              <Button variant="outline" onClick={() => router.push("/")}>
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Volver al paso 1
+              </Button>
+              <Button onClick={() => businessData && loadQuestions(businessData)}>
+                Reintentar
+              </Button>
             </CardContent>
           </Card>
         </div>
@@ -227,11 +268,23 @@ export default function ClaudeQuestionsPage() {
             <ArrowLeft className="mr-2 h-4 w-4" />
             Volver al paso 1
           </Button>
-          <Button onClick={handleContinue} disabled={!isValid}>
+          <Button onClick={handleContinue} disabled={!isValid || isSubmitting}>
             Continuar al analisis
             <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </div>
+
+        {submitError && (
+          <Card className="border-destructive/30 bg-destructive/5">
+            <CardContent className="space-y-2 p-4">
+              <p className="text-sm font-medium text-destructive">No se pudo continuar</p>
+              <p className="text-sm text-foreground/80">{submitError}</p>
+              {requestId && (
+                <p className="text-xs text-muted-foreground">Request ID: {requestId}</p>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         <p className="flex items-center gap-2 text-sm text-muted-foreground">
           <Sparkles className="h-4 w-4" />

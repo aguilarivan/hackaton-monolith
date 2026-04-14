@@ -20,7 +20,7 @@ import {
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { generateAnalysis } from "@/lib/mock-data"
+import { generateAnalysis, type StartupAnalysis } from "@/lib/mock-data"
 import { cn } from "@/lib/utils"
 import type { BusinessInputData } from "@/components/hero-input"
 
@@ -36,13 +36,14 @@ import { ObstaclesSection } from "@/components/dashboard/obstacles-section"
 
 interface StartupDashboardProps {
   data: BusinessInputData
+  analysisOverride?: StartupAnalysis
   onReset: () => void
 }
 
 type SectionKey = "overview" | "viability" | "monetization" | "competitors" | "clients" | "legal" | "kit" | "roadmap" | "obstacles"
 
-export function StartupDashboard({ data, onReset }: StartupDashboardProps) {
-  const analysis = generateAnalysis(data)
+export function StartupDashboard({ data, analysisOverride, onReset }: StartupDashboardProps) {
+  const analysis = analysisOverride ?? generateAnalysis(data)
   const [activeSection, setActiveSection] = useState<SectionKey>("overview")
   const [isLoaded, setIsLoaded] = useState(false)
 

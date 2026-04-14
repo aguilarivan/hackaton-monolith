@@ -527,13 +527,23 @@ export function generateAnalysis(input: BusinessInputData): StartupAnalysis {
     monetization,
   }
 
-  const center = getMapCenter(normalizedCity)
+  const isBuenosAires = /buenos aires|caba/i.test(normalizedCity)
+  const center = isBuenosAires ? { lat: -34.6037, lng: -58.3816 } : getMapCenter(normalizedCity)
   const competitorOffsets = [
     { lat: 0.016, lng: 0.01 },
     { lat: -0.013, lng: -0.012 },
     { lat: 0.007, lng: -0.016 },
     { lat: -0.009, lng: 0.014 },
   ]
+  const hardcodedBuenosAiresLocations = [
+    { lat: -34.6024, lng: -58.3789 }, // Microcentro
+    { lat: -34.5885, lng: -58.4305 }, // Palermo
+    { lat: -34.5621, lng: -58.4562 }, // Belgrano
+    { lat: -34.6195, lng: -58.4432 }, // Caballito
+  ]
+  const competitorLocations = isBuenosAires
+    ? hardcodedBuenosAiresLocations
+    : competitorOffsets.map((offset) => ({ lat: center.lat + offset.lat, lng: center.lng + offset.lng }))
 
   const competitors: CompetitorData = {
     competitors: [
@@ -544,7 +554,7 @@ export function generateAnalysis(input: BusinessInputData): StartupAnalysis {
         weaknesses: ["Higher prices", "Slow personalization", "Rigid packages"],
         cityArea: "Financial district",
         marketShare: "24%",
-        location: { lat: center.lat + competitorOffsets[0].lat, lng: center.lng + competitorOffsets[0].lng },
+        location: competitorLocations[0],
       },
       {
         name: isTech ? "FlowPilot" : isFood ? "DailyFork" : "FastHands",
@@ -553,7 +563,7 @@ export function generateAnalysis(input: BusinessInputData): StartupAnalysis {
         weaknesses: ["Support gaps", "Quality variance", "Cash burn risk"],
         cityArea: "North corridor",
         marketShare: "16%",
-        location: { lat: center.lat + competitorOffsets[1].lat, lng: center.lng + competitorOffsets[1].lng },
+        location: competitorLocations[1],
       },
       {
         name: isTech ? "LegacySuite" : isFood ? "Tradizione Eventos" : "MasterLocal",
@@ -562,7 +572,7 @@ export function generateAnalysis(input: BusinessInputData): StartupAnalysis {
         weaknesses: ["Outdated stack", "Weak digital funnel", "Slow onboarding"],
         cityArea: "Historic center",
         marketShare: "19%",
-        location: { lat: center.lat + competitorOffsets[2].lat, lng: center.lng + competitorOffsets[2].lng },
+        location: competitorLocations[2],
       },
       {
         name: isTech ? "NicheCloud" : isFood ? "GreenBite Co" : "HomePro Plus",
@@ -571,7 +581,7 @@ export function generateAnalysis(input: BusinessInputData): StartupAnalysis {
         weaknesses: ["Limited scale", "Narrow segment", "Higher CAC"],
         cityArea: "Residential west",
         marketShare: "11%",
-        location: { lat: center.lat + competitorOffsets[3].lat, lng: center.lng + competitorOffsets[3].lng },
+        location: competitorLocations[3],
       },
     ],
     mapCenter: center,

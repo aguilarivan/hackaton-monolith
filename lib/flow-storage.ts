@@ -2,6 +2,7 @@ import type { BusinessInputData } from "@/components/hero-input"
 
 const BUSINESS_INPUT_KEY = "dayzero.business-input"
 const CLAUDE_ANSWERS_KEY = "dayzero.claude-answers"
+const FLOW_ID_KEY = "dayzero.flow-id"
 
 export interface ClaudeAnswer {
   questionId: string
@@ -51,4 +52,15 @@ export function clearFlowStorage() {
   if (!canUseStorage()) return
   window.localStorage.removeItem(BUSINESS_INPUT_KEY)
   window.localStorage.removeItem(CLAUDE_ANSWERS_KEY)
+  window.localStorage.removeItem(FLOW_ID_KEY)
+}
+
+export function saveFlowId(flowId: string) {
+  if (!canUseStorage()) return
+  window.localStorage.setItem(FLOW_ID_KEY, flowId)
+}
+
+export function getFlowId(): string | null {
+  if (!canUseStorage()) return null
+  return window.localStorage.getItem(FLOW_ID_KEY)
 }
