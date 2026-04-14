@@ -170,6 +170,15 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    cursor: default;
+  }
+  a, button, select, summary,
+  input[type="submit"], input[type="reset"], input[type="button"],
+  label[for], [role="button"] {
+    cursor: pointer;
+  }
+  input, textarea, [contenteditable] {
+    cursor: text;
   }
   body {
     @apply bg-background text-foreground;
