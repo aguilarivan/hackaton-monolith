@@ -3,8 +3,8 @@
 import { cn } from "@/lib/utils"
 
 const steps = [
-  { label: "Mision", path: "/" },
-  { label: "Calibracion", path: "/preguntas-claude" },
+  { label: "Misión", path: "/" },
+  { label: "Calibración", path: "/preguntas-claude" },
   { label: "Despegue", path: "/analisis" },
 ]
 

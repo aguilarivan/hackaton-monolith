@@ -20,8 +20,8 @@ import { StepIndicator } from "@/components/step-indicator"
 
 const loadingMessages = [
   "Leyendo tu idea con atención...",
-  "Identificando los puntos clave de tu proyecto...",
-  "Preparando las preguntas más importantes para vos...",
+  "Identificando los puntos clave de tu misión...",
+  "Calibrando las preguntas más importantes para vos...",
 ]
 
 export default function ClaudeQuestionsPage() {
@@ -123,7 +123,7 @@ export default function ClaudeQuestionsPage() {
       const flowId = getFlowId()
 
       if (!flowId) {
-        setSubmitError("No existe una sesión activa. Volvé al paso 1 para reiniciar el flujo.")
+        setSubmitError("No existe una sesión activa. Volvé a la misión inicial para reiniciar el flujo.")
         return
       }
 
@@ -157,7 +157,7 @@ export default function ClaudeQuestionsPage() {
               <div className="mx-auto text-5xl">🚀</div>
               <div className="space-y-1.5">
                 <p className="text-lg font-semibold text-foreground">
-                  Estamos preparando tus preguntas
+                  Calibrando tu misión
                 </p>
                 <p className="text-sm text-muted-foreground">{loadingMessages[messageIndex]}...</p>
               </div>
@@ -219,10 +219,10 @@ export default function ClaudeQuestionsPage() {
               <div className="shrink-0 text-4xl">🌎</div>
               <div className="space-y-2">
                 <h2 className="text-lg font-bold text-foreground">
-                  ¡Excelente! Ya diste el primer paso 🎉
+                  ¡Excelente! Misión iniciada 🚀
                 </h2>
                 <p className="text-sm leading-relaxed text-muted-foreground">
-                  Recibimos tu idea y ahora vamos a hacerte <strong className="text-foreground">unas preguntas cortas y simples</strong> para entender mejor tu proyecto.
+                  Recibimos tu idea y estamos calibrando los datos de lanzamiento. Ahora vamos a hacerte <strong className="text-foreground">unas preguntas cortas y simples</strong> para entender mejor tu proyecto.
                   No te preocupes, no hay respuestas correctas ni incorrectas: solo queremos capturar tu visión tal como la imaginás.
                 </p>
                 <p className="text-sm leading-relaxed text-muted-foreground">

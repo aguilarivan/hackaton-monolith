@@ -13,7 +13,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: 'DayZero — Tu copiloto de lanzamiento',
-  description: 'Valida tu idea de negocio con IA. Analisis de viabilidad, competencia, kit de arranque y hoja de ruta personalizada para LATAM.',
+  description: 'Valida tu idea de negocio con IA. Análisis de viabilidad, competencia, kit de arranque y hoja de ruta personalizada para LATAM.',
   generator: 'v0.app',
   icons: {
     icon: [

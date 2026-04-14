@@ -11,12 +11,12 @@ const STEPS = [
   { id: 1, planet: "🌎", label: "Tu idea" },
   { id: 2, planet: "🪐", label: "Preguntas" },
   { id: 3, planet: "⭐", label: "Análisis" },
-  { id: 4, planet: "🌟", label: "Plan" },
+  { id: 4, planet: "🌍", label: "Aterrizaje" },
 ]
 
 export function SpaceProgress({ currentStep, brandName }: SpaceProgressProps) {
   const steps = STEPS.map((s) =>
-    s.id === 4 && brandName ? { ...s, label: brandName, planet: "🌍" } : s
+    s.id === 4 && brandName ? { ...s, label: brandName } : s
   )
 
   return (

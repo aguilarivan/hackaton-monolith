@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { AlertTriangle } from "lucide-react"
 import { HeroInput, BusinessInputData } from "@/components/hero-input"
 import { Header } from "@/components/header"
+import { StepIndicator } from "@/components/step-indicator"
 import { Card, CardContent } from "@/components/ui/card"
 import { createFlowSession, isApiClientError } from "@/lib/flow-api"
 import { saveBusinessInput, saveFlowId } from "@/lib/flow-storage"
@@ -36,13 +37,14 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-background">
       <Header />
+      <StepIndicator currentStep={1} />
       {submitError && (
         <div className="mx-auto w-full max-w-3xl px-4 pt-6">
           <Card className="border-destructive/30 bg-destructive/5">
             <CardContent className="space-y-2 p-4">
               <p className="flex items-center gap-2 text-sm font-medium text-destructive">
                 <AlertTriangle className="h-4 w-4" />
-                Error al iniciar tu sesion
+                Error al iniciar tu sesión
               </p>
               <p className="text-sm text-foreground/80">{submitError}</p>
               {requestId && (

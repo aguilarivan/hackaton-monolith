@@ -1,19 +1,27 @@
 "use client"
 
+import { useState } from "react"
 import { Zap, ArrowRight, Layout, MessageSquare, Search, Smartphone, Upload, HelpCircle } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 
 const features = [
-  { icon: Layout, label: "Hero with value prop" },
-  { icon: Layout, label: "Services section" },
-  { icon: MessageSquare, label: "WhatsApp contact form" },
-  { icon: Search, label: "Basic SEO" },
+  { icon: Layout, label: "Hero con propuesta de valor" },
+  { icon: Layout, label: "Sección de servicios" },
+  { icon: MessageSquare, label: "Formulario WhatsApp" },
+  { icon: Search, label: "SEO básico" },
   { icon: Smartphone, label: "Mobile-first" },
-  { icon: Upload, label: "Ready for Netlify" },
+  { icon: Upload, label: "Lista para deploy" },
 ]
 
 export function LandingCTA() {
+  const [toastVisible, setToastVisible] = useState(false)
+
+  const handleClick = () => {
+    setToastVisible(true)
+    setTimeout(() => setToastVisible(false), 3000)
+  }
+
   return (
     <Card className="border-2 border-[oklch(0.5_0.18_270_/_0.5)] bg-gradient-to-br from-[oklch(0.5_0.18_270_/_0.05)] to-transparent">
       <CardContent className="p-6 sm:p-8">
@@ -26,10 +34,10 @@ export function LandingCTA() {
               </div>
               <div>
                 <h3 className="text-xl font-bold text-foreground sm:text-2xl">
-                  Generate your landing page now
+                  Tu análisis está completo. Ahora aterrizá tu idea.
                 </h3>
                 <p className="mt-1 text-muted-foreground">
-                  AI already has all the context from your analysis and can generate a ready-to-publish HTML landing page in seconds.
+                  La IA ya tiene todo el contexto de tu análisis y puede generar una landing page lista para publicar.
                 </p>
               </div>
             </div>
@@ -50,13 +58,20 @@ export function LandingCTA() {
 
           {/* Right side - CTAs */}
           <div className="flex flex-col gap-3 sm:flex-row lg:flex-col lg:items-end">
-            <Button size="lg" className="h-12 px-6 text-base font-semibold">
-              Create my landing page
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
+            <div className="relative">
+              <Button size="lg" className="h-12 px-6 text-base font-semibold" onClick={handleClick}>
+                Crear mi landing page
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+              {toastVisible && (
+                <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-lg bg-foreground px-3 py-1.5 text-xs font-medium text-background shadow-lg">
+                  Próximamente: generá tu landing automáticamente
+                </div>
+              )}
+            </div>
             <button className="inline-flex items-center justify-center gap-1.5 text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">
               <HelpCircle className="h-3.5 w-3.5" />
-              How to publish it for free?
+              ¿Cómo publicarla gratis?
             </button>
           </div>
         </div>

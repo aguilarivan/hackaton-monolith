@@ -28,7 +28,7 @@ interface HeroInputProps {
 function formatNumber(value: string): string {
   const num = value.replace(/\D/g, "")
   if (!num) return ""
-  return Number(num).toLocaleString("en-US")
+  return Number(num).toLocaleString("es-AR")
 }
 
 function parseNumber(value: string): number {
@@ -66,7 +66,7 @@ export function HeroInput({ onSubmit }: HeroInputProps) {
         {/* Heading */}
         <div className="space-y-2 text-center">
           <h1 className="text-balance text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
-            Empezá el negocio{" "}
+            Lanzá el negocio{" "}
             <span className="text-primary">que siempre soñaste</span>
           </h1>
           <p className="mx-auto max-w-xl text-pretty text-sm text-muted-foreground">
@@ -168,7 +168,7 @@ export function HeroInput({ onSubmit }: HeroInputProps) {
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
             <p className="text-center text-sm text-muted-foreground">
-              La IA analiza mercado, competencia y arma tu kit de startup personalizado
+              La IA analiza mercado, competencia y arma tu plan de lanzamiento personalizado
             </p>
           </div>
         </form>
