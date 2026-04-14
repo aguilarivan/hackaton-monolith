@@ -6,7 +6,10 @@
     "toggleTheme": "Toggle theme",
     "backToStart": "Back to start",
     "brandName": "DayZero",
-    "tagline": "Your launch copilot"
+    "tagline": "Your launch copilot",
+    "previous": "Previous",
+    "saving": "Saving...",
+    "retry": "Retry"
   },
   "metadata": {
     "title": "DayZero — Your Launch Copilot",
@@ -111,6 +114,8 @@
     "sessionExpired": "The analysis session doesn't exist or has expired. Start a new idea.",
     "backendError": "Could not generate the analysis from the backend.",
     "errorTitle": "Error building the analysis",
+    "planningHint": "This only takes a few seconds",
+    "generatingHint": "This may take a few seconds",
     "planningMessages": {
       "0": "Evaluating which sections apply to your idea...",
       "1": "Determining the scope of the analysis..."

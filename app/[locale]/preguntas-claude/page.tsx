@@ -1,7 +1,8 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter } from "@/i18n/navigation"
+import { useTranslations, useLocale } from "next-intl"
 import { AlertTriangle, ArrowLeft, ArrowRight, Loader2, Sparkles } from "lucide-react"
 import { Header } from "@/components/header"
 import { Button } from "@/components/ui/button"
@@ -19,14 +20,12 @@ import { getBusinessInput, getFlowId, saveClaudeAnswers, saveFlowId, type Claude
 
 const QUESTIONS_PER_PAGE = 5
 
-const loadingMessages = [
-  "Leyendo tu idea con atención...",
-  "Identificando los puntos clave de tu misión...",
-  "Calibrando las preguntas más importantes para vos...",
-]
-
 export default function ClaudeQuestionsPage() {
   const router = useRouter()
+  const t = useTranslations("questions")
+  const tCommon = useTranslations("common")
+
+  const loadingMessages = [t("loadingMessages.0"), t("loadingMessages.1"), t("loadingMessages.2")]
   const [isPreparing, setIsPreparing] = useState(true)
   const [messageIndex, setMessageIndex] = useState(0)
   const [businessData, setBusinessData] = useState<ReturnType<typeof getBusinessInput>>(null)
@@ -144,7 +143,7 @@ export default function ClaudeQuestionsPage() {
       const flowId = getFlowId()
 
       if (!flowId) {
-        setSubmitError("No existe una sesión activa. Volvé a la misión inicial para reiniciar el flujo.")
+        setSubmitError(t("noSession"))
         return
       }
 
@@ -157,7 +156,7 @@ export default function ClaudeQuestionsPage() {
         setSubmitError(error.message)
         setRequestId(error.requestId ?? null)
       } else {
-        setSubmitError("No se pudieron guardar tus respuestas en el backend.")
+        setSubmitError(t("saveError"))
       }
     } finally {
       setIsSubmitting(false)
@@ -177,13 +176,13 @@ export default function ClaudeQuestionsPage() {
               <div className="mx-auto text-5xl">🚀</div>
               <div className="space-y-1.5">
                 <p className="text-lg font-semibold text-foreground">
-                  Calibrando tu misión
+                  {t("calibrating")}
                 </p>
                 <p className="text-sm text-muted-foreground">{loadingMessages[messageIndex]}...</p>
               </div>
               <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Esto solo tarda unos segundos
+                {t("calibratingHint")}
               </div>
             </CardContent>
           </Card>
@@ -202,7 +201,7 @@ export default function ClaudeQuestionsPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-destructive">
                 <AlertTriangle className="h-5 w-5" />
-                Algo salió mal al cargar las preguntas
+                {t("loadError")}
               </CardTitle>
               <p className="text-sm text-foreground/80">{loadError}</p>
               {requestId && (
@@ -212,10 +211,10 @@ export default function ClaudeQuestionsPage() {
             <CardContent className="flex flex-col gap-3 sm:flex-row sm:justify-between">
               <Button variant="outline" onClick={() => router.push("/")}>
                 <ArrowLeft className="mr-2 h-4 w-4" />
-                Volver al inicio
+                {tCommon("backToStart")}
               </Button>
               <Button onClick={() => businessData && loadQuestions(businessData)}>
-                Reintentar
+                {tCommon("retry")}
               </Button>
             </CardContent>
           </Card>
@@ -237,22 +236,14 @@ export default function ClaudeQuestionsPage() {
               <div className="shrink-0 text-4xl">🌎</div>
               <div className="space-y-2">
                 <h2 className="text-lg font-bold text-foreground">
-                  ¡Excelente! Misión iniciada 🚀
+                  {t("introTitle")}
                 </h2>
                 <p className="text-sm leading-relaxed text-muted-foreground">
-                  Recibimos tu idea y estamos calibrando los datos de lanzamiento. Ahora vamos a hacerte <strong className="text-foreground">unas preguntas cortas y simples</strong> para entender mejor tu proyecto.
-                  No te preocupes, no hay respuestas correctas ni incorrectas: solo queremos capturar tu visión tal como la imaginás.
-                </p>
-                <p className="text-sm leading-relaxed text-muted-foreground">
-                  Con lo que nos contés, vamos a ayudarte a avanzar con <strong className="text-foreground">todo lo que necesitás</strong> para llevar tu negocio adelante:
-                  desde la validación de la idea hasta el plan de acción concreto.
-                </p>
-                <p className="text-sm leading-relaxed text-muted-foreground">
-                  A lo largo de todo el proceso vas a contar con un <strong className="text-foreground">agente personal</strong> que te va a acompañar, responder tus dudas y orientarte en cada paso. 🤝
+                  {t("introDescription")}
                 </p>
                 {totalPages > 1 && (
                   <p className="text-sm text-muted-foreground">
-                    Página {currentPage + 1} de {totalPages} ({questions.length} preguntas en total)
+                    {t("pageIndicator", { currentPage: currentPage + 1, totalPages })}
                   </p>
                 )}
               </div>
@@ -296,11 +287,11 @@ export default function ClaudeQuestionsPage() {
                 {selected === "expand" && (
                   <div className="space-y-2 pt-1">
                     <Label htmlFor={`${question.id}-details`} className="text-sm font-medium">
-                      Contanos más 💬
+                      {t("detailsPlaceholder")}
                     </Label>
                     <Textarea
                       id={`${question.id}-details`}
-                      placeholder="Escribí todo el contexto que quieras compartir. Cuanto más detalle, mejor puede ayudarte la IA..."
+                      placeholder={t("detailsTextarea")}
                       value={details[question.id] || ""}
                       onChange={(event) =>
                         setDetails((prev) => ({ ...prev, [question.id]: event.target.value }))
@@ -318,7 +309,7 @@ export default function ClaudeQuestionsPage() {
         <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
           <Button variant="outline" onClick={currentPage === 0 ? () => router.push("/") : handlePrevPage}>
             <ArrowLeft className="mr-2 h-4 w-4" />
-            {currentPage === 0 ? "Volver al inicio" : "Anterior"}
+            {currentPage === 0 ? tCommon("backToStart") : tCommon("previous")}
           </Button>
 
           {isLastPage ? (
@@ -326,18 +317,18 @@ export default function ClaudeQuestionsPage() {
               {isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Guardando...
+                  {tCommon("saving")}
                 </>
               ) : (
                 <>
-                  Continuar al análisis
+                  {t("continueToAnalysis")}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </>
               )}
             </Button>
           ) : (
             <Button onClick={handleNextPage} disabled={!isCurrentPageValid}>
-              Siguiente
+              {t("nextButton")}
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           )}
@@ -346,7 +337,7 @@ export default function ClaudeQuestionsPage() {
         {submitError && (
           <Card className="border-destructive/30 bg-destructive/5">
             <CardContent className="space-y-1 p-4">
-              <p className="text-sm font-medium text-destructive">No se pudo continuar</p>
+              <p className="text-sm font-medium text-destructive">{t("continueError")}</p>
               <p className="text-sm text-foreground/80">{submitError}</p>
               {requestId && (
                 <p className="text-xs text-muted-foreground">Request ID: {requestId}</p>
@@ -357,7 +348,7 @@ export default function ClaudeQuestionsPage() {
 
         <p className="flex items-center gap-2 text-sm text-muted-foreground">
           <Sparkles className="h-4 w-4 shrink-0" />
-          Podés elegir &quot;Quiero ampliar este punto&quot; para darle más contexto a la IA en cualquier pregunta.
+          {t("expandHint")}
         </p>
       </div>
     </main>

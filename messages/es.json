@@ -6,7 +6,10 @@
     "toggleTheme": "Cambiar tema",
     "backToStart": "Volver al inicio",
     "brandName": "DayZero",
-    "tagline": "Tu copiloto de lanzamiento"
+    "tagline": "Tu copiloto de lanzamiento",
+    "previous": "Anterior",
+    "saving": "Guardando...",
+    "retry": "Reintentar"
   },
   "metadata": {
     "title": "DayZero — Tu copiloto de lanzamiento",
@@ -111,6 +114,8 @@
     "sessionExpired": "La sesión de análisis no existe o expiró. Iniciá una nueva idea.",
     "backendError": "No se pudo generar el análisis desde backend.",
     "errorTitle": "Error al construir el análisis",
+    "planningHint": "Esto toma solo unos segundos",
+    "generatingHint": "Esto puede tardar unos segundos",
     "planningMessages": {
       "0": "Evaluando qué secciones aplican a tu idea...",
       "1": "Determinando el alcance del análisis..."

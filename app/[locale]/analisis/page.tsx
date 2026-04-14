@@ -1,7 +1,8 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter } from "@/i18n/navigation"
+import { useTranslations, useLocale } from "next-intl"
 import { AlertTriangle, ArrowLeft, Bot, Loader2, Rocket } from "lucide-react"
 import { Header } from "@/components/header"
 import { StartupDashboard } from "@/components/startup-dashboard"
@@ -13,18 +14,6 @@ import type { SectionPlan } from "@/lib/server/section-plan-prompt"
 import { clearFlowStorage, getBusinessInput, getClaudeAnswers, getFlowId, saveSectionPlan, getSectionPlan } from "@/lib/flow-storage"
 import type { BusinessInputData } from "@/components/hero-input"
 
-const planningMessages = [
-  "Evaluando qué secciones aplican a tu idea...",
-  "Determinando el alcance del análisis...",
-]
-
-const loadingMessages = [
-  "Analizando las condiciones de lanzamiento...",
-  "Evaluando viabilidad y modelo de negocio...",
-  "Investigando competencia y mercado...",
-  "Armando tu plan de lanzamiento personalizado...",
-]
-
 export interface PartialAnalysis {
   viability?: ViabilitySection
   details?: DetailsSection
@@ -33,6 +22,11 @@ export interface PartialAnalysis {
 
 export default function AnalysisPage() {
   const router = useRouter()
+  const t = useTranslations("analysis")
+  const tCommon = useTranslations("common")
+
+  const planningMessages = [t("planningMessages.0"), t("planningMessages.1")]
+  const loadingMessages = [t("loadingMessages.0"), t("loadingMessages.1"), t("loadingMessages.2"), t("loadingMessages.3")]
   const [businessData, setBusinessData] = useState<BusinessInputData | null>(null)
   const [sectionPlan, setSectionPlan] = useState<SectionPlan | null>(null)
   const [isPlanning, setIsPlanning] = useState(true)
@@ -66,7 +60,7 @@ export default function AnalysisPage() {
       const flowId = getFlowId()
       if (!flowId) {
         if (!isMounted) return
-        setLoadError("No hay una sesión activa para generar el análisis.")
+        setLoadError(t("noSession"))
         setIsPlanning(false)
         setIsStreaming(false)
         return
@@ -138,13 +132,13 @@ export default function AnalysisPage() {
         if (!isMounted) return
 
         if (isApiClientError(error) && error.status === 404) {
-          setLoadError("La sesión de análisis no existe o expiró. Iniciá una nueva idea.")
+          setLoadError(t("sessionExpired"))
           setRequestId(error.requestId ?? null)
         } else if (isApiClientError(error)) {
           setLoadError(error.message)
           setRequestId(error.requestId ?? null)
         } else {
-          setLoadError("No se pudo generar el análisis desde backend.")
+          setLoadError(t("backendError"))
         }
         setIsPlanning(false)
         setIsStreaming(false)
@@ -172,7 +166,7 @@ export default function AnalysisPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-destructive">
                 <AlertTriangle className="h-5 w-5" />
-                Error al construir el análisis
+                {t("errorTitle")}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -183,9 +177,9 @@ export default function AnalysisPage() {
               <div className="flex flex-col gap-3 sm:flex-row sm:justify-between">
                 <Button variant="outline" onClick={handleReset}>
                   <ArrowLeft className="mr-2 h-4 w-4" />
-                  Volver al inicio
+                  {tCommon("backToStart")}
                 </Button>
-                <Button onClick={() => router.refresh()}>Reintentar</Button>
+                <Button onClick={() => router.refresh()}>{tCommon("retry")}</Button>
               </div>
             </CardContent>
           </Card>
@@ -209,7 +203,7 @@ export default function AnalysisPage() {
               </div>
               <div className="space-y-2">
                 <p className="text-lg font-semibold text-foreground">
-                  {isPlanning ? "Preparando el análisis" : "Generando tu análisis"}
+                  {isPlanning ? t("preparing") : t("generating")}
                 </p>
                 <p className="text-sm text-muted-foreground">
                   {currentMessage}
@@ -217,7 +211,7 @@ export default function AnalysisPage() {
               </div>
               <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
                 <Loader2 className="h-4 w-4 animate-spin" />
-                {isPlanning ? "Esto toma solo unos segundos" : "Esto puede tardar unos segundos"}
+                {isPlanning ? t("planningHint") : t("generatingHint")}
               </div>
             </CardContent>
           </Card>
