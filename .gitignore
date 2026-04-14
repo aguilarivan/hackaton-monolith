@@ -14,3 +14,10 @@ next.user-config.*
 node_modules
 .next/
 .DS_Store
+
+# Editor / AI tool configs
+.claude/
+
+# Auto-generated TypeScript files
+next-env.d.ts
+tsconfig.tsbuildinfo
