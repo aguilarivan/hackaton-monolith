@@ -47,6 +47,7 @@ type SectionKey = "overview" | "viability" | "monetization" | "competitors" | "c
 
 export function StartupDashboard({ data, analysisOverride, onReset }: StartupDashboardProps) {
   const analysis = useMemo(() => analysisOverride ?? generateAnalysis(data), [analysisOverride, data])
+  const displayName = data.brandName || analysis.appName
   const [activeSection, setActiveSection] = useState<SectionKey>("overview")
   const [isLoaded, setIsLoaded] = useState(false)
 
@@ -70,9 +71,9 @@ export function StartupDashboard({ data, analysisOverride, onReset }: StartupDas
   }
 
   const getVerdictSentence = (score: number) => {
-    if (score >= 7) return `${analysis.appName} tiene orbita alta en ${data.city} — las condiciones de lanzamiento son favorables.`
-    if (score >= 5) return `${analysis.appName} tiene trayectoria viable en ${data.city} — hay turbulencia pero el camino existe.`
-    return `${analysis.appName} enfrenta gravedad fuerte en ${data.city} — necesitas repensar la mision.`
+    if (score >= 7) return `${displayName} tiene orbita alta en ${data.city} — las condiciones de lanzamiento son favorables.`
+    if (score >= 5) return `${displayName} tiene trayectoria viable en ${data.city} — hay turbulencia pero el camino existe.`
+    return `${displayName} enfrenta gravedad fuerte en ${data.city} — necesitas repensar la mision.`
   }
 
   const getTrendLabel = (trend: "up" | "stable" | "down") => {

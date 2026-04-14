@@ -8,6 +8,7 @@ export interface BusinessInputData {
   idea: string
   city: string
   investment: number
+  brandName?: string
 }
 
 interface HeroInputProps {
@@ -28,6 +29,7 @@ export function HeroInput({ onSubmit }: HeroInputProps) {
   const [idea, setIdea] = useState("")
   const [city, setCity] = useState("")
   const [investment, setInvestment] = useState("")
+  const [brandName, setBrandName] = useState("")
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -37,6 +39,7 @@ export function HeroInput({ onSubmit }: HeroInputProps) {
       idea,
       city: city || "Buenos Aires",
       investment: parseNumber(investment) || 500000,
+      brandName: brandName.trim() || undefined,
     })
   }
 
@@ -82,6 +85,24 @@ export function HeroInput({ onSubmit }: HeroInputProps) {
                 placeholder="E.g., corporate catering service in Buenos Aires"
                 className="min-h-[100px] w-full resize-none rounded-lg border border-input bg-background p-4 text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
               />
+            </div>
+
+            {/* Brand Name */}
+            <div className="mt-4 space-y-2">
+              <label htmlFor="brandName" className="text-sm font-medium text-foreground">
+                Nombre de tu proyecto
+              </label>
+              <div className="relative">
+                <Rocket className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <input
+                  id="brandName"
+                  type="text"
+                  value={brandName}
+                  onChange={(e) => setBrandName(e.target.value)}
+                  placeholder="Ej: MiStartup, TuApp..."
+                  className="w-full rounded-lg border border-input bg-background py-2.5 pl-10 pr-4 text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
             </div>
 
             {/* City and Investment Row */}

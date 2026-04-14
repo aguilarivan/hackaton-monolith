@@ -232,9 +232,13 @@ export default function ClaudeQuestionsPage() {
       <div className="mx-auto w-full max-w-4xl space-y-6 px-4 py-8">
         <Card className="border-primary/20 bg-primary/5">
           <CardHeader>
-            <CardTitle className="text-xl">Paso 2: responde las dudas de Claude</CardTitle>
+            <CardTitle className="text-xl">
+              {businessData.brandName
+                ? `Calibrando datos para ${businessData.brandName}`
+                : "Calibrando datos antes del analisis"}
+            </CardTitle>
             <CardDescription>
-              Idea: {businessData.idea} | Ciudad: {businessData.city} | Inversion inicial: ${businessData.investment.toLocaleString("es-AR")}
+              {businessData.idea} · {businessData.city} · ${businessData.investment.toLocaleString("es-AR")} ARS
             </CardDescription>
           </CardHeader>
         </Card>
