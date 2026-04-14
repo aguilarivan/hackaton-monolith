@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useTranslations, useLocale } from "next-intl"
 import {
   Gauge,
   Users,
@@ -66,12 +65,10 @@ function LoadingCard({ className }: { className?: string }) {
 }
 
 export function StartupDashboard({ data, partial, isStreaming, sectionPlan, onReset }: StartupDashboardProps) {
-  const t = useTranslations("dashboard")
-  const locale = useLocale()
   const v = partial.viability
   const d = partial.details
   const r = partial.research
-  const displayName = data.brandName || v?.appName || (locale === "es" ? "Tu proyecto" : "Your project")
+  const displayName = data.brandName || v?.appName || "Tu proyecto"
   const [activeSection, setActiveSection] = useState<SectionKey>("overview")
   const [isLoaded, setIsLoaded] = useState(false)
 
@@ -83,7 +80,7 @@ export function StartupDashboard({ data, partial, isStreaming, sectionPlan, onRe
     return () => clearTimeout(timer)
   }, [])
 
-  const formatInvestment = (amount: number) => `$${amount.toLocaleString(locale === "es" ? "es-AR" : "en-US")}`
+  const formatInvestment = (amount: number) => `$${amount.toLocaleString("es-AR")}`
 
   const getScoreColor = (score: number) => {
     if (score >= 7) return "text-success"
@@ -98,21 +95,22 @@ export function StartupDashboard({ data, partial, isStreaming, sectionPlan, onRe
   }
 
   const getVerdictSentence = (score: number) => {
-    if (score >= 7) return t("verdicts.high")
-    if (score >= 5) return t("verdicts.medium")
-    return t("verdicts.low")
+    const cityLabel = data.city ? ` en ${data.city}` : ""
+    if (score >= 7) return `${displayName} tiene órbita alta${cityLabel} — las condiciones de lanzamiento son favorables.`
+    if (score >= 5) return `${displayName} tiene trayectoria viable${cityLabel} — hay turbulencia pero el camino existe.`
+    return `${displayName} enfrenta gravedad fuerte${cityLabel} — necesitás repensar la misión.`
   }
 
   const getCompetitionLabel = (level: string) => {
-    if (level === "Low") return t("competitionLabels.low")
-    if (level === "Medium") return t("competitionLabels.moderate")
-    return t("competitionLabels.high")
+    if (level === "Low") return "baja"
+    if (level === "Medium") return "moderada"
+    return "alta"
   }
 
   const getTrendLabel = (trend: string) => {
-    if (trend === "up") return t("trendLabels.growing")
-    if (trend === "stable") return t("trendLabels.stable")
-    return t("trendLabels.declining")
+    if (trend === "up") return "en crecimiento"
+    if (trend === "stable") return "estable"
+    return "en descenso"
   }
 
   const getSeverityCount = (severity: "High" | "Medium" | "Low") =>
@@ -140,7 +138,7 @@ export function StartupDashboard({ data, partial, isStreaming, sectionPlan, onRe
             className="mb-6 gap-2 text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4" />
-            {t("backToPanel")}
+            Volver al panel
           </Button>
           <div className="animate-in fade-in slide-in-from-right-4 duration-300">
             {activeSection === "viability" && v && <ViabilitySection data={v.viability} />}
@@ -177,7 +175,7 @@ export function StartupDashboard({ data, partial, isStreaming, sectionPlan, onRe
             <div className="min-w-0 flex-1">
               {isStreaming && (
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/5 px-3 py-1.5 text-xs font-medium text-muted-foreground">
-                  <Loader2 className="h-3 w-3 animate-spin" />{t("analyzingRealTime")}
+                  <Loader2 className="h-3 w-3 animate-spin" />Analizando en tiempo real...
                 </span>
               )}
             </div>
@@ -206,7 +204,7 @@ export function StartupDashboard({ data, partial, isStreaming, sectionPlan, onRe
                         <span className="text-sm text-muted-foreground">/10</span>
                       </div>
                     </div>
-                    <span className="text-xs font-medium text-muted-foreground">{t("potential")}</span>
+                    <span className="text-xs font-medium text-muted-foreground">Potencial</span>
                   </div>
 
                   {/* Verdict text */}
@@ -216,8 +214,8 @@ export function StartupDashboard({ data, partial, isStreaming, sectionPlan, onRe
                         {getVerdictSentence(v.viability.marketPotential)}
                       </h1>
                       <p className="mt-2 text-base leading-relaxed text-muted-foreground">
-                        {t("marketSummary", { trend: getTrendLabel(v.viability.trend), competition: getCompetitionLabel(v.viability.competitionLevel) })}
-                        {" "}{t("timeToIncome", { time: v.viability.timeToFirstIncome })}
+                        Mercado {getTrendLabel(v.viability.trend)}, competencia {getCompetitionLabel(v.viability.competitionLevel)}.
+                        {" "}Tiempo estimado al primer ingreso: {v.viability.timeToFirstIncome}.
                       </p>
                     </div>
 
@@ -247,7 +245,7 @@ export function StartupDashboard({ data, partial, isStreaming, sectionPlan, onRe
                         <div className="flex items-start gap-2.5 rounded-lg bg-background/60 p-3 ring-1 ring-border">
                           <ArrowUpRight className="mt-0.5 h-4 w-4 shrink-0 text-success" />
                           <div>
-                            <p className="text-xs font-semibold text-success">{t("keyOpportunity")}</p>
+                            <p className="text-xs font-semibold text-success">Oportunidad clave</p>
                             <p className="mt-0.5 text-sm text-muted-foreground">{topOpportunity.text}</p>
                           </div>
                         </div>
@@ -256,7 +254,7 @@ export function StartupDashboard({ data, partial, isStreaming, sectionPlan, onRe
                         <div className="flex items-start gap-2.5 rounded-lg bg-background/60 p-3 ring-1 ring-border">
                           <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
                           <div>
-                            <p className="text-xs font-semibold text-destructive">{t("mainRisk")}</p>
+                            <p className="text-xs font-semibold text-destructive">Riesgo principal</p>
                             <p className="mt-0.5 text-sm text-muted-foreground">{topRisk.title}</p>
                           </div>
                         </div>
@@ -303,11 +301,11 @@ export function StartupDashboard({ data, partial, isStreaming, sectionPlan, onRe
                 </div>
                 <div className="mt-4">
                   <div className="flex items-baseline gap-2">
-                    <p className="text-sm font-semibold text-foreground">{t("viabilityCard")}</p>
+                    <p className="text-sm font-semibold text-foreground">Viabilidad</p>
                     <span className={cn("text-sm font-bold", getScoreColor(v.viability.marketPotential))}>{v.viability.marketPotential}/10</span>
                   </div>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    {t("viabilityCardDesc")}
+                    Señales de mercado, modelo de negocio y proyecciones de crecimiento
                   </p>
                 </div>
               </CardContent>
@@ -325,9 +323,9 @@ export function StartupDashboard({ data, partial, isStreaming, sectionPlan, onRe
                   <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-1" />
                 </div>
                 <div className="mt-4">
-                  <p className="text-sm font-semibold text-foreground">{t("monetizationCard")}</p>
+                  <p className="text-sm font-semibold text-foreground">Monetización</p>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    {t("monetizationCardDesc", { count: v.viability.monetization.plans.length })}
+                    {v.viability.monetization.plans.length} planes de precio sugeridos y referencia de mercado
                   </p>
                 </div>
               </CardContent>
@@ -345,9 +343,9 @@ export function StartupDashboard({ data, partial, isStreaming, sectionPlan, onRe
                   <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-1" />
                 </div>
                 <div className="mt-4">
-                  <p className="text-sm font-semibold text-foreground">{t("competitorsCard")}</p>
+                  <p className="text-sm font-semibold text-foreground">Competidores</p>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    {t("competitorsCardDesc", { count: r.competitors.competitors.length })}
+                    {r.competitors.competitors.length} identificados — fortalezas, debilidades y mapa de zonas
                   </p>
                 </div>
               </CardContent>
@@ -365,11 +363,11 @@ export function StartupDashboard({ data, partial, isStreaming, sectionPlan, onRe
                   <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-1" />
                 </div>
                 <div className="mt-4">
-                  <p className="text-sm font-semibold text-foreground">{t("clientsCard")}</p>
+                  <p className="text-sm font-semibold text-foreground">Clientes</p>
                   <p className="mt-1 text-xs text-muted-foreground">
                     {v.clients.type === "b2b"
-                      ? t("clientsB2bCardDesc", { count: v.clients.b2bClients?.length || 0 })
-                      : t("clientsB2cCardDesc", { count: v.clients.b2cSegments?.length || 0 })}
+                      ? `${v.clients.b2bClients?.length || 0} clientes B2B — perfiles y cómo abordarlos`
+                      : `${v.clients.b2cSegments?.length || 0} segmentos — perfiles y canales de llegada`}
                   </p>
                 </div>
               </CardContent>
@@ -387,9 +385,9 @@ export function StartupDashboard({ data, partial, isStreaming, sectionPlan, onRe
                   <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-1" />
                 </div>
                 <div className="mt-4">
-                  <p className="text-sm font-semibold text-foreground">{t("legalCard")}</p>
+                  <p className="text-sm font-semibold text-foreground">Legal e Impuestos</p>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    {t("legalCardDesc", { structure: d.legalStructure.structures.find((s) => s.recommended)?.name || "SAS" })}
+                    {d.legalStructure.structures.find((s) => s.recommended)?.name || "SAS"} recomendada — régimen fiscal y trámites
                   </p>
                 </div>
               </CardContent>
@@ -407,9 +405,9 @@ export function StartupDashboard({ data, partial, isStreaming, sectionPlan, onRe
                   <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-1" />
                 </div>
                 <div className="mt-4">
-                  <p className="text-sm font-semibold text-foreground">{t("kitCard")}</p>
+                  <p className="text-sm font-semibold text-foreground">Kit de inicio</p>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    {t("kitCardDesc", { count: r.startupKit.items.length })}
+                    {r.startupKit.items.length} elementos esenciales — qué comprar, dónde y a qué precio
                   </p>
                 </div>
               </CardContent>
@@ -426,9 +424,9 @@ export function StartupDashboard({ data, partial, isStreaming, sectionPlan, onRe
                 <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-1" />
               </div>
               <div className="mt-4">
-                <p className="text-sm font-semibold text-foreground">{t("financialCard")}</p>
+                <p className="text-sm font-semibold text-foreground">Proyección financiera</p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  {t("financialCardDesc")}
+                  Registrá gastos, simulá ingresos y calculá cuándo recuperás la inversión
                 </p>
               </div>
             </CardContent>
@@ -445,9 +443,9 @@ export function StartupDashboard({ data, partial, isStreaming, sectionPlan, onRe
                   <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-1" />
                 </div>
                 <div className="mt-4">
-                  <p className="text-sm font-semibold text-foreground">{t("obstaclesCard")}</p>
+                  <p className="text-sm font-semibold text-foreground">Obstáculos</p>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    {t("obstaclesCardDesc", { count: d.obstacles.length, critical: getSeverityCount("High") })}
+                    {d.obstacles.length} riesgos ({getSeverityCount("High")} críticos) — mitigación y casos reales
                   </p>
                 </div>
               </CardContent>
@@ -469,8 +467,8 @@ export function StartupDashboard({ data, partial, isStreaming, sectionPlan, onRe
                       <Map className="h-5 w-5" style={{ color: "oklch(0.55 0.15 195)" }} />
                     </div>
                     <div>
-                      <p className="font-semibold text-foreground">{t("roadmapCard")}</p>
-                      <p className="text-sm text-muted-foreground">{t("roadmapCardDesc", { phases: d.roadmap.length, steps: d.validationPlan.length })}</p>
+                      <p className="font-semibold text-foreground">Hoja de ruta de lanzamiento</p>
+                      <p className="text-sm text-muted-foreground">{d.roadmap.length} fases &middot; {d.validationPlan.length} pasos de validación</p>
                     </div>
                   </div>
                   <ChevronRight className="h-5 w-5 text-muted-foreground transition-transform group-hover:translate-x-1" />

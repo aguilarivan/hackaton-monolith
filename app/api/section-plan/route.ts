@@ -3,7 +3,7 @@ import { apiSuccess, apiError, parseJsonBody } from "@/lib/server/api-response"
 import type { BusinessInputData } from "@/components/hero-input"
 import type { ClaudeAnswer } from "@/lib/flow-storage"
 import {
-  getSectionPlanSystemPrompt,
+  SECTION_PLAN_SYSTEM_PROMPT,
   buildSectionPlanUserMessage,
   ALL_SECTION_KEYS,
   SECTION_SUBSECTIONS,
@@ -73,15 +73,13 @@ export async function POST(request: Request) {
     return apiError({ status: 400, code: "INVALID_PAYLOAD", message: "Invalid claudeAnswers" })
   }
 
-  const locale = request.headers.get("X-Locale") ?? "es"
-
   try {
     const response = await anthropic.messages.create({
       model: "claude-haiku-4-5-20251001",
       max_tokens: 512,
-      system: getSectionPlanSystemPrompt(locale),
+      system: SECTION_PLAN_SYSTEM_PROMPT,
       messages: [
-        { role: "user", content: buildSectionPlanUserMessage(body.businessInput, body.claudeAnswers, locale) },
+        { role: "user", content: buildSectionPlanUserMessage(body.businessInput, body.claudeAnswers) },
       ],
     })
 

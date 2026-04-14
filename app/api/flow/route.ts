@@ -69,8 +69,7 @@ export async function POST(request: Request) {
       })
     }
 
-    const locale = request.headers.get("X-Locale") ?? "es"
-    const record = createFlow(body.businessInput, locale)
+    const record = createFlow(body.businessInput)
     return apiSuccess({ flowId: record.id, flow: record }, 201)
   } catch (error) {
     if (error instanceof Error && error.message === "INVALID_JSON_BODY") {

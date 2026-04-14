@@ -22,9 +22,9 @@
     "whatYouGet": "What will you get?",
     "previewCaption": "This is what your full analysis looks like",
     "whyDayZero": "Why DayZero?",
-    "hackathonBadge": "Created at the Kaszek × Anthropic × Digital House 2026 Hackathon — Buenos Aires",
+    "hackathonBadge": "Created at the Kaszek × Anthropic 2026 Hackathon — Buenos Aires",
     "footerTagline": "DayZero — Your launch copilot",
-    "footerSubtext": "Kaszek × Anthropic × Digital House 2026 Hackathon",
+    "footerSubtext": "Kaszek × Anthropic 2026 Hackathon",
     "sessionError": "Error starting your session",
     "backendError": "Could not start the backend flow.",
     "featurePills": {
@@ -149,28 +149,7 @@
       "high": "Your idea has excellent market potential. Conditions are favorable for launch.",
       "medium": "The market shows opportunities, but you'll need to differentiate from existing competition.",
       "low": "The market is challenging. Consider a niche approach or a very strong value proposition."
-    },
-    "keyOpportunity": "Key opportunity",
-    "mainRisk": "Main risk",
-    "viabilityCard": "Viability",
-    "viabilityCardDesc": "Market signals, business model, and growth projections",
-    "monetizationCard": "Monetization",
-    "monetizationCardDesc": "{count} suggested pricing plans and market reference",
-    "competitorsCard": "Competitors",
-    "competitorsCardDesc": "{count} identified — strengths, weaknesses, and zone map",
-    "clientsCard": "Clients",
-    "clientsB2bCardDesc": "{count} B2B clients — profiles and how to approach them",
-    "clientsB2cCardDesc": "{count} segments — profiles and outreach channels",
-    "legalCard": "Legal & Taxes",
-    "legalCardDesc": "{structure} recommended — tax regime and procedures",
-    "kitCard": "Starter kit",
-    "kitCardDesc": "{count} essential items — what to buy, where, and at what price",
-    "financialCard": "Financial projection",
-    "financialCardDesc": "Track expenses, simulate income, and calculate when you'll recover your investment",
-    "obstaclesCard": "Obstacles",
-    "obstaclesCardDesc": "{count} risks ({critical} critical) — mitigation and real cases",
-    "roadmapCard": "Launch roadmap",
-    "roadmapCardDesc": "{phases} phases · {steps} validation steps"
+    }
   },
   "viabilitySection": {
     "title": "Market Potential",
@@ -194,10 +173,7 @@
     "trendDeclining": "Trend: Declining",
     "sourceGrowing": "Source: Growing",
     "sourceStable": "Source: Stable",
-    "sourceDeclining": "Source: Declining",
-    "updated": "Updated",
-    "source": "Source",
-    "signalStrength": "Signal strength"
+    "sourceDeclining": "Source: Declining"
   },
   "competitorsSection": {
     "title": "Identified competitors",

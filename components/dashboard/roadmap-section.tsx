@@ -1,12 +1,10 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useState } from "react"
-import { useTranslations } from "next-intl"
+import { useMemo, useState } from "react"
 import { Map, Check, X, Target, CheckCircle2, Globe, LayoutTemplate, Loader2 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import { getLandingProgress, saveLandingProgress, type LandingProgress } from "@/lib/flow-storage"
 import type { RoadmapStep, ValidationStep } from "@/lib/mock-data"
 
 interface RoadmapSectionProps {
@@ -15,34 +13,9 @@ interface RoadmapSectionProps {
 }
 
 export function RoadmapSection({ data, validationPlan }: RoadmapSectionProps) {
-  const t = useTranslations("roadmapSection")
   const [isGeneratingLanding, setIsGeneratingLanding] = useState(false)
-
-  // Hydrate from localStorage on mount
-  const [progress, setProgress] = useState<LandingProgress>(() => {
-    const saved = getLandingProgress()
-    if (saved && saved.totalSteps === validationPlan.length) return saved
-    return { completedSteps: [], totalSteps: validationPlan.length, landingGenerated: false, domainChecked: false }
-  })
-
-  const persist = useCallback((next: LandingProgress) => {
-    setProgress(next)
-    saveLandingProgress(next)
-  }, [])
-
-  const toggleValidationStep = useCallback((index: number) => {
-    setProgress((prev) => {
-      const completed = prev.completedSteps.includes(index)
-        ? prev.completedSteps.filter((i) => i !== index)
-        : [...prev.completedSteps, index]
-      const next = { ...prev, completedSteps: completed }
-      saveLandingProgress(next)
-      return next
-    })
-  }, [])
-
-  const landingGenerated = progress.landingGenerated
-  const domainChecked = progress.domainChecked
+  const [landingGenerated, setLandingGenerated] = useState(false)
+  const [domainChecked, setDomainChecked] = useState(false)
 
   const domainOptions = useMemo(
     () => data.flatMap((step) => step.domainChecks ?? (step.domainSuggestion ? [step.domainSuggestion] : [])),
@@ -53,11 +26,7 @@ export function RoadmapSection({ data, validationPlan }: RoadmapSectionProps) {
     setIsGeneratingLanding(true)
     await new Promise((resolve) => setTimeout(resolve, 1200))
     setIsGeneratingLanding(false)
-    persist({ ...progress, landingGenerated: true })
-  }
-
-  const handleDomainCheck = () => {
-    persist({ ...progress, domainChecked: true })
+    setLandingGenerated(true)
   }
 
   return (
@@ -69,54 +38,32 @@ export function RoadmapSection({ data, validationPlan }: RoadmapSectionProps) {
               <Target className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <CardTitle className="text-xl">{t("validationTitle")}</CardTitle>
-              <p className="text-sm text-muted-foreground">{t("validationSubtitle")}</p>
+              <CardTitle className="text-xl">Plan de Validación de Idea</CardTitle>
+              <p className="text-sm text-muted-foreground">Validá antes de invertir fuerte</p>
             </div>
           </div>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {validationPlan.map((step, index) => {
-              const checked = progress.completedSteps.includes(index)
-              return (
-                <button
-                  key={index}
-                  type="button"
-                  onClick={() => toggleValidationStep(index)}
-                  className={cn(
-                    "flex w-full items-start gap-4 rounded-lg border p-4 text-left transition-all",
-                    checked
-                      ? "border-success/40 bg-success/5"
-                      : "border-border bg-card hover:bg-secondary/30"
-                  )}
-                >
-                  <div
-                    className={cn(
-                      "flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-colors",
-                      checked ? "bg-success/20" : "bg-primary/10"
-                    )}
-                  >
-                    {checked ? (
-                      <Check className="h-4 w-4 text-success" />
-                    ) : (
-                      <span className="text-sm font-bold text-primary">{index + 1}</span>
-                    )}
-                  </div>
-                  <div className="flex-1 space-y-2">
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <h4 className={cn("font-medium", checked ? "text-muted-foreground line-through" : "text-foreground")}>{step.action}</h4>
-                        <p className="mt-1 text-sm text-muted-foreground">{step.duration}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 rounded-md bg-success/10 px-3 py-1.5">
-                      <CheckCircle2 className="h-4 w-4 text-success" />
-                      <span className="text-sm font-medium text-success">{t("successMetric", { metric: step.metric })}</span>
+            {validationPlan.map((step, index) => (
+              <div key={index} className="flex items-start gap-4 rounded-lg border border-border bg-card p-4 transition-colors hover:bg-secondary/30">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                  <span className="text-sm font-bold text-primary">{index + 1}</span>
+                </div>
+                <div className="flex-1 space-y-2">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <h4 className="font-medium text-foreground">{step.action}</h4>
+                      <p className="mt-1 text-sm text-muted-foreground">{step.duration}</p>
                     </div>
                   </div>
-                </button>
-              )
-            })}
+                  <div className="flex items-center gap-2 rounded-md bg-success/10 px-3 py-1.5">
+                    <CheckCircle2 className="h-4 w-4 text-success" />
+                    <span className="text-sm font-medium text-success">Métrica de éxito: {step.metric}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </CardContent>
       </Card>
@@ -128,8 +75,8 @@ export function RoadmapSection({ data, validationPlan }: RoadmapSectionProps) {
               <LayoutTemplate className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <CardTitle className="text-xl">{t("launchTools")}</CardTitle>
-              <p className="text-sm text-muted-foreground">{t("launchToolsDesc")}</p>
+              <CardTitle className="text-xl">Herramientas de Lanzamiento</CardTitle>
+              <p className="text-sm text-muted-foreground">Creación de página integrada y verificación de dominios disponibles</p>
             </div>
           </div>
         </CardHeader>
@@ -137,36 +84,36 @@ export function RoadmapSection({ data, validationPlan }: RoadmapSectionProps) {
           <div className="flex flex-wrap gap-3">
             <Button onClick={handleGenerateLanding} disabled={isGeneratingLanding} className="gap-2">
               {isGeneratingLanding ? <Loader2 className="h-4 w-4 animate-spin" /> : <LayoutTemplate className="h-4 w-4" />}
-              {isGeneratingLanding ? t("generating") : t("createPage")}
+              {isGeneratingLanding ? "Generando..." : "Crear mi página"}
             </Button>
-            <Button variant="outline" onClick={handleDomainCheck} className="gap-2">
+            <Button variant="outline" onClick={() => setDomainChecked(true)} className="gap-2">
               <Globe className="h-4 w-4" />
-              {t("checkDomains")}
+              Verificar dominios disponibles
             </Button>
           </div>
 
           {landingGenerated && (
             <div className="rounded-lg border border-success/30 bg-success/5 p-3 text-sm">
-              <p className="font-semibold text-success">{t("draftGenerated")}</p>
-              <p className="text-muted-foreground">{t("draftDescription")}</p>
+              <p className="font-semibold text-success">Borrador de página generado</p>
+              <p className="text-muted-foreground">Una estructura de una página lista para lanzar ya está incluida en tu flujo de trabajo.</p>
             </div>
           )}
 
           {domainChecked && (
             <div className="space-y-2 rounded-lg border border-border bg-card p-3">
-              <p className="text-sm font-semibold text-foreground">{t("domainAvailability")}</p>
+              <p className="text-sm font-semibold text-foreground">Disponibilidad de dominio</p>
               {domainOptions.length > 0 ? (
                 domainOptions.map((domain, index) => (
                   <div key={index} className="flex items-center justify-between rounded-md border border-border bg-background px-3 py-2 text-sm">
                     <span className="font-medium text-foreground">{domain.domain}</span>
                     <span className={cn("inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium", domain.available ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive")}>
                       {domain.available ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
-                      {domain.available ? t("domainAvailable") : t("domainTaken")}
+                      {domain.available ? "disponible" : "ocupado"}
                     </span>
                   </div>
                 ))
               ) : (
-                <p className="text-sm text-muted-foreground">{t("noDomains")}</p>
+                <p className="text-sm text-muted-foreground">No hay sugerencias de dominio disponibles para esta idea todavía.</p>
               )}
             </div>
           )}
@@ -179,7 +126,7 @@ export function RoadmapSection({ data, validationPlan }: RoadmapSectionProps) {
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
               <Map className="h-5 w-5 text-primary" />
             </div>
-            <CardTitle className="text-xl">{t("roadmapTitle")}</CardTitle>
+            <CardTitle className="text-xl">Hoja de Ruta de Lanzamiento</CardTitle>
           </div>
         </CardHeader>
         <CardContent>
@@ -216,7 +163,7 @@ export function RoadmapSection({ data, validationPlan }: RoadmapSectionProps) {
                                 step.domainSuggestion.available ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"
                               )}
                             >
-                              {step.domainSuggestion.available ? <><Check className="h-3 w-3" />{t("domainAvailable")}</> : <><X className="h-3 w-3" />{t("domainTaken")}</>}
+                              {step.domainSuggestion.available ? <><Check className="h-3 w-3" />disponible</> : <><X className="h-3 w-3" />ocupado</>}
                             </span>
                           </div>
                         </div>
@@ -261,7 +208,7 @@ export function RoadmapSection({ data, validationPlan }: RoadmapSectionProps) {
                                 step.domainSuggestion.available ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"
                               )}
                             >
-                              {step.domainSuggestion.available ? <><Check className="h-3 w-3" />{t("domainAvailable")}</> : <><X className="h-3 w-3" />{t("domainTaken")}</>}
+                              {step.domainSuggestion.available ? <><Check className="h-3 w-3" />disponible</> : <><X className="h-3 w-3" />ocupado</>}
                             </span>
                           </div>
                         </div>

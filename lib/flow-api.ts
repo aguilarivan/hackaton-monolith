@@ -111,11 +111,10 @@ async function requestJson<T>(input: RequestInfo | URL, init?: RequestInit): Pro
   return body.data
 }
 
-export async function createFlowSession(businessInput: BusinessInputData, locale?: string): Promise<string> {
+export async function createFlowSession(businessInput: BusinessInputData): Promise<string> {
   const data = await requestJson<{ flowId: string; flow: FlowPayload }>("/api/flow", {
     method: "POST",
     body: JSON.stringify({ businessInput }),
-    headers: { ...(locale ? { "X-Locale": locale } : {}) },
   })
 
   return data.flowId
@@ -124,21 +123,17 @@ export async function createFlowSession(businessInput: BusinessInputData, locale
 export async function saveFlowAnswers(
   flowId: string,
   claudeAnswers: ClaudeAnswer[],
-  businessInput?: BusinessInputData,
-  locale?: string
+  businessInput?: BusinessInputData
 ): Promise<{ newFlowId?: string }> {
   const data = await requestJson<{ flow: FlowPayload; newFlowId?: string }>("/api/flow", {
     method: "PATCH",
     body: JSON.stringify({ flowId, claudeAnswers, businessInput }),
-    headers: { ...(locale ? { "X-Locale": locale } : {}) },
   })
   return { newFlowId: data.newFlowId }
 }
 
-export async function getFlowSession(flowId: string, locale?: string): Promise<FlowPayload> {
-  const data = await requestJson<{ flow: FlowPayload }>(`/api/flow?flowId=${encodeURIComponent(flowId)}`, {
-    headers: { ...(locale ? { "X-Locale": locale } : {}) },
-  })
+export async function getFlowSession(flowId: string): Promise<FlowPayload> {
+  const data = await requestJson<{ flow: FlowPayload }>(`/api/flow?flowId=${encodeURIComponent(flowId)}`)
   return data.flow
 }
 
@@ -146,13 +141,11 @@ export async function getFlowSession(flowId: string, locale?: string): Promise<F
 
 export async function fetchSectionPlan(
   businessInput: BusinessInputData,
-  claudeAnswers: ClaudeAnswer[],
-  locale?: string
+  claudeAnswers: ClaudeAnswer[]
 ): Promise<SectionPlan> {
   const data = await requestJson<{ plan: SectionPlan }>("/api/section-plan", {
     method: "POST",
     body: JSON.stringify({ businessInput, claudeAnswers }),
-    headers: { ...(locale ? { "X-Locale": locale } : {}) },
   })
   return data.plan
 }
@@ -169,15 +162,11 @@ export type AnalysisStreamEvent =
 export async function* streamAnalysis(
   businessInput: BusinessInputData,
   claudeAnswers: ClaudeAnswer[],
-  sectionPlan?: SectionPlan,
-  locale?: string
+  sectionPlan?: SectionPlan
 ): AsyncGenerator<AnalysisStreamEvent> {
   const response = await fetch("/api/analysis", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...(locale ? { "X-Locale": locale } : {}),
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ businessInput, claudeAnswers, sectionPlan }),
   })
 
@@ -218,13 +207,11 @@ export async function* streamAnalysis(
 
 export async function getClarificationQuestionsFromApi(
   businessInput: BusinessInputData,
-  flowId?: string,
-  locale?: string
+  flowId?: string
 ): Promise<ClarificationQuestion[]> {
   const data = await requestJson<{ questions: ClarificationQuestion[] }>("/api/questions", {
     method: "POST",
     body: JSON.stringify({ businessInput, flowId }),
-    headers: { ...(locale ? { "X-Locale": locale } : {}) },
   })
 
   if (data.questions.length === 0) {

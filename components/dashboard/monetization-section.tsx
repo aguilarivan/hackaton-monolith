@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { useTranslations, useLocale } from "next-intl"
 import { DollarSign, Check, Pencil, X } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { ViabilityData } from "@/lib/mock-data"
@@ -12,8 +11,6 @@ interface MonetizationSectionProps {
 }
 
 export function MonetizationSection({ data }: MonetizationSectionProps) {
-  const t = useTranslations("monetizationSection")
-  const locale = useLocale()
   const [selectedPlan, setSelectedPlan] = useState<number | null>(null)
   const [confirmedStreams, setConfirmedStreams] = useState<Set<number>>(new Set())
   const [editingPrice, setEditingPrice] = useState<number | null>(null)
@@ -22,7 +19,7 @@ export function MonetizationSection({ data }: MonetizationSectionProps) {
   const [customModel, setCustomModel] = useState(data.businessModel.description)
 
   const formatArs = (value: number) =>
-    new Intl.NumberFormat(locale === "es" ? "es-AR" : "en-US", {
+    new Intl.NumberFormat("es-AR", {
       style: "currency",
       currency: "ARS",
       maximumFractionDigits: 0,
@@ -49,8 +46,8 @@ export function MonetizationSection({ data }: MonetizationSectionProps) {
               <DollarSign className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <CardTitle className="text-xl">{t("title")}</CardTitle>
-              <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
+              <CardTitle className="text-xl">¿Cómo vas a ganar dinero?</CardTitle>
+              <p className="text-sm text-muted-foreground">Modelo de negocio y precios sugeridos para tu idea</p>
             </div>
           </div>
         </CardHeader>
@@ -60,7 +57,7 @@ export function MonetizationSection({ data }: MonetizationSectionProps) {
           {/* Tipo de modelo + fuentes de ingreso */}
           <div className="space-y-4 rounded-xl border border-border bg-card p-4">
             <div>
-              <h4 className="text-sm font-semibold text-foreground">{t("modelType")}</h4>
+              <h4 className="text-sm font-semibold text-foreground">Tu tipo de modelo</h4>
               <p className="text-xs text-muted-foreground">{data.businessModel.type}</p>
 
               {editingModel ? (
@@ -106,7 +103,7 @@ export function MonetizationSection({ data }: MonetizationSectionProps) {
             {/* Fuentes de ingreso interactivas */}
             <div>
               <p className="mb-2 text-xs font-medium text-muted-foreground">
-                {t("revenueStreams")}
+                Tildá las fuentes de ingreso que aplican a tu negocio:
               </p>
               <div className="space-y-2">
                 {data.businessModel.revenueStreams.map((stream, index) => (
@@ -139,7 +136,7 @@ export function MonetizationSection({ data }: MonetizationSectionProps) {
                       </div>
                     </div>
                     <span className="shrink-0 text-sm font-bold text-primary">
-                      {stream.percentage}{t("revenuePercent")}
+                      {stream.percentage}% del ingreso
                     </span>
                   </button>
                 ))}
@@ -150,7 +147,7 @@ export function MonetizationSection({ data }: MonetizationSectionProps) {
           {/* Planes de precio — seleccionables y editables */}
           <div className="space-y-3">
             <div>
-              <h4 className="text-sm font-semibold text-foreground">{t("pricingTitle")}</h4>
+              <h4 className="text-sm font-semibold text-foreground">¿Cuánto le cobrarías a tus clientes?</h4>
               <p className="mt-0.5 text-xs text-muted-foreground">
                 Estos son los precios que <span className="font-medium text-foreground">vos le cobrarías</span> a las personas que usen tu negocio — no lo que pagás vos. Seleccioná el modelo de entrada que más te cierra.
               </p>
@@ -217,7 +214,7 @@ export function MonetizationSection({ data }: MonetizationSectionProps) {
                     </div>
                   )}
 
-                  <p className="text-xs text-muted-foreground">{t("pricePerMonth")}</p>
+                  <p className="text-xs text-muted-foreground">/mes · precio para tu cliente</p>
                   <p className="mt-2 text-xs font-medium text-foreground">{plan.target}</p>
                   <p className="mt-1 text-xs text-muted-foreground">{plan.rationale}</p>
                 </div>
@@ -240,23 +237,23 @@ export function MonetizationSection({ data }: MonetizationSectionProps) {
 
           {/* Benchmark de la competencia */}
           <div className="rounded-xl border border-border bg-card p-4">
-            <p className="text-sm font-semibold text-foreground">{t("benchmarkTitle")}</p>
+            <p className="text-sm font-semibold text-foreground">¿Cuánto cobra la competencia?</p>
             <p className="mt-1 text-xs text-muted-foreground">{data.monetization.benchmark.note}</p>
             <div className="mt-3 grid gap-2 sm:grid-cols-3">
               <div className="rounded-lg bg-secondary/30 p-3 text-center">
-                <p className="text-xs text-muted-foreground">{t("priceLow")}</p>
+                <p className="text-xs text-muted-foreground">Precio bajo</p>
                 <p className="mt-0.5 font-semibold text-foreground">
                   {formatArs(data.monetization.benchmark.lowArs)}
                 </p>
               </div>
               <div className="rounded-lg bg-primary/10 p-3 text-center ring-1 ring-primary/30">
-                <p className="text-xs font-medium text-primary">{t("priceAverage")}</p>
+                <p className="text-xs font-medium text-primary">Promedio del mercado</p>
                 <p className="mt-0.5 font-semibold text-primary">
                   {formatArs(data.monetization.benchmark.medianArs)}
                 </p>
               </div>
               <div className="rounded-lg bg-secondary/30 p-3 text-center">
-                <p className="text-xs text-muted-foreground">{t("priceHigh")}</p>
+                <p className="text-xs text-muted-foreground">Precio alto</p>
                 <p className="mt-0.5 font-semibold text-foreground">
                   {formatArs(data.monetization.benchmark.highArs)}
                 </p>

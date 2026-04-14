@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { useTranslations, useLocale } from "next-intl"
 import {
   BarChart3,
   Plus,
@@ -31,8 +30,14 @@ interface FinancialProjectionSectionProps {
   businessType?: BusinessType
 }
 
-const EXPENSE_CATEGORY_KEYS = ["personal", "local", "insumos", "marketing", "servicios", "otros"] as const
-const INCOME_CATEGORY_KEYS = ["ventas", "servicios", "delivery", "eventos", "otros"] as const
+const CATEGORIAS_GASTO = ["Personal", "Local", "Insumos", "Marketing", "Servicios", "Otros"]
+const CATEGORIAS_INGRESO = ["Ventas", "Servicios", "Delivery", "Eventos", "Otros"]
+
+const ESTADO_LABELS: Record<EstadoLinea, string> = {
+  estimado: "Estimado",
+  confirmado: "Confirmado",
+  pagado: "Pagado",
+}
 
 const ESTADO_SIGUIENTE: Record<EstadoLinea, EstadoLinea> = {
   estimado: "confirmado",
@@ -46,51 +51,36 @@ const ESTADO_COLORS: Record<EstadoLinea, string> = {
   pagado: "border-success/40 bg-success/5 text-success",
 }
 
-interface TranslatedCategories {
-  personal: string; local: string; insumos: string; marketing: string; servicios: string; otros: string
-  ventas: string; delivery: string; eventos: string
-}
-
-interface TranslatedExpenses {
-  employee: string; rent: string; supplies: string; utilities: string; socialAds: string
-  hosting: string; digitalTools: string; digitalAds: string; freelancer: string; accountant: string
-}
-
-interface TranslatedIncomes {
-  storeSales: string; delivery: string; catering: string
-  subscriptions: string; consulting: string; advertising: string
-}
-
-function generateGastosIniciales(businessType: BusinessType | undefined, cat: TranslatedCategories, exp: TranslatedExpenses): Omit<LineaFinanciera, "id">[] {
+function generateGastosIniciales(businessType?: BusinessType): Omit<LineaFinanciera, "id">[] {
   const fisica: Omit<LineaFinanciera, "id">[] = [
-    { categoria: cat.personal,  descripcion: exp.employee,    monto: 350000, estado: "estimado" },
-    { categoria: cat.local,     descripcion: exp.rent,        monto: 200000, estado: "estimado" },
-    { categoria: cat.insumos,   descripcion: exp.supplies,    monto: 150000, estado: "estimado" },
-    { categoria: cat.servicios, descripcion: exp.utilities,   monto: 40000,  estado: "estimado" },
-    { categoria: cat.marketing, descripcion: exp.socialAds,   monto: 30000,  estado: "estimado" },
+    { categoria: "Personal",  descripcion: "Empleado/a (1)",              monto: 350000, estado: "estimado" },
+    { categoria: "Local",     descripcion: "Alquiler del local",           monto: 200000, estado: "estimado" },
+    { categoria: "Insumos",   descripcion: "Insumos y materias primas",    monto: 150000, estado: "estimado" },
+    { categoria: "Servicios", descripcion: "Luz, gas y agua",              monto: 40000,  estado: "estimado" },
+    { categoria: "Marketing", descripcion: "Redes sociales / publicidad",  monto: 30000,  estado: "estimado" },
   ]
   const digital: Omit<LineaFinanciera, "id">[] = [
-    { categoria: cat.servicios, descripcion: exp.hosting,      monto: 15000,  estado: "estimado" },
-    { categoria: cat.servicios, descripcion: exp.digitalTools, monto: 25000,  estado: "estimado" },
-    { categoria: cat.marketing, descripcion: exp.digitalAds,   monto: 80000,  estado: "estimado" },
-    { categoria: cat.personal,  descripcion: exp.freelancer,   monto: 200000, estado: "estimado" },
-    { categoria: cat.otros,     descripcion: exp.accountant,   monto: 40000,  estado: "estimado" },
+    { categoria: "Servicios", descripcion: "Hosting y dominio",            monto: 15000,  estado: "estimado" },
+    { categoria: "Servicios", descripcion: "Herramientas digitales",       monto: 25000,  estado: "estimado" },
+    { categoria: "Marketing", descripcion: "Publicidad digital",           monto: 80000,  estado: "estimado" },
+    { categoria: "Personal",  descripcion: "Freelancer / colaborador",     monto: 200000, estado: "estimado" },
+    { categoria: "Otros",     descripcion: "Contador / asesor",            monto: 40000,  estado: "estimado" },
   ]
   if (businessType === "digital") return digital
   if (businessType === "ambos") return [...fisica, ...digital.slice(2)]
   return fisica
 }
 
-function generateIngresosIniciales(businessType: BusinessType | undefined, cat: TranslatedCategories, inc: TranslatedIncomes): Omit<LineaFinanciera, "id">[] {
+function generateIngresosIniciales(businessType?: BusinessType): Omit<LineaFinanciera, "id">[] {
   const fisica: Omit<LineaFinanciera, "id">[] = [
-    { categoria: cat.ventas,    descripcion: inc.storeSales, monto: 500000, estado: "estimado" },
-    { categoria: cat.delivery,  descripcion: inc.delivery,   monto: 150000, estado: "estimado" },
-    { categoria: cat.eventos,   descripcion: inc.catering,   monto: 80000,  estado: "estimado" },
+    { categoria: "Ventas",    descripcion: "Ventas en mostrador / local",  monto: 500000, estado: "estimado" },
+    { categoria: "Delivery",  descripcion: "Pedidos por delivery",         monto: 150000, estado: "estimado" },
+    { categoria: "Eventos",   descripcion: "Catering / eventos especiales",monto: 80000,  estado: "estimado" },
   ]
   const digital: Omit<LineaFinanciera, "id">[] = [
-    { categoria: cat.ventas,    descripcion: inc.subscriptions, monto: 300000, estado: "estimado" },
-    { categoria: cat.servicios, descripcion: inc.consulting,    monto: 200000, estado: "estimado" },
-    { categoria: cat.otros,     descripcion: inc.advertising,   monto: 80000,  estado: "estimado" },
+    { categoria: "Ventas",    descripcion: "Suscripciones / licencias",    monto: 300000, estado: "estimado" },
+    { categoria: "Servicios", descripcion: "Consultoría / servicios",      monto: 200000, estado: "estimado" },
+    { categoria: "Otros",     descripcion: "Publicidad / afiliados",       monto: 80000,  estado: "estimado" },
   ]
   if (businessType === "digital") return digital
   if (businessType === "ambos") return [...fisica, ...digital.slice(1)]
@@ -122,9 +112,6 @@ function TablaLineas({
   setEditCategoria,
   onSaveEdit,
   etiquetaAgregar,
-  stateLabels,
-  changeStatusTitle,
-  locale,
 }: {
   lineas: LineaFinanciera[]
   categorias: string[]
@@ -141,12 +128,9 @@ function TablaLineas({
   setEditCategoria: (v: string) => void
   onSaveEdit: (id: string) => void
   etiquetaAgregar: string
-  stateLabels: Record<EstadoLinea, string>
-  changeStatusTitle: string
-  locale: string
 }) {
   const formatArs = (value: number) =>
-    new Intl.NumberFormat(locale === "es" ? "es-AR" : "en-US", {
+    new Intl.NumberFormat("es-AR", {
       style: "currency",
       currency: "ARS",
       maximumFractionDigits: 0,
@@ -208,9 +192,9 @@ function TablaLineas({
                 "shrink-0 rounded-md border px-2 py-0.5 text-xs font-medium transition-all",
                 ESTADO_COLORS[linea.estado]
               )}
-              title={changeStatusTitle}
+              title="Cambiá el estado tocando acá"
             >
-              {stateLabels[linea.estado]}
+              {ESTADO_LABELS[linea.estado]}
             </button>
 
             <div className="min-w-0 flex-1">
@@ -254,53 +238,8 @@ export function FinancialProjectionSection({
   investment,
   businessType,
 }: FinancialProjectionSectionProps) {
-  const t = useTranslations("financialSection")
-  const locale = useLocale()
-
-  const CATEGORIAS_GASTO = EXPENSE_CATEGORY_KEYS.map((k) => t(`expenseCategories.${k}`))
-  const CATEGORIAS_INGRESO = INCOME_CATEGORY_KEYS.map((k) => t(`incomeCategories.${k}`))
-  const ESTADO_LABELS: Record<EstadoLinea, string> = {
-    estimado: t("stateLabels.estimated"),
-    confirmado: t("stateLabels.confirmed"),
-    pagado: t("stateLabels.paid"),
-  }
-
-  const translatedCat: TranslatedCategories = {
-    personal: t("expenseCategories.personal"),
-    local: t("expenseCategories.local"),
-    insumos: t("expenseCategories.insumos"),
-    marketing: t("expenseCategories.marketing"),
-    servicios: t("expenseCategories.servicios"),
-    otros: t("expenseCategories.otros"),
-    ventas: t("incomeCategories.ventas"),
-    delivery: t("incomeCategories.delivery"),
-    eventos: t("incomeCategories.eventos"),
-  }
-
-  const translatedExp: TranslatedExpenses = {
-    employee: t("defaultExpenses.employee"),
-    rent: t("defaultExpenses.rent"),
-    supplies: t("defaultExpenses.supplies"),
-    utilities: t("defaultExpenses.utilities"),
-    socialAds: t("defaultExpenses.socialAds"),
-    hosting: t("defaultExpenses.hosting"),
-    digitalTools: t("defaultExpenses.digitalTools"),
-    digitalAds: t("defaultExpenses.digitalAds"),
-    freelancer: t("defaultExpenses.freelancer"),
-    accountant: t("defaultExpenses.accountant"),
-  }
-
-  const translatedInc: TranslatedIncomes = {
-    storeSales: t("defaultIncomes.storeSales"),
-    delivery: t("defaultIncomes.delivery"),
-    catering: t("defaultIncomes.catering"),
-    subscriptions: t("defaultIncomes.subscriptions"),
-    consulting: t("defaultIncomes.consulting"),
-    advertising: t("defaultIncomes.advertising"),
-  }
-
-  const [gastos, setGastos] = useLineas(generateGastosIniciales(businessType, translatedCat, translatedExp))
-  const [ingresos, setIngresos] = useLineas(generateIngresosIniciales(businessType, translatedCat, translatedInc))
+  const [gastos, setGastos] = useLineas(generateGastosIniciales(businessType))
+  const [ingresos, setIngresos] = useLineas(generateIngresosIniciales(businessType))
 
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editDescripcion, setEditDescripcion] = useState("")
@@ -309,7 +248,7 @@ export function FinancialProjectionSection({
   const [editingSeccion, setEditingSeccion] = useState<"gastos" | "ingresos" | null>(null)
 
   const formatArs = (value: number) =>
-    new Intl.NumberFormat(locale === "es" ? "es-AR" : "en-US", {
+    new Intl.NumberFormat("es-AR", {
       style: "currency",
       currency: "ARS",
       maximumFractionDigits: 0,
@@ -367,13 +306,13 @@ export function FinancialProjectionSection({
   const addGasto = () =>
     setGastos((prev) => [
       ...prev,
-      { id: newId(), categoria: translatedCat.otros, descripcion: t("addExpense"), monto: 0, estado: "estimado" },
+      { id: newId(), categoria: "Otros", descripcion: "Nuevo gasto", monto: 0, estado: "estimado" },
     ])
 
   const addIngreso = () =>
     setIngresos((prev) => [
       ...prev,
-      { id: newId(), categoria: translatedCat.ventas, descripcion: t("addIncome"), monto: 0, estado: "estimado" },
+      { id: newId(), categoria: "Ventas", descripcion: "Nueva fuente de ingreso", monto: 0, estado: "estimado" },
     ])
 
   return (
@@ -385,9 +324,9 @@ export function FinancialProjectionSection({
               <BarChart3 className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <CardTitle className="text-xl">{t("title")}</CardTitle>
+              <CardTitle className="text-xl">Proyección financiera</CardTitle>
               <p className="text-sm text-muted-foreground">
-                {t("subtitle")}
+                Registrá tus ingresos y gastos para ir llevando el balance de tu negocio
               </p>
             </div>
           </div>
@@ -399,20 +338,20 @@ export function FinancialProjectionSection({
             {/* Fila 1: inversión + capital */}
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="rounded-xl border border-border bg-card p-4">
-                <p className="text-xs text-muted-foreground">{t("initialInvestment")}</p>
+                <p className="text-xs text-muted-foreground">Inversión inicial</p>
                 <p className="mt-1 text-xl font-bold text-foreground">{formatArs(investment)}</p>
               </div>
               <div className={cn(
                 "rounded-xl border p-4",
                 capitalRestante >= 0 ? "border-border bg-card" : "border-destructive/30 bg-destructive/5"
               )}>
-                <p className="text-xs text-muted-foreground">{t("availableCapital")}</p>
+                <p className="text-xs text-muted-foreground">Capital disponible</p>
                 <p className={cn("mt-1 text-xl font-bold", capitalRestante >= 0 ? "text-foreground" : "text-destructive")}>
                   {formatArs(capitalRestante)}
                 </p>
                 {gastosConfirmados > 0 && (
                   <p className="mt-1 text-xs text-muted-foreground">
-                    {t("committed", { amount: formatArs(gastosConfirmados) })}
+                    {formatArs(gastosConfirmados)} ya comprometidos
                   </p>
                 )}
               </div>
@@ -426,8 +365,8 @@ export function FinancialProjectionSection({
                   : balanceEstimado < 0 ? "border-destructive/30 bg-destructive/5"
                   : "border-border bg-card"
               )}>
-                <p className="text-xs text-muted-foreground">{t("estimatedBalance")}</p>
-                <p className="mt-0.5 text-[10px] text-muted-foreground">{t("estimatedBalanceDesc")}</p>
+                <p className="text-xs text-muted-foreground">Balance mensual estimado</p>
+                <p className="mt-0.5 text-[10px] text-muted-foreground">Basado en todos los ítems, incluyendo los que todavía no confirmaste</p>
                 <div className="mt-2 flex items-center gap-1.5">
                   {balanceEstimado > 0 ? <TrendingUp className="h-4 w-4 text-success" />
                     : balanceEstimado < 0 ? <TrendingDown className="h-4 w-4 text-destructive" />
@@ -446,8 +385,8 @@ export function FinancialProjectionSection({
                   : balanceConfirmado < 0 ? "border-destructive/30 bg-destructive/5"
                   : "border-border bg-card"
               )}>
-                <p className="text-xs text-muted-foreground">{t("realBalance")}</p>
-                <p className="mt-0.5 text-[10px] text-muted-foreground">{t("realBalanceDesc")}</p>
+                <p className="text-xs text-muted-foreground">Balance mensual real</p>
+                <p className="mt-0.5 text-[10px] text-muted-foreground">Solo lo que ya confirmaste o pagaste</p>
                 <div className="mt-2 flex items-center gap-1.5">
                   {balanceConfirmado > 0 ? <TrendingUp className="h-4 w-4 text-success" />
                     : balanceConfirmado < 0 ? <TrendingDown className="h-4 w-4 text-destructive" />
@@ -460,7 +399,7 @@ export function FinancialProjectionSection({
                 </div>
                 {ingresosConfirmados === 0 && gastosConfirmados === 0 && (
                   <p className="mt-2 text-[10px] text-muted-foreground italic">
-                    {t("confirmToSee")}
+                    Confirmá ítems para ver el balance real
                   </p>
                 )}
               </div>
@@ -470,7 +409,10 @@ export function FinancialProjectionSection({
           {mesesRecupero && (
             <div className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-3 text-center">
               <p className="text-sm text-foreground">
-                {t("recoveryMessage", { investment: formatArs(investment), months: mesesRecupero })}
+                A este ritmo recuperás tu inversión inicial en{" "}
+                <span className="font-bold text-primary">
+                  {mesesRecupero} {mesesRecupero === 1 ? "mes" : "meses"}
+                </span>
               </p>
             </div>
           )}
@@ -479,14 +421,15 @@ export function FinancialProjectionSection({
           <div className="space-y-3">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <h4 className="text-sm font-semibold text-foreground">{t("monthlyIncome")}</h4>
+                <h4 className="text-sm font-semibold text-foreground">Ingresos mensuales</h4>
                 <p className="mt-0.5 text-xs text-muted-foreground">
-                  {t("incomeDesc")}
+                  ¿De dónde entra la plata? Agregá cada fuente de ingreso y estimá cuánto genera por mes.
+                  Cambiá el estado a medida que lo vayas confirmando.
                 </p>
               </div>
               <div className="shrink-0 text-right">
                 <p className="text-lg font-bold text-foreground">{formatArs(totalIngresos)}</p>
-                <p className="text-xs text-muted-foreground">{t("totalPerMonth")}</p>
+                <p className="text-xs text-muted-foreground">total / mes</p>
               </div>
             </div>
             <TablaLineas
@@ -504,10 +447,7 @@ export function FinancialProjectionSection({
               setEditMonto={setEditMonto}
               setEditCategoria={setEditCategoria}
               onSaveEdit={saveEdit(setIngresos)}
-              etiquetaAgregar={t("addIncome")}
-              stateLabels={ESTADO_LABELS}
-              changeStatusTitle={t("changeStatus")}
-              locale={locale}
+              etiquetaAgregar="Agregar fuente de ingreso"
             />
           </div>
 
@@ -515,14 +455,15 @@ export function FinancialProjectionSection({
           <div className="space-y-3">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <h4 className="text-sm font-semibold text-foreground">{t("monthlyExpenses")}</h4>
+                <h4 className="text-sm font-semibold text-foreground">Gastos mensuales</h4>
                 <p className="mt-0.5 text-xs text-muted-foreground">
-                  {t("expensesDesc")}
+                  Claude pre-cargó sugerencias para tu negocio. Editá los montos, eliminá lo que no aplica
+                  y confirmá los que ya tenés cerrados.
                 </p>
               </div>
               <div className="shrink-0 text-right">
                 <p className="text-lg font-bold text-foreground">{formatArs(totalGastos)}</p>
-                <p className="text-xs text-muted-foreground">{t("totalPerMonth")}</p>
+                <p className="text-xs text-muted-foreground">total / mes</p>
               </div>
             </div>
             <TablaLineas
@@ -540,28 +481,25 @@ export function FinancialProjectionSection({
               setEditMonto={setEditMonto}
               setEditCategoria={setEditCategoria}
               onSaveEdit={saveEdit(setGastos)}
-              etiquetaAgregar={t("addExpense")}
-              stateLabels={ESTADO_LABELS}
-              changeStatusTitle={t("changeStatus")}
-              locale={locale}
+              etiquetaAgregar="Agregar gasto"
             />
           </div>
 
           {/* Referencia de estados */}
           <div className="rounded-lg border border-border bg-secondary/20 p-4">
-            <p className="mb-3 text-xs font-semibold text-foreground">{t("statusGuide")}</p>
+            <p className="mb-3 text-xs font-semibold text-foreground">¿Cómo usar los estados?</p>
             <div className="grid gap-2 sm:grid-cols-3 text-xs text-muted-foreground">
               <div className="flex items-center gap-2">
-                <span className="rounded-md border border-border px-2 py-0.5 text-xs font-medium text-muted-foreground">{t("statusEstimated")}</span>
-                <span>{t("statusEstimatedDesc")}</span>
+                <span className="rounded-md border border-border px-2 py-0.5 text-xs font-medium text-muted-foreground">Estimado</span>
+                <span>Todavía no lo confirmaste</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="rounded-md border border-primary/40 bg-primary/5 px-2 py-0.5 text-xs font-medium text-primary">{t("statusConfirmed")}</span>
-                <span>{t("statusConfirmedDesc")}</span>
+                <span className="rounded-md border border-primary/40 bg-primary/5 px-2 py-0.5 text-xs font-medium text-primary">Confirmado</span>
+                <span>Ya sabés que va a ocurrir</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="rounded-md border border-success/40 bg-success/5 px-2 py-0.5 text-xs font-medium text-success">{t("statusPaid")}</span>
-                <span>{t("statusPaidDesc")}</span>
+                <span className="rounded-md border border-success/40 bg-success/5 px-2 py-0.5 text-xs font-medium text-success">Pagado</span>
+                <span>Ya lo pagaste / cobraste</span>
               </div>
             </div>
           </div>

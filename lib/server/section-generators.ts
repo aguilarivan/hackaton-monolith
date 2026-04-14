@@ -266,16 +266,12 @@ const ViabilityOutputSchema = z.object({
 export async function generateViabilitySection(
   input: BusinessInputData,
   answers: ClaudeAnswer[],
-  mock: StartupAnalysis,
-  locale: string = "es"
+  mock: StartupAnalysis
 ): Promise<ViabilitySection> {
   try {
-    const systemMsg = locale === "en"
-      ? `You are an Argentine startup analyst. Generate viability, monetization, and customer analysis for the given idea. Currency ARS 2026. Call generate_viability.`
-      : `Sos un analista de startups argentinos. Generá viabilidad, monetización y clientes para la idea recibida. Moneda ARS 2026. Llamá a generate_viability.`
     const block = await runToolLoop(
-      systemMsg,
-      buildAnalysisUserMessage(input, answers, locale),
+      `Sos un analista de startups argentinos. Generá viabilidad, monetización y clientes para la idea recibida. Moneda ARS 2026. Llamá a generate_viability.`,
+      buildAnalysisUserMessage(input, answers),
       VIABILITY_TOOL
     )
     const parsed = ViabilityOutputSchema.parse(deepParse(block.input))
@@ -414,16 +410,12 @@ const DetailsOutputSchema = z.object({
 export async function generateDetailsSection(
   input: BusinessInputData,
   answers: ClaudeAnswer[],
-  mock: StartupAnalysis,
-  locale: string = "es"
+  mock: StartupAnalysis
 ): Promise<DetailsSection> {
   try {
-    const systemMsg = locale === "en"
-      ? `You are an Argentine startup analyst. Generate obstacles, roadmap, validation plan, and legal structure for the idea. Legal frameworks: Monotributo, SAS (recommended), SRL, SA. Cite real startups that failed. Call generate_details with all 4 fields: obstacles, validationPlan, roadmap, and legalStructure.`
-      : `Sos un analista de startups argentinos. Generá obstáculos, roadmap, plan de validación y estructura legal para la idea. Marcos legales: Monotributo, SAS (recomendada), SRL, SA. Citá startups reales que fallaron. Llamá a generate_details con los 4 campos: obstacles, validationPlan, roadmap y legalStructure.`
     const block = await runToolLoop(
-      systemMsg,
-      buildAnalysisUserMessage(input, answers, locale),
+      `Sos un analista de startups argentinos. Generá obstáculos, roadmap, plan de validación y estructura legal para la idea. Marcos legales: Monotributo, SAS (recomendada), SRL, SA. Citá startups reales que fallaron. Llamá a generate_details con los 4 campos: obstacles, validationPlan, roadmap y legalStructure.`,
+      buildAnalysisUserMessage(input, answers),
       DETAILS_TOOL,
       2500,
     )
@@ -611,36 +603,7 @@ const ResearchOutputSchema = z.object({
   ),
 })
 
-function buildResearchSystem(city: string, locale: string = "es"): string {
-  if (locale === "en") {
-    return `You have access to web search. Your task is to find REAL competitors for the idea you are given.
-
-ABSOLUTE RULES:
-- FORBIDDEN to invent company names. Only use what you find in searches.
-- FORBIDDEN to use your training knowledge for company names. Only search data.
-- If a search returns no results, change the terms and search again.
-- It is better to return 2 real competitors than 4 invented ones.
-
-HOW TO DETERMINE THE SEARCH SCOPE:
-First analyze whether the business is DIGITAL or PHYSICAL:
-
-- DIGITAL (app, platform, SaaS, marketplace, online service): competition is NOT local.
-  -> Search in Argentina first, then expand to Latin America and global if there are few options.
-  -> Queries: "[idea] app Argentina", "[idea] platform", "[idea] app site:play.google.com", "[idea] startup"
-
-- PHYSICAL (local, store, restaurant, in-person service): competition is local or regional.
-  -> Search in ${city} and surrounding areas.
-  -> Queries: "[idea] ${city}", "[idea] ${city} Instagram", "[idea] province"
-
-- HYBRID (e.g. delivery, consulting, e-commerce): search both levels.
-
-PROCESS:
-1. First search already executed — analyze whether the business is digital, physical, or hybrid
-2. Perform 2-3 searches with the correct scope based on the type
-3. For each competitor found: note their real URL and the query that found them (sourceQuery)
-Record the exact sourceQuery for each competitor. Call generate_research with what you found.`
-  }
-
+function buildResearchSystem(city: string): string {
   return `Tenés acceso a búsqueda web. Tu tarea es encontrar competidores REALES para la idea que te van a dar.
 
 REGLAS ABSOLUTAS:
@@ -672,14 +635,12 @@ Registrá sourceQuery exacto por cada competidor. Llamá a generate_research con
 export async function generateResearchSection(
   input: BusinessInputData,
   answers: ClaudeAnswer[],
-  mock: StartupAnalysis,
-  locale: string = "es"
+  mock: StartupAnalysis
 ): Promise<ResearchSection> {
   try {
-    const defaultCity = locale === "en" ? "the indicated city" : "la ciudad indicada"
     const block = await runToolLoopWithSearch(
-      buildResearchSystem(input.city || defaultCity, locale),
-      buildAnalysisUserMessage(input, answers, locale),
+      buildResearchSystem(input.city || "la ciudad indicada"),
+      buildAnalysisUserMessage(input, answers),
       RESEARCH_TOOL
     )
     const parsed = ResearchOutputSchema.parse(deepParse(block.input))

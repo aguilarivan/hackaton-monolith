@@ -22,9 +22,9 @@
     "whatYouGet": "¿Qué vas a recibir?",
     "previewCaption": "Así se ve tu análisis completo",
     "whyDayZero": "¿Por qué DayZero?",
-    "hackathonBadge": "Creado en el hackathon Kaszek × Anthropic × Digital House 2026 — Buenos Aires",
+    "hackathonBadge": "Creado en el hackathon Kaszek × Anthropic 2026 — Buenos Aires",
     "footerTagline": "DayZero — Tu copiloto de lanzamiento",
-    "footerSubtext": "Hackathon Kaszek × Anthropic × Digital House 2026",
+    "footerSubtext": "Hackathon Kaszek × Anthropic 2026",
     "sessionError": "Error al iniciar tu sesión",
     "backendError": "No se pudo iniciar el flujo en backend.",
     "featurePills": {
@@ -149,28 +149,7 @@
       "high": "Tu idea tiene un excelente potencial de mercado. Las condiciones son favorables para lanzar.",
       "medium": "El mercado muestra oportunidades, pero necesitarás diferenciarte de la competencia existente.",
       "low": "El mercado es desafiante. Considerá un enfoque de nicho o una propuesta de valor muy fuerte."
-    },
-    "keyOpportunity": "Oportunidad clave",
-    "mainRisk": "Riesgo principal",
-    "viabilityCard": "Viabilidad",
-    "viabilityCardDesc": "Señales de mercado, modelo de negocio y proyecciones de crecimiento",
-    "monetizationCard": "Monetización",
-    "monetizationCardDesc": "{count} planes de precio sugeridos y referencia de mercado",
-    "competitorsCard": "Competidores",
-    "competitorsCardDesc": "{count} identificados — fortalezas, debilidades y mapa de zonas",
-    "clientsCard": "Clientes",
-    "clientsB2bCardDesc": "{count} clientes B2B — perfiles y cómo abordarlos",
-    "clientsB2cCardDesc": "{count} segmentos — perfiles y canales de llegada",
-    "legalCard": "Legal e Impuestos",
-    "legalCardDesc": "{structure} recomendada — régimen fiscal y trámites",
-    "kitCard": "Kit de inicio",
-    "kitCardDesc": "{count} elementos esenciales — qué comprar, dónde y a qué precio",
-    "financialCard": "Proyección financiera",
-    "financialCardDesc": "Registrá gastos, simulá ingresos y calculá cuándo recuperás la inversión",
-    "obstaclesCard": "Obstáculos",
-    "obstaclesCardDesc": "{count} riesgos ({critical} críticos) — mitigación y casos reales",
-    "roadmapCard": "Hoja de ruta de lanzamiento",
-    "roadmapCardDesc": "{phases} fases · {steps} pasos de validación"
+    }
   },
   "viabilitySection": {
     "title": "Potencial de Mercado",
@@ -194,10 +173,7 @@
     "trendDeclining": "Tendencia: Bajando",
     "sourceGrowing": "Fuente: Creciendo",
     "sourceStable": "Fuente: Estable",
-    "sourceDeclining": "Fuente: Bajando",
-    "updated": "Actualizado",
-    "source": "Fuente",
-    "signalStrength": "Fuerza de señal"
+    "sourceDeclining": "Fuente: Bajando"
   },
   "competitorsSection": {
     "title": "Competidores identificados",

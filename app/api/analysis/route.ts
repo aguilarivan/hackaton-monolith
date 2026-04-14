@@ -53,7 +53,6 @@ export async function POST(request: Request) {
     )
   }
 
-  const locale = request.headers.get("X-Locale") ?? "es"
   const input = body.businessInput
   const answers = body.claudeAnswers
   const plan = body.sectionPlan as SectionPlan | undefined
@@ -88,14 +87,14 @@ export async function POST(request: Request) {
       if (needViability || needDetails) {
         tasks.push((async () => {
           if (needViability) {
-            const viability = await generateViabilitySection(input, answers, mock, locale)
+            const viability = await generateViabilitySection(input, answers, mock)
             await emit({ type: "viability", data: viability })
           }
           if (needDetails) {
             if (needViability) {
               await new Promise((resolve) => setTimeout(resolve, 20000))
             }
-            const details = await generateDetailsSection(input, answers, mock, locale)
+            const details = await generateDetailsSection(input, answers, mock)
             await emit({ type: "details", data: details })
           }
         })())
@@ -104,7 +103,7 @@ export async function POST(request: Request) {
       // Research (Sonnet + web search) — runs in parallel with Haiku chain
       if (needResearch) {
         tasks.push(
-          generateResearchSection(input, answers, mock, locale).then((data) =>
+          generateResearchSection(input, answers, mock).then((data) =>
             emit({ type: "research", data })
           )
         )

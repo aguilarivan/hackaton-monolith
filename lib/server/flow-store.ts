@@ -17,20 +17,18 @@ export interface FlowRecord {
   id: string
   businessInput: BusinessInputData
   claudeAnswers: ClaudeAnswer[]
-  locale?: string
   createdAt: string
   updatedAt: string
 }
 
 const flowStore = new Map<string, FlowRecord>()
 
-export function createFlow(businessInput: BusinessInputData, locale?: string): FlowRecord {
+export function createFlow(businessInput: BusinessInputData): FlowRecord {
   const now = new Date().toISOString()
   const record: FlowRecord = {
     id: randomUUID(),
     businessInput,
     claudeAnswers: [],
-    locale,
     createdAt: now,
     updatedAt: now,
   }

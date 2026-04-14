@@ -1,7 +1,6 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { useTranslations, useLocale } from "next-intl"
 import { Scale, Check, ArrowRight, Receipt, FileText, Calculator, ExternalLink } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
@@ -11,12 +10,11 @@ interface LegalSectionProps {
   data: LegalStructure
 }
 
-export function LegalSection({ data }: LegalSectionProps) {
-  const t = useTranslations("legalSection")
-  const locale = useLocale()
+function formatArs(value: number): string {
+  return `ARS ${Math.round(value).toLocaleString("es-AR")}`
+}
 
-  const formatArs = (value: number): string =>
-    `ARS ${Math.round(value).toLocaleString(locale === "es" ? "es-AR" : "en-US")}`
+export function LegalSection({ data }: LegalSectionProps) {
   const [selectedCategory, setSelectedCategory] = useState(data.taxCategories[0]?.name ?? "")
   const [monthlyRevenue, setMonthlyRevenue] = useState(1200000)
 
@@ -50,7 +48,7 @@ export function LegalSection({ data }: LegalSectionProps) {
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[oklch(0.6_0.12_160_/_0.1)]">
               <Scale className="h-5 w-5 text-[oklch(0.6_0.12_160)]" />
             </div>
-            <CardTitle className="text-xl">{t("title")}</CardTitle>
+            <CardTitle className="text-xl">Estructura Legal Recomendada</CardTitle>
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -74,13 +72,13 @@ export function LegalSection({ data }: LegalSectionProps) {
           <p className="text-sm leading-relaxed text-muted-foreground">{data.explanation}</p>
 
           <div className="rounded-lg border border-border bg-secondary/20 p-4">
-            <p className="mb-3 text-sm font-medium text-foreground">{t("evolution")}</p>
+            <p className="mb-3 text-sm font-medium text-foreground">Evolución Recomendada</p>
             <div className="flex flex-wrap items-center gap-3">
               {data.timeline.map((step, index) => (
                 <div key={index} className="flex items-center gap-3">
                   <div className="flex items-center gap-2">
                     <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
-                      {t("month", { month: step.month })}
+                      M{step.month}
                     </span>
                     <span className="text-sm text-muted-foreground">{step.action}</span>
                   </div>
@@ -99,15 +97,15 @@ export function LegalSection({ data }: LegalSectionProps) {
               <Calculator className="h-5 w-5 text-[oklch(0.6_0.12_160)]" />
             </div>
             <div>
-              <CardTitle className="text-xl">{t("taxSimulator")}</CardTitle>
-              <p className="text-sm text-muted-foreground">{t("taxSimulatorDesc")}</p>
+              <CardTitle className="text-xl">Simulador de Cargas Impositivas</CardTitle>
+              <p className="text-sm text-muted-foreground">Estimá impuestos por categoría y facturación mensual</p>
             </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-5">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">{t("taxCategory")}</label>
+              <label className="text-sm font-medium text-foreground">Categoría impositiva</label>
               <select
                 value={selectedCategory}
                 onChange={(event) => setSelectedCategory(event.target.value)}
@@ -121,7 +119,7 @@ export function LegalSection({ data }: LegalSectionProps) {
               </select>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">{t("monthlyRevenue")}</label>
+              <label className="text-sm font-medium text-foreground">Facturación mensual (ARS)</label>
               <input
                 type="number"
                 min={0}
@@ -135,27 +133,27 @@ export function LegalSection({ data }: LegalSectionProps) {
           {selectedTaxCategory && simulated && (
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               <div className="rounded-lg border border-border bg-secondary/20 p-3">
-                <p className="text-xs text-muted-foreground">{t("fixedQuota")}</p>
+                <p className="text-xs text-muted-foreground">Cuota fija mensual</p>
                 <p className="text-sm font-semibold text-foreground">{formatArs(selectedTaxCategory.fixedMonthlyArs)}</p>
               </div>
               <div className="rounded-lg border border-border bg-secondary/20 p-3">
-                <p className="text-xs text-muted-foreground">{t("vatEstimate")}</p>
+                <p className="text-xs text-muted-foreground">Estimación IVA</p>
                 <p className="text-sm font-semibold text-foreground">{formatArs(simulated.vat)}</p>
               </div>
               <div className="rounded-lg border border-border bg-secondary/20 p-3">
-                <p className="text-xs text-muted-foreground">{t("incomeEstimate")}</p>
+                <p className="text-xs text-muted-foreground">Estimación Ganancias</p>
                 <p className="text-sm font-semibold text-foreground">{formatArs(simulated.income)}</p>
               </div>
               <div className="rounded-lg border border-border bg-secondary/20 p-3">
-                <p className="text-xs text-muted-foreground">{t("socialCharges")}</p>
+                <p className="text-xs text-muted-foreground">Cargas sociales</p>
                 <p className="text-sm font-semibold text-foreground">{formatArs(simulated.social)}</p>
               </div>
               <div className="rounded-lg border border-primary/30 bg-primary/5 p-3">
-                <p className="text-xs text-muted-foreground">{t("totalMonthly")}</p>
+                <p className="text-xs text-muted-foreground">Total impuestos mensuales</p>
                 <p className="text-sm font-semibold text-primary">{formatArs(simulated.monthlyTotal)}</p>
               </div>
               <div className="rounded-lg border border-primary/30 bg-primary/5 p-3">
-                <p className="text-xs text-muted-foreground">{t("totalAnnual")}</p>
+                <p className="text-xs text-muted-foreground">Impuestos anuales proyectados</p>
                 <p className="text-sm font-semibold text-primary">{formatArs(simulated.annualTotal)}</p>
               </div>
             </div>
@@ -170,7 +168,7 @@ export function LegalSection({ data }: LegalSectionProps) {
               <Receipt className="h-5 w-5 text-[oklch(0.6_0.12_160)]" />
             </div>
             <div>
-              <CardTitle className="text-xl">{t("taxObligations")}</CardTitle>
+              <CardTitle className="text-xl">Obligaciones Impositivas</CardTitle>
               <p className="text-sm text-muted-foreground">{data.taxInfo.regime}</p>
             </div>
           </div>
@@ -178,17 +176,17 @@ export function LegalSection({ data }: LegalSectionProps) {
         <CardContent className="space-y-6">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="rounded-lg border border-border bg-secondary/20 p-4">
-              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("monthlyEstimate")}</p>
+              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Estimación Mensual</p>
               <p className="mt-1 text-xl font-bold text-foreground">{data.taxInfo.monthlyEstimate}</p>
             </div>
             <div className="rounded-lg border border-border bg-secondary/20 p-4">
-              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("annualEstimate")}</p>
+              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Estimación Anual</p>
               <p className="mt-1 text-xl font-bold text-foreground">{data.taxInfo.annualEstimate}</p>
             </div>
           </div>
 
           <div className="space-y-3">
-            <h4 className="text-sm font-semibold text-foreground">{t("benefits")}</h4>
+            <h4 className="text-sm font-semibold text-foreground">Beneficios de este régimen</h4>
             <div className="grid gap-2 sm:grid-cols-2">
               {data.taxInfo.benefits.map((benefit, index) => (
                 <div key={index} className="flex items-start gap-2 rounded-lg border border-border bg-card p-3">
@@ -200,7 +198,7 @@ export function LegalSection({ data }: LegalSectionProps) {
           </div>
 
           <div className="space-y-3">
-            <h4 className="text-sm font-semibold text-foreground">{t("startProcedures")}</h4>
+            <h4 className="text-sm font-semibold text-foreground">Iniciar trámites legales e impositivos</h4>
             <div className="grid gap-2">
               {data.bureaucracyLinks.map((link, index) => (
                 <a
@@ -223,9 +221,9 @@ export function LegalSection({ data }: LegalSectionProps) {
           <div className="flex items-start gap-3 rounded-lg border border-warning/30 bg-warning/5 p-4">
             <FileText className="mt-0.5 h-5 w-5 shrink-0 text-warning" />
             <div>
-              <p className="text-sm font-medium text-foreground">{t("disclaimer")}</p>
+              <p className="text-sm font-medium text-foreground">Nota Importante</p>
               <p className="mt-1 text-sm text-muted-foreground">
-                {t("disclaimerText")}
+                Las estimaciones impositivas son simulaciones simplificadas para ayudar en la toma de decisiones. Confirmá las obligaciones exactas con un contador certificado.
               </p>
             </div>
           </div>
