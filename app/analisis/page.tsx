@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { AlertTriangle, ArrowLeft, Bot, Loader2 } from "lucide-react"
 import { Header } from "@/components/header"
@@ -27,6 +27,16 @@ export default function AnalysisPage() {
   const [messageIndex, setMessageIndex] = useState(0)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [requestId, setRequestId] = useState<string | null>(null)
+
+  const dataReadyRef = useRef(false)
+  const animationDoneRef = useRef(false)
+  const [, forceUpdate] = useState(0)
+
+  const tryReveal = () => {
+    if (dataReadyRef.current && animationDoneRef.current) {
+      forceUpdate((n) => n + 1) // trigger re-render to pick up refs
+    }
+  }
 
   useEffect(() => {
     let isMounted = true
@@ -75,6 +85,8 @@ export default function AnalysisPage() {
         const analysis = await generateAnalysisFromApi(input, answers)
         if (!isMounted) return
         setAnalysisData(analysis)
+        dataReadyRef.current = true
+        tryReveal()
       } catch (error) {
         if (!isMounted) return
 
@@ -95,9 +107,8 @@ export default function AnalysisPage() {
     }
   }, [router])
 
+  // Message cycling starts immediately on mount — decoupled from data arrival
   useEffect(() => {
-    if (!analysisData) return
-
     const interval = setInterval(() => {
       setMessageIndex((prev) => {
         if (prev >= analysisMessages.length - 1) {
@@ -108,15 +119,16 @@ export default function AnalysisPage() {
       })
     }, 1800)
 
-    const reveal = setTimeout(() => {
-      setIsAnalyzing(false)
+    const animationEnd = setTimeout(() => {
+      animationDoneRef.current = true
+      tryReveal()
     }, analysisMessages.length * 1800)
 
     return () => {
       clearInterval(interval)
-      clearTimeout(reveal)
+      clearTimeout(animationEnd)
     }
-  }, [analysisData])
+  }, [])
 
   const handleReset = () => {
     clearFlowStorage()
@@ -158,7 +170,9 @@ export default function AnalysisPage() {
     return null
   }
 
-  if (isAnalyzing) {
+  const showDashboard = dataReadyRef.current && animationDoneRef.current
+
+  if (!showDashboard) {
     return (
       <main className="min-h-screen bg-background">
         <Header />
