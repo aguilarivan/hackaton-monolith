@@ -104,18 +104,29 @@ export default function Home() {
 
         {/* ─── Hero Hook ─── */}
         <section className="mx-auto max-w-4xl px-4 pt-16 text-center sm:pt-20">
-          <p className="dz-enter-1 text-sm font-medium uppercase tracking-widest text-muted-foreground">
-            El 70% de los emprendimientos argentinos cierra en 2 años
-          </p>
-          <h2 className="dz-enter-1 mt-3 font-display text-3xl font-extrabold tracking-tight sm:text-4xl md:text-5xl">
-            ¿Tu idea tiene futuro?{" "}
+          <h1 className="dz-enter-1 font-display text-balance text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
+            Lanzá el negocio{" "}
             <span className="bg-gradient-to-r from-primary via-[oklch(0.6_0.18_175)] to-[oklch(0.55_0.16_160)] bg-clip-text text-transparent">
-              Descubrilo antes de invertir un peso.
+              que siempre soñaste
             </span>
-          </h2>
+          </h1>
+          <p className="dz-enter-2 mx-auto mt-5 max-w-xl text-pretty text-base text-muted-foreground sm:text-lg">
+            Describí tu idea, tu ciudad y tu inversión inicial. La IA analiza
+            todo y genera un informe completo adaptado a tu contexto.
+          </p>
+        </section>
+
+        {/* ─── Form Section ─── */}
+        <HeroInput onSubmit={handleSubmit} />
+
+        {/* ─── What you get ─── */}
+        <section className="dz-enter-5 mx-auto max-w-4xl px-4 pt-4 pb-12 text-center">
+          <h3 className="font-display text-lg font-semibold tracking-tight sm:text-xl">
+            ¿Qué vas a recibir?
+          </h3>
 
           {/* Feature pills */}
-          <div className="dz-enter-2 mx-auto mt-6 flex flex-wrap justify-center gap-2">
+          <div className="mx-auto mt-4 flex flex-wrap justify-center gap-2">
             {FEATURE_PILLS.map(({ icon: Icon, label }) => (
               <span
                 key={label}
@@ -129,7 +140,7 @@ export default function Home() {
 
           {/* Dashboard Preview */}
           <div
-            className="dz-enter-3 mx-auto mt-10 hidden max-w-sm sm:block"
+            className="mx-auto mt-8 hidden max-w-sm sm:block"
             style={{ perspective: "1200px" }}
           >
             <div className="dz-preview-tilt relative overflow-hidden rounded-2xl border border-border/30 bg-card/70 p-4 shadow-xl backdrop-blur-lg dark:border-primary/[0.06] dark:bg-white/[0.03]">
@@ -180,9 +191,6 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ─── Form Section ─── */}
-        <HeroInput onSubmit={handleSubmit} />
-
         {/* ─── Trust Section ─── */}
         <section className="dz-enter-5 mx-auto max-w-4xl px-4 pb-16 pt-8">
           <h3 className="text-center font-display text-2xl font-bold tracking-tight sm:text-3xl">
@@ -205,7 +213,7 @@ export default function Home() {
             ))}
           </div>
           <p className="mt-10 text-center text-sm text-muted-foreground">
-            Creado en el hackathon Kaszek × Anthropic 2025 — Buenos Aires
+            Creado en el hackathon Kaszek × Anthropic 2026 — Buenos Aires
           </p>
         </section>
 
@@ -215,11 +223,8 @@ export default function Home() {
             <p className="font-display text-sm font-semibold tracking-tight">
               DayZero — Tu copiloto de lanzamiento
             </p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Hecho con 🚀 en Buenos Aires
-            </p>
             <p className="mt-1 text-xs text-muted-foreground/60">
-              Hackathon Kaszek × Anthropic 2025
+              Hackathon Kaszek × Anthropic 2026
             </p>
           </div>
         </footer>

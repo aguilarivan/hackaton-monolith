@@ -69,21 +69,6 @@ export function HeroInput({ onSubmit }: HeroInputProps) {
         />
         <span className="dz-float pointer-events-none absolute right-10 -top-2 hidden h-2 w-2 rounded-full bg-primary/20 sm:block" />
 
-        {/* Heading */}
-        <div className="dz-enter-1 text-center">
-          <h1 className="font-display text-balance text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
-            Lanzá el negocio{" "}
-            <span className="bg-gradient-to-r from-primary via-[oklch(0.6_0.18_175)] to-[oklch(0.55_0.16_160)] bg-clip-text text-transparent">
-              que siempre soñaste
-            </span>
-          </h1>
-        </div>
-
-        <p className="dz-enter-2 mx-auto mt-5 max-w-xl text-pretty text-center text-base text-muted-foreground sm:text-lg">
-          Describí tu idea, tu ciudad y tu inversión inicial. La IA analiza
-          todo y genera un informe completo adaptado a tu contexto.
-        </p>
-
         {/* Step indicator */}
         <div className="dz-enter-2 mx-auto mt-3 flex items-center justify-center gap-2">
           <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
