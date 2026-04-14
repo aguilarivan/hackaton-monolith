@@ -12,8 +12,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'Startup Copilot - AI Business Idea Validator for LATAM',
-  description: 'Analyze your business idea with AI. Get a comprehensive analysis with viability assessment, competitors, starter kit and personalized launch roadmap for Latin America.',
+  title: 'DayZero — Tu copiloto de lanzamiento',
+  description: 'Valida tu idea de negocio con IA. Analisis de viabilidad, competencia, kit de arranque y hoja de ruta personalizada para LATAM.',
   generator: 'v0.app',
   icons: {
     icon: [
@@ -47,7 +47,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className="bg-background" suppressHydrationWarning>
+    <html lang="es" className="bg-background" suppressHydrationWarning>
       <body className={`${inter.variable} font-sans antialiased`}>
         <ThemeProvider
           attribute="class"

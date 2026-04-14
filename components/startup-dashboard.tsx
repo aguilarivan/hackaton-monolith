@@ -16,6 +16,9 @@ import {
   DollarSign,
   ArrowLeft,
   Target,
+  Zap,
+  ShieldAlert,
+  ArrowUpRight,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -44,6 +47,7 @@ type SectionKey = "overview" | "viability" | "monetization" | "competitors" | "c
 
 export function StartupDashboard({ data, analysisOverride, onReset }: StartupDashboardProps) {
   const analysis = useMemo(() => analysisOverride ?? generateAnalysis(data), [analysisOverride, data])
+  const displayName = data.brandName || analysis.appName
   const [activeSection, setActiveSection] = useState<SectionKey>("overview")
   const [isLoaded, setIsLoaded] = useState(false)
 
@@ -60,8 +64,35 @@ export function StartupDashboard({ data, analysisOverride, onReset }: StartupDas
     return "text-destructive"
   }
 
+  const getScoreBgColor = (score: number) => {
+    if (score >= 7) return "bg-success/15 border-success/30"
+    if (score >= 5) return "bg-warning/15 border-warning/30"
+    return "bg-destructive/15 border-destructive/30"
+  }
+
+  const getVerdictSentence = (score: number) => {
+    if (score >= 7) return `${displayName} tiene orbita alta en ${data.city} — las condiciones de lanzamiento son favorables.`
+    if (score >= 5) return `${displayName} tiene trayectoria viable en ${data.city} — hay turbulencia pero el camino existe.`
+    return `${displayName} enfrenta gravedad fuerte en ${data.city} — necesitas repensar la mision.`
+  }
+
+  const getTrendLabel = (trend: "up" | "stable" | "down") => {
+    if (trend === "up") return "en crecimiento"
+    if (trend === "stable") return "estable"
+    return "en contraccion"
+  }
+
+  const getCompetitionLabel = (level: "Low" | "Medium" | "High") => {
+    if (level === "Low") return "baja"
+    if (level === "Medium") return "moderada"
+    return "alta"
+  }
+
   const getSeverityCount = (severity: "High" | "Medium" | "Low") =>
     analysis.obstacles.filter((o) => o.severity === severity).length
+
+  const topOpportunity = analysis.viability.findings.find((f) => f.type === "opportunity")
+  const topRisk = analysis.obstacles.find((o) => o.severity === "High")
 
   // Handle section navigation
   const handleSectionClick = (section: SectionKey) => {
@@ -85,7 +116,7 @@ export function StartupDashboard({ data, analysisOverride, onReset }: StartupDas
             className="mb-6 gap-2 text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back to dashboard
+            Volver al panel
           </Button>
 
           {/* Section Detail Content */}
@@ -108,31 +139,37 @@ export function StartupDashboard({ data, analysisOverride, onReset }: StartupDas
   return (
     <div className="min-h-screen bg-background">
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-        {/* Brand Identity + context */}
+        {/* Header */}
         <div
           className={cn(
             "mb-8 space-y-4 transition-all duration-500",
             isLoaded ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
           )}
         >
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1.5 text-sm font-medium text-primary">
-                <MapPin className="h-3.5 w-3.5" />
-                {data.city}
-              </span>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1.5 text-sm font-medium text-muted-foreground">
-                <DollarSign className="h-3.5 w-3.5" />
-                {formatInvestment(data.investment)}
-              </span>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="space-y-3">
+              <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+                {analysis.appName} Analysis
+              </h1>
+              <p className="max-w-2xl text-base text-muted-foreground leading-relaxed">
+                {data.idea}
+              </p>
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1.5 text-sm font-medium text-primary">
+                  <MapPin className="h-3.5 w-3.5" />
+                  {data.city}
+                </span>
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1.5 text-sm font-medium text-muted-foreground">
+                  <DollarSign className="h-3.5 w-3.5" />
+                  {formatInvestment(data.investment)}
+                </span>
+              </div>
             </div>
             <Button variant="outline" size="sm" onClick={onReset} className="shrink-0">
               <RefreshCw className="mr-2 h-4 w-4" />
               Nueva idea
             </Button>
           </div>
-
-          <BrandIdentityCard businessData={data} />
         </div>
 
         {/* Bento Grid Dashboard */}
@@ -157,7 +194,7 @@ export function StartupDashboard({ data, analysisOverride, onReset }: StartupDas
                 <ChevronRight className="h-5 w-5 text-muted-foreground transition-transform group-hover:translate-x-1" />
               </div>
               <div className="mt-6">
-                <p className="text-sm font-medium text-muted-foreground">Market Potential</p>
+                <p className="text-sm font-medium text-muted-foreground">Potencial de mercado</p>
                 <div className="mt-2 flex items-baseline gap-2">
                   <span className={cn("text-6xl font-bold", getScoreColor(analysis.viability.marketPotential))}>
                     {analysis.viability.marketPotential}
@@ -166,20 +203,20 @@ export function StartupDashboard({ data, analysisOverride, onReset }: StartupDas
                 </div>
                 <div className="mt-4 flex flex-wrap gap-2">
                   <span className="rounded-full bg-secondary px-3 py-1 text-xs font-medium">
-                    Competition: {analysis.viability.competitionLevel}
+                    Competencia: {getCompetitionLabel(analysis.viability.competitionLevel)}
                   </span>
                   <span className="rounded-full bg-secondary px-3 py-1 text-xs font-medium">
-                    Barrier: {analysis.viability.entryBarrier}
+                    Barrera: {analysis.viability.entryBarrier === "Low" ? "baja" : analysis.viability.entryBarrier === "Medium" ? "media" : "alta"}
                   </span>
                 </div>
                 <p className="mt-3 text-sm text-muted-foreground">
-                  Score based on live-like source signals
+                  Score basado en señales de mercado
                 </p>
               </div>
               <div className="mt-6 flex items-center gap-2 text-primary">
                 <Clock className="h-4 w-4" />
                 <span className="text-sm font-medium">
-                  First income: {analysis.viability.timeToFirstIncome}
+                  Primer ingreso: {analysis.viability.timeToFirstIncome}
                 </span>
               </div>
             </CardContent>
@@ -200,8 +237,8 @@ export function StartupDashboard({ data, analysisOverride, onReset }: StartupDas
                     <DollarSign className="h-5 w-5" style={{ color: "oklch(0.58 0.15 35)" }} />
                   </div>
                   <div>
-                    <p className="font-semibold text-foreground">Monetization</p>
-                    <p className="text-sm text-muted-foreground">Business model + suggested pricing</p>
+                    <p className="font-semibold text-foreground">Monetizacion</p>
+                    <p className="text-sm text-muted-foreground">Modelo de negocio y precios sugeridos</p>
                   </div>
                 </div>
                 <ChevronRight className="h-5 w-5 text-muted-foreground transition-transform group-hover:translate-x-1" />
@@ -241,7 +278,7 @@ export function StartupDashboard({ data, analysisOverride, onReset }: StartupDas
                   {analysis.competitors.competitors.length}
                 </p>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Main competitors
+                  Competidores principales
                 </p>
               </div>
             </CardContent>
@@ -269,7 +306,7 @@ export function StartupDashboard({ data, analysisOverride, onReset }: StartupDas
                     : analysis.clients.b2cSegments?.length || 0}
                 </p>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  {analysis.clients.type === "b2b" ? "Potential B2B clients" : "B2C segments"}
+                  {analysis.clients.type === "b2b" ? "Clientes B2B potenciales" : "Segmentos B2C"}
                 </p>
               </div>
             </CardContent>
@@ -292,9 +329,9 @@ export function StartupDashboard({ data, analysisOverride, onReset }: StartupDas
               </div>
               <div className="mt-4">
                 <p className="text-lg font-bold text-foreground">
-                  Legal & Taxes
+                  Marco legal
                 </p>
-                <p className="mt-1 text-sm text-muted-foreground">Recommended path</p>
+                <p className="mt-1 text-sm text-muted-foreground">Estructura recomendada</p>
                 <p className="mt-1 text-xs text-muted-foreground">
                   {analysis.legalStructure.structures.find((s) => s.recommended)?.name || "SAS"}
                 </p>
@@ -318,9 +355,9 @@ export function StartupDashboard({ data, analysisOverride, onReset }: StartupDas
                     <AlertTriangle className="h-5 w-5" style={{ color: "oklch(0.55 0.18 30)" }} />
                   </div>
                   <div>
-                    <p className="font-semibold text-foreground">Obstacles & Solutions</p>
+                    <p className="font-semibold text-foreground">Obstaculos y soluciones</p>
                     <p className="text-sm text-muted-foreground">
-                      {analysis.obstacles.length} risks identified
+                      {analysis.obstacles.length} riesgos identificados
                     </p>
                   </div>
                 </div>
@@ -358,9 +395,9 @@ export function StartupDashboard({ data, analysisOverride, onReset }: StartupDas
                     <Package className="h-5 w-5" style={{ color: "oklch(0.6 0.15 80)" }} />
                   </div>
                   <div>
-                    <p className="font-semibold text-foreground">Starter Kit</p>
+                    <p className="font-semibold text-foreground">Kit de arranque</p>
                     <p className="text-sm text-muted-foreground">
-                      {analysis.startupKit.items.length} essential products
+                      {analysis.startupKit.items.length} productos esenciales
                     </p>
                   </div>
                 </div>
@@ -404,9 +441,9 @@ export function StartupDashboard({ data, analysisOverride, onReset }: StartupDas
                     <Map className="h-5 w-5" style={{ color: "oklch(0.55 0.15 195)" }} />
                   </div>
                   <div>
-                    <p className="font-semibold text-foreground">Launch Roadmap</p>
+                    <p className="font-semibold text-foreground">Hoja de ruta</p>
                     <p className="text-sm text-muted-foreground">
-                      {analysis.validationPlan.length} validation steps + {analysis.roadmap.length} launch phases
+                      {analysis.validationPlan.length} pasos de validacion + {analysis.roadmap.length} fases de lanzamiento
                     </p>
                   </div>
                 </div>
