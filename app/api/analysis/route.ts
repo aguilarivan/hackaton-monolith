@@ -70,20 +70,20 @@ export async function POST(request: Request) {
 
   ;(async () => {
     try {
-      await Promise.all([
-        // Section 1: viability + clients — Haiku, fast (~5s)
-        generateViabilitySection(input, answers, mock).then((data) =>
-          emit({ type: "viability", data })
-        ),
-        // Section 2: obstacles + roadmap + legal — Haiku, medium (~10s)
-        generateDetailsSection(input, answers, mock).then((data) =>
-          emit({ type: "details", data })
-        ),
-        // Section 3: competitors + kit — Sonnet + web search, slow (~30s)
-        generateResearchSection(input, answers, mock).then((data) =>
-          emit({ type: "research", data })
-        ),
+      // Haiku sections run sequentially to avoid the 4,000 output TPM rate limit.
+      // Research (Sonnet) runs concurrently since it uses a separate model quota.
+      const [, researchData] = await Promise.all([
+        // Haiku chain: viability first, then details (avoids parallel TPM burst)
+        (async () => {
+          const viability = await generateViabilitySection(input, answers, mock)
+          await emit({ type: "viability", data: viability })
+          const details = await generateDetailsSection(input, answers, mock)
+          await emit({ type: "details", data: details })
+        })(),
+        // Section 3: competitors + kit — Sonnet + web search, runs in parallel
+        generateResearchSection(input, answers, mock),
       ])
+      await emit({ type: "research", data: researchData })
     } catch (error) {
       console.error("[analysis/stream] unexpected error:", error)
       await emit({ type: "error", message: "Analysis failed" })
