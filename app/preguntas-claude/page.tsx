@@ -16,6 +16,7 @@ import {
   type ClarificationQuestion,
 } from "@/lib/flow-api"
 import { getBusinessInput, getFlowId, saveClaudeAnswers, type ClaudeAnswer } from "@/lib/flow-storage"
+import { StepIndicator } from "@/components/step-indicator"
 
 const askMessages = [
   "Claude esta leyendo tu idea y detectando riesgos",
@@ -168,7 +169,8 @@ export default function ClaudeQuestionsPage() {
     return (
       <main className="min-h-screen bg-background">
         <Header />
-        <div className="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-3xl items-center justify-center px-4 py-16">
+        <StepIndicator currentStep={2} />
+        <div className="mx-auto flex min-h-[calc(100vh-6rem)] w-full max-w-3xl items-center justify-center px-4 py-16">
           <Card className="w-full border-border/70">
             <CardContent className="space-y-6 p-8 text-center">
               <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
@@ -193,6 +195,7 @@ export default function ClaudeQuestionsPage() {
     return (
       <main className="min-h-screen bg-background">
         <Header />
+        <StepIndicator currentStep={2} />
         <div className="mx-auto w-full max-w-3xl px-4 py-8">
           <Card className="border-destructive/30 bg-destructive/5">
             <CardHeader>
@@ -225,6 +228,7 @@ export default function ClaudeQuestionsPage() {
   return (
     <main className="min-h-screen bg-background">
       <Header />
+      <StepIndicator currentStep={2} />
       <div className="mx-auto w-full max-w-4xl space-y-6 px-4 py-8">
         <Card className="border-primary/20 bg-primary/5">
           <CardHeader>
