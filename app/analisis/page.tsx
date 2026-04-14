@@ -119,6 +119,27 @@ export default function AnalysisPage() {
 
           if (event.type === "viability") {
             setPartial((prev) => ({ ...prev, viability: event.data }))
+          } else if (event.type === "market-data") {
+            // Merge real market signals + similar ideas into viability
+            setPartial((prev) => {
+              if (!prev.viability) return prev
+              return {
+                ...prev,
+                viability: {
+                  ...prev.viability,
+                  viability: {
+                    ...prev.viability.viability,
+                    sourceSignals: event.data.sourceSignals,
+                    similarIdeas: event.data.similarIdeas.length > 0
+                      ? event.data.similarIdeas
+                      : prev.viability.viability.similarIdeas,
+                    ...(event.data.marketPotential !== null
+                      ? { marketPotential: event.data.marketPotential }
+                      : {}),
+                  },
+                },
+              }
+            })
           } else if (event.type === "details") {
             setPartial((prev) => ({ ...prev, details: event.data }))
           } else if (event.type === "research") {

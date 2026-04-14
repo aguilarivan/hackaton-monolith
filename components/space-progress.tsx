@@ -39,6 +39,7 @@ export function SpaceProgress({ currentStep, brandName, landingRatio }: SpacePro
               <span
                 className={cn(
                   "text-base transition-all duration-300",
+                  isDone && "scale-110 drop-shadow-[0_0_6px_rgba(52,211,153,0.9)]",
                   isActive && "scale-125 drop-shadow-[0_0_6px_rgba(139,92,246,0.8)]",
                   // Step 4: progressive glow based on completion
                   landingComplete && "scale-125 drop-shadow-[0_0_8px_rgba(16,185,129,0.9)]",

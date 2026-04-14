@@ -4,6 +4,8 @@ import { buildAnalysisUserMessage } from "./analysis-prompt"
 import type { BusinessInputData, ClaudeAnswer } from "./flow-store"
 import type {
   ViabilityData,
+  MarketSignal,
+  SimilarIdeaBenchmark,
   ClientData,
   Obstacle,
   ValidationStep,
@@ -180,22 +182,8 @@ const VIABILITY_TOOL: Anthropic.Tool = {
             },
             required: ["strategy", "plans", "benchmark"],
           },
-          similarIdeas: {
-            type: "array",
-            items: {
-              type: "object",
-              properties: {
-                idea: { type: "string" },
-                market: { type: "string" },
-                annualGrowth: { type: "string" },
-                traction: { type: "string" },
-                matchScore: { type: "number" },
-              },
-              required: ["idea", "market", "annualGrowth", "traction", "matchScore"],
-            },
-          },
         },
-        required: ["marketPotential", "competitionLevel", "entryBarrier", "trend", "timeToFirstIncome", "findings", "businessModel", "monetization", "similarIdeas"],
+        required: ["marketPotential", "competitionLevel", "entryBarrier", "trend", "timeToFirstIncome", "findings", "businessModel", "monetization"],
       },
       clients: {
         type: "object",
@@ -254,7 +242,6 @@ const ViabilityOutputSchema = z.object({
       plans: z.array(z.object({ name: z.string(), monthlyPriceArs: z.number(), target: z.string(), rationale: z.string() })),
       benchmark: z.object({ lowArs: z.number(), medianArs: z.number(), highArs: z.number(), note: z.string() }),
     }),
-    similarIdeas: z.array(z.object({ idea: z.string(), market: z.string(), annualGrowth: z.string(), traction: z.string(), matchScore: z.number() })),
   })),
   clients: jsonString(z.object({
     type: z.enum(["b2b", "b2c"]),
@@ -270,15 +257,16 @@ export async function generateViabilitySection(
 ): Promise<ViabilitySection> {
   try {
     const block = await runToolLoop(
-      `Sos un analista de startups argentinos. Generá viabilidad, monetización y clientes para la idea recibida. Moneda ARS 2026. Llamá a generate_viability.`,
+      `Sos un analista de startups argentinos. Generá viabilidad, monetización y clientes para la idea recibida. Moneda ARS 2026. Llamá a generate_viability. Sé conciso en los textos.`,
       buildAnalysisUserMessage(input, answers),
       VIABILITY_TOOL,
+      4096
     )
     const parsed = ViabilityOutputSchema.parse(deepParse(block.input))
     return {
       appName: parsed.appName,
-      viability: { ...parsed.viability, growthData: mock.viability.growthData, sourceSignals: mock.viability.sourceSignals },
-      clients: parsed.clients ?? mock.clients,
+      viability: { ...parsed.viability, growthData: mock.viability.growthData, sourceSignals: [], similarIdeas: [] },
+      clients: parsed.clients,
       _isMock: false,
     }
   } catch (error) {
@@ -414,10 +402,10 @@ export async function generateDetailsSection(
 ): Promise<DetailsSection> {
   try {
     const block = await runToolLoop(
-      `Sos un analista de startups argentinos. Generá obstáculos, roadmap, plan de validación y estructura legal para la idea. Marcos legales: Monotributo, SAS (recomendada), SRL, SA. Citá startups reales que fallaron. Llamá a generate_details con los 4 campos: obstacles, validationPlan, roadmap y legalStructure.`,
+      `Sos un analista de startups argentinos. Generá obstáculos, roadmap, plan de validación y estructura legal para la idea. Marcos legales: Monotributo, SAS (recomendada), SRL, SA. Citá startups reales que fallaron. Llamá a generate_details con los 4 campos: obstacles, validationPlan, roadmap y legalStructure. Sé conciso.`,
       buildAnalysisUserMessage(input, answers),
       DETAILS_TOOL,
-      2500,
+      4096
     )
     const parsed = DetailsOutputSchema.parse(deepParse(block.input))
 
@@ -666,5 +654,177 @@ export async function generateResearchSection(
       startupKit: mock.startupKit,
       _isMock: false,
     }
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// SECTION 4 — Market Data: Signals + Similar Ideas (Sonnet + web search)
+// ══════════════════════════════════════════════════════════════════════════════
+
+export interface MarketDataSection {
+  sourceSignals: MarketSignal[]
+  similarIdeas: SimilarIdeaBenchmark[]
+  marketPotential: number | null
+}
+
+const MARKET_DATA_TOOL: Anthropic.Tool = {
+  name: "report_market_data",
+  description: "Reporta señales de mercado reales e ideas similares encontradas via búsqueda web.",
+  input_schema: {
+    type: "object" as const,
+    properties: {
+      signals: {
+        type: "array",
+        description: "Señales de mercado encontradas. Solo incluir aquellas con datos reales.",
+        items: {
+          type: "object",
+          properties: {
+            source: { type: "string", description: "Nombre de la fuente: 'Google Trends', 'MercadoLibre', o 'INDEC'" },
+            metric: { type: "string", description: "Qué se midió. Ej: 'Interés de búsqueda relativo', 'Publicaciones activas', 'Crecimiento interanual del sector'" },
+            value: { type: "string", description: "Valor encontrado. Ej: '72/100', '2.300 publicaciones', '+8.3% YoY'" },
+            scoreImpact: { type: "number", description: "Contribución al puntaje en escala 0-10 según qué tan positiva es la señal" },
+            trend: { type: "string", enum: ["up", "stable", "down"], description: "Tendencia de la señal" },
+            history: {
+              type: "array",
+              description: "Datos históricos de tendencia si están disponibles (ej: de Google Trends). Omitir si no hay datos.",
+              items: {
+                type: "object",
+                properties: {
+                  period: { type: "string" },
+                  value: { type: "number" },
+                },
+                required: ["period", "value"],
+              },
+            },
+            url: { type: "string", description: "URL de la fuente que proporcionó los datos" },
+          },
+          required: ["source", "metric", "value", "scoreImpact", "trend", "url"],
+        },
+      },
+      similarIdeas: {
+        type: "array",
+        description: "2-4 startups o ideas similares REALES encontradas via búsqueda web.",
+        items: {
+          type: "object",
+          properties: {
+            idea: { type: "string", description: "Nombre real de la startup o idea similar encontrada" },
+            market: { type: "string", description: "Mercado en el que opera" },
+            annualGrowth: { type: "string", description: "Crecimiento anual si se encontró. Ej: '+22%', 'No disponible'" },
+            traction: { type: "string", description: "Logro o métrica de tracción encontrada" },
+            matchScore: { type: "number", description: "Similitud del 1 al 100 con la idea analizada" },
+          },
+          required: ["idea", "market", "annualGrowth", "traction", "matchScore"],
+        },
+      },
+      applicabilityNotes: {
+        type: "string",
+        description: "Explicación breve de por qué se incluyeron o excluyeron ciertas fuentes",
+      },
+    },
+    required: ["signals", "similarIdeas"],
+  },
+}
+
+const MarketDataOutputSchema = z.object({
+  signals: z.array(z.object({
+    source: z.string(),
+    metric: z.string(),
+    value: z.string(),
+    scoreImpact: z.number(),
+    trend: z.enum(["up", "stable", "down"]),
+    history: z.array(z.object({ period: z.coerce.string(), value: z.number() })).optional(),
+    url: z.string(),
+  })),
+  similarIdeas: z.array(z.object({
+    idea: z.string(),
+    market: z.string(),
+    annualGrowth: z.string(),
+    traction: z.string(),
+    matchScore: z.number(),
+  })),
+  applicabilityNotes: z.string().optional(),
+})
+
+function buildMarketDataSystem(): string {
+  return `Tu tarea es buscar señales REALES de mercado e ideas similares para una idea de negocio en Argentina usando búsqueda web.
+
+═══ PARTE 1: SEÑALES DE MERCADO ═══
+
+FUENTES A CONSULTAR (solo si aplican):
+
+1. **Google Trends** — Casi siempre aplica.
+   - Buscá "[idea] Google Trends Argentina" o "Google Trends [categoría] Argentina".
+   - Extraé el interés de búsqueda relativo (0-100) y la tendencia reciente (subiendo, estable, bajando).
+   - scoreImpact: mapeá el interés de 0-100 a escala 0-10 (dividir por 10).
+   - Si encontrás datos de interés a lo largo del tiempo, incluí los puntos en history.
+
+2. **MercadoLibre** — SOLO para productos físicos, bienes tangibles, equipamiento, o negocios con componente de venta de productos.
+   - NO aplica para: apps, SaaS, plataformas digitales, consultoría, servicios puros sin producto físico.
+   - Buscá "[producto/idea] site:mercadolibre.com.ar" o "[producto] mercadolibre Argentina".
+   - Extraé la cantidad aproximada de publicaciones activas y rango de precios.
+   - scoreImpact: 0-10 basado en volumen (>2000 publicaciones = 7-10, 500-2000 = 4-7, <500 = 1-4).
+
+3. **INDEC** — SOLO si el sector es medido por INDEC.
+   - Sectores que INDEC mide: construcción, manufactura, industria, comercio minorista, alimentos y bebidas, transporte, turismo/hotelería, agricultura.
+   - NO aplica para: tecnología, apps, startups digitales, servicios de nicho, consultorías.
+   - Buscá "INDEC [sector] crecimiento interanual 2025 2026" o "indec.gob.ar [sector]".
+   - Extraé el porcentaje de crecimiento interanual del sector.
+   - scoreImpact: mapeá crecimiento a escala 0-10. Negativo = 0-3, 0-5% = 3-5, 5-10% = 5-7, >10% = 7-10.
+
+═══ PARTE 2: IDEAS SIMILARES ═══
+
+Buscá 2-4 startups o emprendimientos REALES similares a la idea:
+- Buscá "[tipo de negocio] startup Argentina", "[idea similar] emprendimiento", "[categoría] startup exitosa".
+- Solo incluí empresas/ideas que encontraste en las búsquedas con datos reales.
+- Para cada una, extraé: nombre, mercado, crecimiento anual (si disponible), tracción/logros, y estimá similitud (matchScore).
+- Si no encontrás startups similares, devolvé un array vacío.
+
+═══ REGLAS ABSOLUTAS ═══
+- Si una fuente de señales NO aplica a esta idea, NO la incluyas en signals.
+- Si buscás una fuente y NO encontrás datos concretos, NO la incluyas.
+- PROHIBIDO inventar datos o nombres de empresas. Solo usá lo que encontrás en las búsquedas.
+- Es mejor devolver 1 señal real que 3 inventadas, y 1 startup real que 4 inventadas.
+- Explicá en applicabilityNotes por qué incluiste o excluiste cada fuente.
+
+Hacé las búsquedas necesarias y luego llamá a report_market_data con todos los resultados.`
+}
+
+export async function fetchMarketData(
+  input: BusinessInputData,
+  answers: ClaudeAnswer[]
+): Promise<MarketDataSection> {
+  console.log("[fetchMarketData] starting for idea:", input.idea)
+  try {
+    const block = await runToolLoopWithSearch(
+      buildMarketDataSystem(),
+      buildAnalysisUserMessage(input, answers),
+      MARKET_DATA_TOOL
+    )
+    const parsed = MarketDataOutputSchema.parse(deepParse(block.input))
+
+    const today = new Date().toISOString().slice(0, 10)
+    const sourceSignals: MarketSignal[] = parsed.signals.map((signal) => ({
+      source: signal.source,
+      metric: signal.metric,
+      value: signal.value,
+      scoreImpact: Number(signal.scoreImpact.toFixed(1)),
+      trend: signal.trend,
+      history: signal.history ?? [],
+      lastUpdated: today,
+      url: signal.url,
+    }))
+
+    const marketPotential = sourceSignals.length > 0
+      ? Number((sourceSignals.reduce((sum, s) => sum + s.scoreImpact, 0) / sourceSignals.length).toFixed(1))
+      : null
+
+    return {
+      sourceSignals,
+      similarIdeas: parsed.similarIdeas,
+      marketPotential,
+    }
+  } catch (error) {
+    console.error("[fetchMarketData] error:", error)
+    return { sourceSignals: [], similarIdeas: [], marketPotential: null }
   }
 }

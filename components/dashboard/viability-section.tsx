@@ -1,7 +1,8 @@
 "use client"
 
-import { Gauge, Clock, Database, ArrowUpRight, ArrowDownRight, Minus } from "lucide-react"
+import { Gauge, Clock, Database, ArrowUpRight, ArrowDownRight, Minus, Loader2 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 import type { ViabilityData } from "@/lib/mock-data"
 import {
@@ -13,6 +14,7 @@ import {
 
 interface ViabilitySectionProps {
   data: ViabilityData
+  isStreaming?: boolean
 }
 
 function getScoreColor(score: number): string {
@@ -71,7 +73,10 @@ function getTrendAccent(trend: "up" | "stable" | "down") {
   }
 }
 
-export function ViabilitySection({ data }: ViabilitySectionProps) {
+export function ViabilitySection({ data, isStreaming }: ViabilitySectionProps) {
+  const signalsLoading = isStreaming && data.sourceSignals.length === 0
+  const similarLoading = isStreaming && data.similarIdeas.length === 0
+
   const formatSignalTrendLabel = (trend: "up" | "stable" | "down") => {
     if (trend === "up") return "Fuente: Creciendo"
     if (trend === "stable") return "Fuente: Estable"
@@ -127,108 +132,181 @@ export function ViabilitySection({ data }: ViabilitySectionProps) {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
-              <Database className="h-5 w-5 text-primary" />
-            </div>
-            <div>
-              <CardTitle className="text-xl">Fuentes del Puntaje (Señales en Vivo Simuladas)</CardTitle>
-              <p className="text-sm text-muted-foreground">Serp/Trends, Mercado Libre API e INDEC</p>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {data.sourceSignals.map((signal, index) => (
-            <div key={index} className="rounded-lg border border-border bg-card p-4">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <p className="text-sm font-semibold text-foreground">{signal.source}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">{signal.metric}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="rounded-full border border-primary/30 bg-primary/5 px-2.5 py-1 text-xs font-semibold text-primary">
-                    +{signal.scoreImpact} score
-                  </span>
-                  <span
-                    className={cn(
-                      "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-semibold",
-                      getTrendAccent(signal.trend).badge
-                    )}
-                  >
-                    {(() => {
-                      const TrendIcon = getTrendAccent(signal.trend).icon
-                      return <TrendIcon className="h-3.5 w-3.5" />
-                    })()}
-                    {formatSignalTrendLabel(signal.trend)}
-                  </span>
-                </div>
+      {signalsLoading ? (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
+                <Database className="h-5 w-5 text-primary" />
               </div>
-              <div className="mt-3 h-20 w-full rounded-md border border-border bg-secondary/20 p-1">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={signal.history} margin={{ top: 4, right: 4, left: 4, bottom: 0 }}>
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "var(--card)",
-                        border: "1px solid var(--border)",
-                        borderRadius: "8px",
-                      }}
-                      labelStyle={{ color: "var(--foreground)" }}
-                      formatter={(value: number) => [`${value.toFixed(1)} pts`, "Fuerza de señal"]}
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="value"
-                      stroke={getTrendAccent(signal.trend).line}
-                      fill={getTrendAccent(signal.trend).area}
-                      strokeWidth={2}
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-                <p className="text-sm font-medium text-foreground">{signal.value}</p>
-                <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                  <span>Actualizado: {signal.lastUpdated}</span>
-                  <a href={signal.url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                    Fuente
-                  </a>
-                </div>
+              <div>
+                <CardTitle className="text-xl">Fuentes del Puntaje</CardTitle>
+                <p className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  Buscando datos en Google Trends, MercadoLibre e INDEC...
+                </p>
               </div>
             </div>
-          ))}
-        </CardContent>
-      </Card>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {[1, 2].map((i) => (
+              <div key={i} className="rounded-lg border border-border bg-card p-4 space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-40" />
+                    <Skeleton className="h-3 w-28" />
+                  </div>
+                  <div className="flex gap-2">
+                    <Skeleton className="h-6 w-20 rounded-full" />
+                    <Skeleton className="h-6 w-28 rounded-full" />
+                  </div>
+                </div>
+                <Skeleton className="h-20 w-full rounded-md" />
+                <div className="flex justify-between">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-3 w-32" />
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      ) : data.sourceSignals.length > 0 ? (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
+                <Database className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <CardTitle className="text-xl">Fuentes del Puntaje</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  {data.sourceSignals.map(s => s.source).join(" · ")}
+                </p>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {data.sourceSignals.map((signal, index) => (
+              <div key={index} className="rounded-lg border border-border bg-card p-4">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">{signal.source}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">{signal.metric}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="rounded-full border border-primary/30 bg-primary/5 px-2.5 py-1 text-xs font-semibold text-primary">
+                      +{signal.scoreImpact} score
+                    </span>
+                    <span
+                      className={cn(
+                        "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-semibold",
+                        getTrendAccent(signal.trend).badge
+                      )}
+                    >
+                      {(() => {
+                        const TrendIcon = getTrendAccent(signal.trend).icon
+                        return <TrendIcon className="h-3.5 w-3.5" />
+                      })()}
+                      {formatSignalTrendLabel(signal.trend)}
+                    </span>
+                  </div>
+                </div>
+                {signal.history.length >= 2 && (
+                  <div className="mt-3 h-20 w-full rounded-md border border-border bg-secondary/20 p-1">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={signal.history} margin={{ top: 4, right: 4, left: 4, bottom: 0 }}>
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: "var(--card)",
+                            border: "1px solid var(--border)",
+                            borderRadius: "8px",
+                          }}
+                          labelStyle={{ color: "var(--foreground)" }}
+                          formatter={(value: number) => [`${value.toFixed(1)} pts`, "Fuerza de señal"]}
+                        />
+                        <Area
+                          type="monotone"
+                          dataKey="value"
+                          stroke={getTrendAccent(signal.trend).line}
+                          fill={getTrendAccent(signal.trend).area}
+                          strokeWidth={2}
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+                  <p className="text-sm font-medium text-foreground">{signal.value}</p>
+                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                    <span>Actualizado: {signal.lastUpdated}</span>
+                    <a href={signal.url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                      Fuente
+                    </a>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      ) : null}
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-xl">Ideas Similares Exitosas</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {data.similarIdeas.map((idea, index) => (
-            <div key={index} className="rounded-lg border border-border bg-card p-4">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <p className="font-semibold text-foreground">{idea.idea}</p>
-                  <p className="text-xs text-muted-foreground">{idea.market}</p>
+      {similarLoading ? (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-xl">Ideas Similares Exitosas</CardTitle>
+            <p className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              Buscando emprendimientos similares...
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {[1, 2].map((i) => (
+              <div key={i} className="rounded-lg border border-border bg-card p-4 space-y-2">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="space-y-1.5">
+                    <Skeleton className="h-4 w-36" />
+                    <Skeleton className="h-3 w-24" />
+                  </div>
+                  <Skeleton className="h-6 w-28 rounded-full" />
                 </div>
-                <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
-                  Similitud: {idea.matchScore}/100
-                </span>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-4 w-40" />
+                </div>
               </div>
-              <div className="mt-2 grid gap-2 sm:grid-cols-2">
-                <p className="text-sm text-muted-foreground">
-                  <span className="font-medium text-foreground">Crecimiento:</span> {idea.annualGrowth}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  <span className="font-medium text-foreground">Tracción:</span> {idea.traction}
-                </p>
+            ))}
+          </CardContent>
+        </Card>
+      ) : data.similarIdeas.length > 0 ? (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-xl">Ideas Similares Exitosas</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {data.similarIdeas.map((idea, index) => (
+              <div key={index} className="rounded-lg border border-border bg-card p-4">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="font-semibold text-foreground">{idea.idea}</p>
+                    <p className="text-xs text-muted-foreground">{idea.market}</p>
+                  </div>
+                  <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
+                    Similitud: {idea.matchScore}/100
+                  </span>
+                </div>
+                <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                  <p className="text-sm text-muted-foreground">
+                    <span className="font-medium text-foreground">Crecimiento:</span> {idea.annualGrowth}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    <span className="font-medium text-foreground">Tracción:</span> {idea.traction}
+                  </p>
+                </div>
               </div>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
+            ))}
+          </CardContent>
+        </Card>
+      ) : null}
     </div>
   )
 }

@@ -177,13 +177,13 @@ export default function ClaudeQuestionsPage() {
               <div className="mx-auto text-5xl">🚀</div>
               <div className="space-y-1.5">
                 <p className="text-lg font-semibold text-foreground">
-                  {"Calibrating your mission"}
+                  Calibrating your mission
                 </p>
                 <p className="text-sm text-muted-foreground">{loadingMessages[messageIndex]}...</p>
               </div>
               <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
                 <Loader2 className="h-4 w-4 animate-spin" />
-                {"This only takes a few seconds"}
+                This only takes a few seconds
               </div>
             </CardContent>
           </Card>
@@ -253,11 +253,31 @@ export default function ClaudeQuestionsPage() {
         </Card>
 
         {/* Questions */}
-        {pageQuestions.map((question) => {
+        {pageQuestions.map((question, idx) => {
           const globalIndex = questions.indexOf(question)
           const selected = answers[question.id]
           return (
             <Card key={question.id} className="border-border/70 transition-shadow hover:shadow-md">
+              {currentPage === 0 && idx === 0 && (
+                <div className="flex items-center gap-2 border-b border-border/50 px-6 py-3">
+                  <Sparkles className="h-4 w-4 shrink-0 text-primary" />
+                  <p className="text-sm text-muted-foreground">
+                    Respondé las siguientes preguntas para que pueda comprender mejor tu idea.
+                    {totalPages > 1 && (
+                      <span className="ml-1 text-muted-foreground/70">
+                        — Página {currentPage + 1} de {totalPages}
+                      </span>
+                    )}
+                  </p>
+                </div>
+              )}
+              {currentPage > 0 && idx === 0 && totalPages > 1 && (
+                <div className="border-b border-border/50 px-6 py-3">
+                  <p className="text-sm text-muted-foreground">
+                    Página {currentPage + 1} de {totalPages}
+                  </p>
+                </div>
+              )}
               <CardHeader className="pb-3">
                 <div className="flex items-start gap-3">
                   <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
