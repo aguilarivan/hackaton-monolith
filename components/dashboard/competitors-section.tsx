@@ -2,7 +2,7 @@
 
 import { useMemo } from "react"
 import dynamic from "next/dynamic"
-import { Users, ThumbsUp, ThumbsDown, MapPin, Target } from "lucide-react"
+import { Users, ThumbsUp, ThumbsDown, MapPin, Target, ExternalLink } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { CompetitorData } from "@/lib/mock-data"
 
@@ -199,6 +199,18 @@ export function CompetitorsSection({ data, city }: CompetitorsSectionProps) {
                     <span className="rounded-full border border-primary/20 bg-primary/5 px-2 py-0.5 text-xs font-medium text-primary">
                       Share: {competitor.marketShare}
                     </span>
+                    {competitor.url && (
+                      <a
+                        href={competitor.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 rounded-full border border-success/30 bg-success/5 px-2 py-0.5 text-xs font-medium text-success hover:bg-success/10"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <ExternalLink className="h-3 w-3" />
+                        Verificar
+                      </a>
+                    )}
                   </div>
                   <p className="mt-1 text-sm text-muted-foreground">{competitor.description}</p>
                 </div>
