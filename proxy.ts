@@ -8,7 +8,7 @@ const JWT_SECRET = new TextEncoder().encode(
 
 const PROTECTED = ["/preguntas-claude", "/analisis"]
 
-export async function proxy(request: NextRequest) {
+export default async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
   if (!PROTECTED.some((p) => pathname.startsWith(p))) {
     return NextResponse.next()
@@ -21,7 +21,7 @@ export async function proxy(request: NextRequest) {
       await jwtVerify(token, JWT_SECRET)
       return NextResponse.next()
     } catch {
-      // token invalid or expired — fall through to redirect
+      // token inválido o expirado — redirigir a login
     }
   }
 

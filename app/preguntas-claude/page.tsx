@@ -255,7 +255,7 @@ export default function ClaudeQuestionsPage() {
               </CardHeader>
               <CardContent className="space-y-3 pl-10">
                 <RadioGroup
-                  value={selected}
+                  value={selected ?? ""}
                   onValueChange={(value) => handleOptionChange(question.id, value)}
                 >
                   {question.options.map((option) => (
