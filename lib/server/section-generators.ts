@@ -502,31 +502,46 @@ const RESEARCH_TOOL: Anthropic.Tool = {
 }
 
 const ResearchOutputSchema = z.object({
-  competitors: jsonString(z.object({
-    competitors: z.array(z.object({
-      name: z.string(),
-      description: z.string(),
-      strengths: z.array(z.string()),
-      weaknesses: z.array(z.string()),
-      cityArea: z.string(),
-      marketShare: z.string(),
-    })),
-    launchZones: z.array(z.object({
-      zone: z.string(),
-      competitorDensity: z.number(),
-      demandSignal: z.number(),
-      launchScore: z.number(),
-      color: z.string(),
-    })),
-  })),
-  startupKit: jsonString(z.object({
-    items: z.array(z.object({
-      name: z.string(),
-      reason: z.string(),
-      price: z.number(),
-      percentage: z.number(),
-    })),
-  })),
+  competitors: z.preprocess(
+    (val) => {
+      const v = typeof val === "string" ? (() => { try { return JSON.parse(val) } catch { return val } })() : val
+      // Haiku a veces devuelve el array directo en lugar del objeto wrapper
+      if (Array.isArray(v)) return { competitors: v, launchZones: [] }
+      return v
+    },
+    z.object({
+      competitors: z.array(z.object({
+        name: z.string(),
+        description: z.string(),
+        strengths: z.array(z.string()),
+        weaknesses: z.array(z.string()),
+        cityArea: z.string(),
+        marketShare: z.string(),
+      })),
+      launchZones: z.array(z.object({
+        zone: z.string(),
+        competitorDensity: z.number(),
+        demandSignal: z.number(),
+        launchScore: z.number(),
+        color: z.string(),
+      })).default([]),
+    })
+  ),
+  startupKit: z.preprocess(
+    (val) => {
+      const v = typeof val === "string" ? (() => { try { return JSON.parse(val) } catch { return val } })() : val
+      if (Array.isArray(v)) return { items: v }
+      return v
+    },
+    z.object({
+      items: z.array(z.object({
+        name: z.string(),
+        reason: z.string(),
+        price: z.number(),
+        percentage: z.number(),
+      })),
+    })
+  ),
 })
 
 export async function generateResearchSection(
