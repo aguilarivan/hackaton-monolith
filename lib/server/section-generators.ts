@@ -85,11 +85,10 @@ async function runToolLoop(
       max_tokens: maxTokens,
       system: [{ type: "text", text: system, cache_control: { type: "ephemeral" } }],
       tools: [tool],
-      tool_choice: { type: "auto" },
+      // Force immediate tool call — avoids Haiku wasting tokens on preamble text
+      tool_choice: { type: "tool", name: tool.name },
       messages,
     })
-
-    console.log(`[${tool.name}] turn=${turn + 1} stop=${response.stop_reason}`)
 
     const block = response.content.find(
       (b): b is Anthropic.ToolUseBlock => b.type === "tool_use" && b.name === tool.name
@@ -220,7 +219,7 @@ const VIABILITY_TOOL: Anthropic.Tool = {
         required: ["type"],
       },
     },
-    required: ["appName", "viability", "clients"],
+    required: ["appName", "viability"],
   },
 }
 
@@ -248,7 +247,7 @@ const ViabilityOutputSchema = z.object({
     type: z.enum(["b2b", "b2c"]),
     b2bClients: z.array(z.object({ name: z.string(), reason: z.string(), approach: z.string(), contactRole: z.string(), companyContext: z.string() })).optional(),
     b2cSegments: z.array(z.object({ segment: z.string(), estimatedSize: z.string(), reachStrategy: z.string() })).optional(),
-  })),
+  })).optional(),
 })
 
 export async function generateViabilitySection(
@@ -449,10 +448,10 @@ async function runToolLoopWithSearch(
 ): Promise<Anthropic.ToolUseBlock> {
   const messages: Anthropic.MessageParam[] = [{ role: "user", content: userMessage }]
 
-  for (let turn = 0; turn < 12; turn++) {
+  for (let turn = 0; turn < 7; turn++) {
     const response = await anthropic.messages.create({
       model: "claude-sonnet-4-6",
-      max_tokens: 8192,
+      max_tokens: 3000,
       system: [{ type: "text", text: system, cache_control: { type: "ephemeral" } }],
       tools: [WEB_SEARCH_TOOL as unknown as Anthropic.Tool, tool],
       tool_choice: { type: "auto" },
@@ -516,12 +515,12 @@ const RESEARCH_TOOL: Anthropic.Tool = {
             items: {
               type: "object",
               properties: {
-                name: { type: "string", description: "Nombre exacto tal como aparece en la búsqueda" },
-                description: { type: "string", description: "Descripción basada en lo que encontraste en su sitio o perfil" },
-                strengths: { type: "array", items: { type: "string" }, description: "Fortalezas observadas en la búsqueda" },
-                weaknesses: { type: "array", items: { type: "string" }, description: "Debilidades observadas" },
-                cityArea: { type: "string", description: "Zona o barrio donde opera, tal como aparece en sus datos" },
-                marketShare: { type: "string", description: "Estimación de presencia relativa. Ej: 'Alta', 'Media', '~20%'" },
+                name: { type: "string" },
+                description: { type: "string", description: "1-2 oraciones" },
+                strengths: { type: "array", items: { type: "string" }, description: "Máximo 2 items" },
+                weaknesses: { type: "array", items: { type: "string" }, description: "Máximo 2 items" },
+                cityArea: { type: "string" },
+                marketShare: { type: "string", description: "Porcentaje estimado, ej: '~30%'" },
                 url: { type: "string", description: "URL exacta del sitio web, Instagram u otro perfil encontrado" },
                 sourceQuery: { type: "string", description: "Query exacta que usaste para encontrar este competidor. Ej: 'tinder perros Buenos Aires'" },
               },
@@ -593,32 +592,19 @@ const ResearchOutputSchema = z.object({
 })
 
 function buildResearchSystem(city: string): string {
-  return `Tenés acceso a búsqueda web. Tu tarea es encontrar competidores REALES para la idea que te van a dar.
+  return `Tenés acceso a búsqueda web. Encontrá MÁXIMO 3 competidores REALES para la idea dada.
 
-REGLAS ABSOLUTAS:
-- PROHIBIDO inventar nombres de empresas. Solo usá lo que encontrás en las búsquedas.
-- PROHIBIDO usar tu conocimiento de entrenamiento para nombres de empresas. Solo datos de búsqueda.
-- Si una búsqueda no devuelve resultados, cambiá los términos y volvé a buscar.
-- Es mejor devolver 2 competidores reales que 4 inventados.
+REGLAS:
+- PROHIBIDO inventar empresas. Solo lo que encontrás en las búsquedas.
+- 2 competidores reales > 4 inventados.
+- Hacé máximo 2 búsquedas.
 
-CÓMO DETERMINAR EL ALCANCE DE LA BÚSQUEDA:
-Primero analizá si el negocio es DIGITAL o FÍSICO:
+ALCANCE:
+- DIGITAL (app/SaaS/plataforma): buscá en Argentina → "[idea] app Argentina", "[idea] startup"
+- FÍSICO (local/presencial): buscá en ${city} → "[idea] ${city}", "[idea] ${city} Instagram"
+- HÍBRIDO: una búsqueda local, una nacional.
 
-- DIGITAL (app, plataforma, SaaS, marketplace, servicio online): la competencia NO es local.
-  → Buscá en Argentina primero, luego expandí a latinoamérica y global si hay pocas opciones.
-  → Queries: "[idea] app Argentina", "[idea] plataforma", "[idea] app site:play.google.com", "[idea] startup"
-
-- FÍSICO (local, tienda, restaurante, servicio presencial): la competencia es local o regional.
-  → Buscá en ${city} y alrededores.
-  → Queries: "[idea] ${city}", "[idea] ${city} Instagram", "[idea] provincia"
-
-- HÍBRIDO (ej: delivery, consultoría, e-commerce): buscá ambos niveles.
-
-PROCESO:
-1. Primera búsqueda ya ejecutada — analizá si el negocio es digital, físico o híbrido
-2. Hacé 2-3 búsquedas con el alcance correcto según el tipo
-3. Para cada competidor encontrado: anotá su URL real y la query que lo encontró (sourceQuery)
-Registrá sourceQuery exacto por cada competidor. Llamá a generate_research con lo que encontraste.`
+Tras las búsquedas, llamá inmediatamente a generate_research con lo que encontraste.`
 }
 
 export async function generateResearchSection(
@@ -632,7 +618,6 @@ export async function generateResearchSection(
       buildAnalysisUserMessage(input, answers),
       RESEARCH_TOOL
     )
-    console.log("[generate_research] raw block.input:", JSON.stringify(block.input, null, 2))
     const parsed = ResearchOutputSchema.parse(deepParse(block.input))
 
     const competitors: Competitor[] = parsed.competitors.competitors.map((c) => ({ ...c }))

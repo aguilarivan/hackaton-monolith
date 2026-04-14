@@ -109,6 +109,9 @@ export async function POST(request: Request) {
             emit({ type: "research", data })
           )
         )
+      } else {
+        // Emit empty research so the UI doesn't hang waiting for it
+        tasks.push(emit({ type: "research", data: { competitors: { competitors: [], mapCenter: mock.competitors.mapCenter }, startupKit: mock.startupKit, _isMock: false } }))
       }
 
       if (needViability) {

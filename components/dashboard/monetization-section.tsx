@@ -154,11 +154,14 @@ export function MonetizationSection({ data }: MonetizationSectionProps) {
             </div>
             <div className="grid gap-3 md:grid-cols-3">
               {data.monetization.plans.map((plan, index) => (
-                <button
+                <div
                   key={index}
+                  role="button"
+                  tabIndex={0}
                   onClick={() => setSelectedPlan(selectedPlan === index ? null : index)}
+                  onKeyDown={(e) => e.key === "Enter" && setSelectedPlan(selectedPlan === index ? null : index)}
                   className={cn(
-                    "relative rounded-xl border p-4 text-left transition-all",
+                    "relative cursor-pointer rounded-xl border p-4 text-left transition-all",
                     selectedPlan === index
                       ? "border-primary bg-primary/10 shadow-sm"
                       : "border-border bg-secondary/20 hover:border-primary/40"
@@ -214,7 +217,7 @@ export function MonetizationSection({ data }: MonetizationSectionProps) {
                   <p className="text-xs text-muted-foreground">/mes · precio para tu cliente</p>
                   <p className="mt-2 text-xs font-medium text-foreground">{plan.target}</p>
                   <p className="mt-1 text-xs text-muted-foreground">{plan.rationale}</p>
-                </button>
+                </div>
               ))}
             </div>
 

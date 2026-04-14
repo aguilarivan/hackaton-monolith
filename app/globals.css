@@ -170,6 +170,15 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    cursor: default;
+  }
+  a, button, select, summary,
+  input[type="submit"], input[type="reset"], input[type="button"],
+  label[for], [role="button"] {
+    cursor: pointer;
+  }
+  input, textarea, [contenteditable] {
+    cursor: text;
   }
   body {
     @apply bg-background text-foreground;
@@ -244,6 +253,7 @@
   background: linear-gradient(135deg, oklch(0.52 0.17 190), oklch(0.42 0.14 225));
   box-shadow: 0 0 24px oklch(0.55 0.15 195 / 0.2), 0 4px 12px oklch(0 0 0 / 0.15);
   transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+  animation: dz-cta-breathe 3s ease-in-out infinite;
 }
 .dz-cta:hover:not(:disabled) {
   transform: translateY(-2px) scale(1.02);
@@ -313,7 +323,10 @@
 
 /* Hero background (deep space gradient in dark mode) */
 .dz-hero-bg {
-  background: var(--background);
+  background:
+    radial-gradient(ellipse 80% 50% at 50% 20%, oklch(0.55 0.15 195 / 0.04), transparent),
+    radial-gradient(ellipse 50% 40% at 80% 60%, oklch(0.6 0.12 160 / 0.03), transparent),
+    var(--background);
 }
 :is(.dark) .dz-hero-bg {
   background:
@@ -340,4 +353,66 @@
 /* Twinkling decorative dot */
 .dz-twinkle {
   animation: dz-glow-pulse 3s ease-in-out infinite;
+}
+
+/* ===========================
+   Landing Page Enhancements
+   =========================== */
+
+/* Additional staggered entrances */
+.dz-enter-5 {
+  opacity: 0;
+  animation: dz-fade-up 0.65s cubic-bezier(0.16, 1, 0.3, 1) 0.7s forwards;
+}
+.dz-enter-6 {
+  opacity: 0;
+  animation: dz-fade-up 0.65s cubic-bezier(0.16, 1, 0.3, 1) 0.85s forwards;
+}
+
+/* CTA continuous glow breath */
+@keyframes dz-cta-breathe {
+  0%, 100% { filter: drop-shadow(0 0 6px oklch(0.55 0.15 195 / 0.2)); }
+  50% { filter: drop-shadow(0 0 16px oklch(0.55 0.15 195 / 0.45)); }
+}
+
+/* Form card animated border glow */
+@keyframes dz-card-glow {
+  0%, 100% {
+    box-shadow:
+      0 0 0 1px oklch(0.55 0.15 195 / 0.06),
+      0 0 24px oklch(0.55 0.15 195 / 0.03),
+      0 20px 40px -12px oklch(0 0 0 / 0.08);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px oklch(0.55 0.15 195 / 0.14),
+      0 0 36px oklch(0.55 0.15 195 / 0.07),
+      0 20px 40px -12px oklch(0 0 0 / 0.1);
+  }
+}
+.dz-form-card {
+  animation: dz-card-glow 4s ease-in-out infinite;
+}
+
+/* Dashboard preview tilt */
+.dz-preview-tilt {
+  transform: rotateY(-4deg) rotateX(3deg);
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.dz-preview-tilt:hover {
+  transform: rotateY(0deg) rotateX(0deg);
+}
+
+/* Reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .dz-cta {
+    animation: none;
+  }
+  .dz-form-card {
+    animation: none;
+    box-shadow: 0 0 0 1px oklch(0.55 0.15 195 / 0.08), 0 20px 40px -12px oklch(0 0 0 / 0.08);
+  }
+  .dz-preview-tilt {
+    transform: none;
+  }
 }
