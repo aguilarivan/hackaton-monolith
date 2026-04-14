@@ -83,6 +83,7 @@ export async function POST(request: Request) {
       const tasks: Promise<void>[] = []
 
       // Haiku chain: viability → details (sequential to avoid TPM burst)
+      // 20s delay between calls to clear the 4,000 output TPM window
       if (needViability || needDetails) {
         tasks.push((async () => {
           if (needViability) {
@@ -90,6 +91,9 @@ export async function POST(request: Request) {
             await emit({ type: "viability", data: viability })
           }
           if (needDetails) {
+            if (needViability) {
+              await new Promise((resolve) => setTimeout(resolve, 20000))
+            }
             const details = await generateDetailsSection(input, answers, mock)
             await emit({ type: "details", data: details })
           }

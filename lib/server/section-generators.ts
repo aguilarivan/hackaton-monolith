@@ -39,10 +39,9 @@ const jsonString = <T extends z.ZodTypeAny>(schema: T) =>
     return val
   }, schema)
 
-// Fail fast — no retries so SSE shows fallback immediately instead of waiting
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
-  maxRetries: 0,
+  maxRetries: 1, // 1 retry for transient connection errors (ETIMEDOUT)
 })
 
 // ── Public types ──────────────────────────────────────────────────────────────
@@ -80,7 +79,7 @@ async function runToolLoop(
   for (let turn = 0; turn < 5; turn++) {
     const response = await anthropic.messages.create({
       model: "claude-haiku-4-5",
-      max_tokens: 3000,
+      max_tokens: 1500,
       system: [{ type: "text", text: system, cache_control: { type: "ephemeral" } }],
       tools: [tool],
       tool_choice: { type: "auto" },

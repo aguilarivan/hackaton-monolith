@@ -84,10 +84,6 @@ export interface Competitor {
   marketShare: string
   url?: string
   sourceQuery?: string
-  location?: {
-    lat: number
-    lng: number
-  }
 }
 
 export interface CompetitorData {
@@ -521,63 +517,10 @@ export function generateAnalysis(input: BusinessInputData): StartupAnalysis {
     monetization,
   }
 
-  const isBuenosAires = /buenos aires|caba/i.test(normalizedCity)
-  const center = isBuenosAires ? { lat: -34.6037, lng: -58.3816 } : getMapCenter(normalizedCity)
-  const competitorOffsets = [
-    { lat: 0.016, lng: 0.01 },
-    { lat: -0.013, lng: -0.012 },
-    { lat: 0.007, lng: -0.016 },
-    { lat: -0.009, lng: 0.014 },
-  ]
-  const hardcodedBuenosAiresLocations = [
-    { lat: -34.6024, lng: -58.3789 }, // Microcentro
-    { lat: -34.5885, lng: -58.4305 }, // Palermo
-    { lat: -34.5621, lng: -58.4562 }, // Belgrano
-    { lat: -34.6195, lng: -58.4432 }, // Caballito
-  ]
-  const competitorLocations = isBuenosAires
-    ? hardcodedBuenosAiresLocations
-    : competitorOffsets.map((offset) => ({ lat: center.lat + offset.lat, lng: center.lng + offset.lng }))
+  const center = getMapCenter(normalizedCity)
 
   const competitors: CompetitorData = {
-    competitors: [
-      {
-        name: isTech ? "ScaleOps" : isFood ? "MesaPro Catering" : "UrbanAssist",
-        description: "Incumbente bien posicionado con fuerte reconocimiento de marca.",
-        strengths: ["Distribución", "Clientes recurrentes", "Disciplina operativa"],
-        weaknesses: ["Precios altos", "Personalización lenta", "Paquetes rígidos"],
-        cityArea: "Microcentro",
-        marketShare: "24%",
-        location: competitorLocations[0],
-      },
-      {
-        name: isTech ? "FlowPilot" : isFood ? "DailyFork" : "FastHands",
-        description: "Challenger de rápido crecimiento enfocado en conveniencia.",
-        strengths: ["Velocidad", "UX moderna", "Fuerte presencia en redes"],
-        weaknesses: ["Brechas en soporte", "Calidad variable", "Riesgo de quema de caja"],
-        cityArea: "Corredor norte",
-        marketShare: "16%",
-        location: competitorLocations[1],
-      },
-      {
-        name: isTech ? "LegacySuite" : isFood ? "Tradizione Eventos" : "MasterLocal",
-        description: "Operador tradicional con cuentas de larga data.",
-        strengths: ["Relaciones", "Experiencia", "Contratos grandes"],
-        weaknesses: ["Stack desactualizado", "Funnel digital débil", "Onboarding lento"],
-        cityArea: "Centro histórico",
-        marketShare: "19%",
-        location: competitorLocations[2],
-      },
-      {
-        name: isTech ? "NicheCloud" : isFood ? "GreenBite Co" : "HomePro Plus",
-        description: "Especialista de nicho con clientela selecta.",
-        strengths: ["Especialización", "Percepción premium", "Alta retención"],
-        weaknesses: ["Escala limitada", "Segmento estrecho", "CAC elevado"],
-        cityArea: "Zona residencial oeste",
-        marketShare: "11%",
-        location: competitorLocations[3],
-      },
-    ],
+    competitors: [],
     mapCenter: center,
   }
 

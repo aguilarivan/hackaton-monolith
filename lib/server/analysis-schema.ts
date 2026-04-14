@@ -196,11 +196,7 @@ export function mergeWithComputedData(
   input: BusinessInputData,
   mock: StartupAnalysis
 ): StartupAnalysis {
-  // Attach GPS locations from mock to Claude's competitors
-  const competitorsWithLocations: Competitor[] = core.competitors.competitors.map((c, i) => ({
-    ...c,
-    location: mock.competitors.competitors[i]?.location,
-  }))
+  const competitorsWithLocations: Competitor[] = core.competitors.competitors.map((c) => ({ ...c }))
 
   // Prefer real offers from Claude's web search; fall back to mock if not found
   const kitItemsWithOffers: StartupKitItem[] = core.startupKit.items.map((item, i) => {

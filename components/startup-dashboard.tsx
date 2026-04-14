@@ -153,7 +153,6 @@ export function StartupDashboard({ data, partial, isStreaming, sectionPlan, onRe
               <FinancialProjectionSection
                 investment={data.investment ?? 0}
                 businessType={data.businessType}
-                monetizationPlans={v?.viability.monetization.plans}
               />
             )}
           </div>
