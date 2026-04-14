@@ -17,6 +17,8 @@ import {
 } from "@/lib/flow-api"
 import { getBusinessInput, getFlowId, saveClaudeAnswers, saveFlowId, type ClaudeAnswer } from "@/lib/flow-storage"
 
+const QUESTIONS_PER_PAGE = 5
+
 const loadingMessages = [
   "Leyendo tu idea con atención...",
   "Identificando los puntos clave de tu misión...",
@@ -35,6 +37,26 @@ export default function ClaudeQuestionsPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [answers, setAnswers] = useState<Record<string, string>>({})
   const [details, setDetails] = useState<Record<string, string>>({})
+  const [currentPage, setCurrentPage] = useState(0)
+
+  const totalPages = Math.max(1, Math.ceil(questions.length / QUESTIONS_PER_PAGE))
+
+  const pageQuestions = useMemo(
+    () => questions.slice(currentPage * QUESTIONS_PER_PAGE, (currentPage + 1) * QUESTIONS_PER_PAGE),
+    [questions, currentPage]
+  )
+
+  const isCurrentPageValid = useMemo(
+    () => pageQuestions.every((question) => {
+      const selected = answers[question.id]
+      if (!selected) return false
+      if (selected !== "expand") return true
+      return Boolean(details[question.id]?.trim())
+    }),
+    [answers, details, pageQuestions]
+  )
+
+  const isLastPage = currentPage === totalPages - 1
 
   useEffect(() => {
     const data = getBusinessInput()
@@ -90,21 +112,21 @@ export default function ClaudeQuestionsPage() {
     }
   }, [businessData])
 
-  const isValid = useMemo(
-    () => questions.length > 0 && questions.every((question) => {
-      const selected = answers[question.id]
-      if (!selected) return false
-      if (selected !== "expand") return true
-      return Boolean(details[question.id]?.trim())
-    }),
-    [answers, details, questions]
-  )
-
   const handleOptionChange = (questionId: string, option: string) => {
     setAnswers((prev) => ({ ...prev, [questionId]: option }))
     if (option !== "expand") {
       setDetails((prev) => ({ ...prev, [questionId]: "" }))
     }
+  }
+
+  const handleNextPage = () => {
+    setCurrentPage((prev) => Math.min(prev + 1, totalPages - 1))
+    window.scrollTo({ top: 0, behavior: "smooth" })
+  }
+
+  const handlePrevPage = () => {
+    setCurrentPage((prev) => Math.max(prev - 1, 0))
+    window.scrollTo({ top: 0, behavior: "smooth" })
   }
 
   const handleContinue = async () => {
@@ -228,20 +250,26 @@ export default function ClaudeQuestionsPage() {
                 <p className="text-sm leading-relaxed text-muted-foreground">
                   A lo largo de todo el proceso vas a contar con un <strong className="text-foreground">agente personal</strong> que te va a acompañar, responder tus dudas y orientarte en cada paso. 🤝
                 </p>
+                {totalPages > 1 && (
+                  <p className="text-sm text-muted-foreground">
+                    Página {currentPage + 1} de {totalPages} ({questions.length} preguntas en total)
+                  </p>
+                )}
               </div>
             </div>
           </CardContent>
         </Card>
 
         {/* Questions */}
-        {questions.map((question, index) => {
+        {pageQuestions.map((question) => {
+          const globalIndex = questions.indexOf(question)
           const selected = answers[question.id]
           return (
             <Card key={question.id} className="border-border/70 transition-shadow hover:shadow-md">
               <CardHeader className="pb-3">
                 <div className="flex items-start gap-3">
                   <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
-                    {index + 1}
+                    {globalIndex + 1}
                   </span>
                   <div className="space-y-1">
                     <CardTitle className="text-base leading-snug">{question.title}</CardTitle>
@@ -288,28 +316,31 @@ export default function ClaudeQuestionsPage() {
 
         {/* Actions */}
         <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <Button variant="outline" onClick={() => router.push("/")}>
+          <Button variant="outline" onClick={currentPage === 0 ? () => router.push("/") : handlePrevPage}>
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Volver al inicio
+            {currentPage === 0 ? "Volver al inicio" : "Anterior"}
           </Button>
-          <Button
-            onClick={handleContinue}
-            disabled={!isValid || isSubmitting}
-            size="lg"
-            className="gap-2"
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Guardando respuestas...
-              </>
-            ) : (
-              <>
-                Continuar al análisis
-                <ArrowRight className="h-4 w-4" />
-              </>
-            )}
-          </Button>
+
+          {isLastPage ? (
+            <Button onClick={handleContinue} disabled={!isCurrentPageValid || isSubmitting}>
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Guardando...
+                </>
+              ) : (
+                <>
+                  Continuar al analisis
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </>
+              )}
+            </Button>
+          ) : (
+            <Button onClick={handleNextPage} disabled={!isCurrentPageValid}>
+              Siguiente
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          )}
         </div>
 
         {submitError && (
