@@ -68,6 +68,7 @@ export function StartupDashboard({ data, partial, isStreaming, onReset }: Startu
   const v = partial.viability
   const d = partial.details
   const r = partial.research
+  const displayName = data.brandName || v?.appName || "Tu proyecto"
   const [activeSection, setActiveSection] = useState<SectionKey>("overview")
   const [isLoaded, setIsLoaded] = useState(false)
 
@@ -84,6 +85,18 @@ export function StartupDashboard({ data, partial, isStreaming, onReset }: Startu
     return "text-destructive"
   }
 
+  const getScoreBgColor = (score: number) => {
+    if (score >= 7) return "bg-success/15 border-success/30"
+    if (score >= 5) return "bg-warning/15 border-warning/30"
+    return "bg-destructive/15 border-destructive/30"
+  }
+
+  const getVerdictSentence = (score: number) => {
+    if (score >= 7) return `${displayName} tiene orbita alta en ${data.city} — las condiciones de lanzamiento son favorables.`
+    if (score >= 5) return `${displayName} tiene trayectoria viable en ${data.city} — hay turbulencia pero el camino existe.`
+    return `${displayName} enfrenta gravedad fuerte en ${data.city} — necesitas repensar la mision.`
+  }
+
   const getCompetitionLabel = (level: string) => {
     if (level === "Low") return "baja"
     if (level === "Medium") return "moderada"
@@ -98,6 +111,9 @@ export function StartupDashboard({ data, partial, isStreaming, onReset }: Startu
 
   const getSeverityCount = (severity: "High" | "Medium" | "Low") =>
     (d?.obstacles ?? []).filter((o) => o.severity === severity).length
+
+  const topOpportunity = v?.viability.findings.find((f) => f.type === "opportunity")
+  const topRisk = d?.obstacles.find((o) => o.severity === "High")
 
   const handleSectionClick = (section: SectionKey) => {
     if ((section === "competitors" || section === "kit") && !r) return
@@ -138,33 +154,126 @@ export function StartupDashboard({ data, partial, isStreaming, onReset }: Startu
   return (
     <div className="min-h-screen bg-background">
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-        <div className={cn("mb-8 space-y-4 transition-all duration-500", isLoaded ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0")}>
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-            <div className="space-y-3">
-              <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-                {v?.appName ? `${v.appName} Analysis` : <Skeleton className="h-8 w-64" />}
-              </h1>
-              <p className="max-w-2xl text-base text-muted-foreground leading-relaxed">{data.idea}</p>
-              <div className="flex flex-wrap items-center gap-3">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1.5 text-sm font-medium text-primary">
-                  <MapPin className="h-3.5 w-3.5" />{data.city}
+        {/* Hero Verdict */}
+        <div
+          className={cn(
+            "mb-8 transition-all duration-500",
+            isLoaded ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
+          )}
+        >
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0 flex-1">
+              {isStreaming && (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/5 px-3 py-1.5 text-xs font-medium text-muted-foreground">
+                  <Loader2 className="h-3 w-3 animate-spin" />Analizando en tiempo real...
                 </span>
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1.5 text-sm font-medium text-muted-foreground">
-                  <DollarSign className="h-3.5 w-3.5" />{formatInvestment(data.investment)}
-                </span>
-                {isStreaming && (
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/5 px-3 py-1.5 text-xs font-medium text-muted-foreground">
-                    <Loader2 className="h-3 w-3 animate-spin" />Analizando en tiempo real...
-                  </span>
-                )}
-              </div>
+              )}
             </div>
             <Button variant="outline" size="sm" onClick={onReset} className="shrink-0">
               <RefreshCw className="mr-2 h-4 w-4" />Nueva idea
             </Button>
           </div>
+
+          {v ? (
+            <Card className={cn("mt-4 border", getScoreBgColor(v.viability.marketPotential))}>
+              <CardContent className="p-6 sm:p-8">
+                <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:gap-8">
+                  {/* Score circle */}
+                  <div className="flex shrink-0 flex-col items-center gap-2">
+                    <div
+                      className={cn(
+                        "flex h-24 w-24 items-center justify-center rounded-full border-4",
+                        v.viability.marketPotential >= 7
+                          ? "border-success/40 bg-success/10"
+                          : v.viability.marketPotential >= 5
+                          ? "border-warning/40 bg-warning/10"
+                          : "border-destructive/40 bg-destructive/10"
+                      )}
+                    >
+                      <div className="text-center">
+                        <span className={cn("text-4xl font-bold", getScoreColor(v.viability.marketPotential))}>
+                          {v.viability.marketPotential}
+                        </span>
+                        <span className="text-sm text-muted-foreground">/10</span>
+                      </div>
+                    </div>
+                    <span className="text-xs font-medium text-muted-foreground">Potencial</span>
+                  </div>
+
+                  {/* Verdict text */}
+                  <div className="min-w-0 flex-1 space-y-4">
+                    <div>
+                      <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+                        {getVerdictSentence(v.viability.marketPotential)}
+                      </h1>
+                      <p className="mt-2 text-base leading-relaxed text-muted-foreground">
+                        Mercado {getTrendLabel(v.viability.trend)}, competencia {getCompetitionLabel(v.viability.competitionLevel)}.
+                        {" "}Tiempo estimado al primer ingreso: {v.viability.timeToFirstIncome}.
+                      </p>
+                    </div>
+
+                    {/* Quick stats row */}
+                    <div className="flex flex-wrap gap-3">
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-background/80 px-3 py-1.5 text-sm font-medium text-foreground shadow-sm ring-1 ring-border">
+                        <MapPin className="h-3.5 w-3.5 text-primary" />
+                        {data.city}
+                      </span>
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-background/80 px-3 py-1.5 text-sm font-medium text-foreground shadow-sm ring-1 ring-border">
+                        <DollarSign className="h-3.5 w-3.5 text-primary" />
+                        {formatInvestment(data.investment)}
+                      </span>
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-background/80 px-3 py-1.5 text-sm font-medium text-foreground shadow-sm ring-1 ring-border">
+                        <Clock className="h-3.5 w-3.5 text-primary" />
+                        {v.viability.timeToFirstIncome}
+                      </span>
+                    </div>
+
+                    {/* Opportunity and risk highlights */}
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      {topOpportunity && (
+                        <div className="flex items-start gap-2.5 rounded-lg bg-background/60 p-3 ring-1 ring-border">
+                          <ArrowUpRight className="mt-0.5 h-4 w-4 shrink-0 text-success" />
+                          <div>
+                            <p className="text-xs font-semibold text-success">Oportunidad clave</p>
+                            <p className="mt-0.5 text-sm text-muted-foreground">{topOpportunity.text}</p>
+                          </div>
+                        </div>
+                      )}
+                      {topRisk && (
+                        <div className="flex items-start gap-2.5 rounded-lg bg-background/60 p-3 ring-1 ring-border">
+                          <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
+                          <div>
+                            <p className="text-xs font-semibold text-destructive">Riesgo principal</p>
+                            <p className="mt-0.5 text-sm text-muted-foreground">{topRisk.title}</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card className="mt-4 border">
+              <CardContent className="p-6 sm:p-8">
+                <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:gap-8">
+                  <Skeleton className="h-24 w-24 shrink-0 rounded-full" />
+                  <div className="flex-1 space-y-4">
+                    <Skeleton className="h-8 w-3/4" />
+                    <Skeleton className="h-5 w-1/2" />
+                    <div className="flex gap-3">
+                      <Skeleton className="h-8 w-28 rounded-full" />
+                      <Skeleton className="h-8 w-28 rounded-full" />
+                      <Skeleton className="h-8 w-28 rounded-full" />
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
+        {/* Bento Grid Dashboard */}
         <div className={cn("grid gap-4 transition-all duration-700 delay-150 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4", isLoaded ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0")}>
 
           {v ? (

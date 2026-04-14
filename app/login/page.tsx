@@ -1,7 +1,7 @@
 "use client"
 
 import { Suspense, useState } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { Eye, EyeOff, Loader2, LogIn } from "lucide-react"
 import { Header } from "@/components/header"
 import { Button } from "@/components/ui/button"
@@ -11,8 +11,7 @@ import { Label } from "@/components/ui/label"
 
 function LoginForm() {
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const redirectTo = searchParams.get("redirect") ?? "/"
+  const redirectTo = "/"
 
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")

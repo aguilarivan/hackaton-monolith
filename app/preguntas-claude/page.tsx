@@ -16,6 +16,7 @@ import {
   type ClarificationQuestion,
 } from "@/lib/flow-api"
 import { getBusinessInput, getFlowId, saveClaudeAnswers, saveFlowId, type ClaudeAnswer } from "@/lib/flow-storage"
+import { StepIndicator } from "@/components/step-indicator"
 
 const QUESTIONS_PER_PAGE = 5
 
@@ -171,7 +172,8 @@ export default function ClaudeQuestionsPage() {
     return (
       <main className="min-h-screen bg-background">
         <Header />
-        <div className="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-3xl flex-col items-center justify-center gap-8 px-4 py-16">
+        <StepIndicator currentStep={2} />
+        <div className="mx-auto flex min-h-[calc(100vh-6rem)] w-full max-w-3xl flex-col items-center justify-center gap-8 px-4 py-16">
           <Card className="w-full border-border/60">
             <CardContent className="space-y-5 p-8 text-center">
               <div className="mx-auto text-5xl">🚀</div>
@@ -197,6 +199,7 @@ export default function ClaudeQuestionsPage() {
     return (
       <main className="min-h-screen bg-background">
         <Header />
+        <StepIndicator currentStep={2} />
         <div className="mx-auto w-full max-w-3xl space-y-6 px-4 py-8">
           <Card className="border-destructive/30 bg-destructive/5">
             <CardHeader>
@@ -228,6 +231,7 @@ export default function ClaudeQuestionsPage() {
   return (
     <main className="min-h-screen bg-background">
       <Header />
+      <StepIndicator currentStep={2} />
       <div className="mx-auto w-full max-w-4xl space-y-6 px-4 py-8">
 
         {/* Warm intro */}
