@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import {
   RefreshCw,
   Gauge,
@@ -43,7 +43,7 @@ interface StartupDashboardProps {
 type SectionKey = "overview" | "viability" | "monetization" | "competitors" | "clients" | "legal" | "kit" | "roadmap" | "obstacles"
 
 export function StartupDashboard({ data, analysisOverride, onReset }: StartupDashboardProps) {
-  const analysis = analysisOverride ?? generateAnalysis(data)
+  const analysis = useMemo(() => analysisOverride ?? generateAnalysis(data), [analysisOverride, data])
   const [activeSection, setActiveSection] = useState<SectionKey>("overview")
   const [isLoaded, setIsLoaded] = useState(false)
 

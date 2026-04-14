@@ -6,6 +6,7 @@ export type ApiErrorCode =
   | "NOT_FOUND"
   | "INVALID_PAYLOAD"
   | "INTERNAL_ERROR"
+  | "UNAUTHORIZED"
 
 interface ErrorPayload {
   code: ApiErrorCode

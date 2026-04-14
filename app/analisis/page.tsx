@@ -86,7 +86,7 @@ export default function AnalysisPage() {
   }, [router])
 
   useEffect(() => {
-    if (!businessData || !analysisData) return
+    if (!analysisData) return
 
     const interval = setInterval(() => {
       setMessageIndex((prev) => {
@@ -106,7 +106,7 @@ export default function AnalysisPage() {
       clearInterval(interval)
       clearTimeout(reveal)
     }
-  }, [analysisData, businessData])
+  }, [analysisData])
 
   const handleReset = () => {
     clearFlowStorage()

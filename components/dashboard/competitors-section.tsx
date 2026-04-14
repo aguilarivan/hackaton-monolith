@@ -1,5 +1,6 @@
 "use client"
 
+import { useMemo } from "react"
 import dynamic from "next/dynamic"
 import { Users, ThumbsUp, ThumbsDown, MapPin, Target } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -156,14 +157,19 @@ export function CompetitorsSection({ data, city }: CompetitorsSectionProps) {
   const isBuenosAires = normalizedCity.includes("buenos aires") || normalizedCity.includes("caba")
 
   const mapCenter = isBuenosAires ? BA_CENTER : data.mapCenter
-  const validCompetitorLocations = data.competitors
-    .filter((competitor) => competitor.location)
-    .map((competitor) => competitor.location as Coordinate)
 
-  const fallbackLocations = BA_FALLBACK_COMPETITORS.map((competitor) => competitor.location)
-  const competitorLocations = validCompetitorLocations.length > 0 ? validCompetitorLocations : fallbackLocations
-  const launchZones = buildBuenosAiresGrid(competitorLocations)
-  const bestZone = [...launchZones].sort((a, b) => b.launchScore - a.launchScore)[0]
+  const competitorLocations = useMemo(() => {
+    const valid = data.competitors
+      .filter((competitor) => competitor.location)
+      .map((competitor) => competitor.location as Coordinate)
+    return valid.length > 0 ? valid : BA_FALLBACK_COMPETITORS.map((c) => c.location)
+  }, [data.competitors])
+
+  const launchZones = useMemo(() => buildBuenosAiresGrid(competitorLocations), [competitorLocations])
+  const bestZone = useMemo(
+    () => [...launchZones].sort((a, b) => b.launchScore - a.launchScore)[0],
+    [launchZones]
+  )
 
   return (
     <div className="space-y-6">
@@ -279,7 +285,7 @@ export function CompetitorsSection({ data, city }: CompetitorsSectionProps) {
                 {data.competitors.map((competitor, index) => {
                   const position = competitor.location
                     ? toLeafletPosition(competitor.location)
-                    : toLeafletPosition(fallbackLocations[index % fallbackLocations.length])
+                    : toLeafletPosition(BA_FALLBACK_COMPETITORS[index % BA_FALLBACK_COMPETITORS.length].location)
 
                   return (
                     <CircleMarker
