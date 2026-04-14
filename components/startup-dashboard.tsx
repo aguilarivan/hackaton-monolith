@@ -14,9 +14,7 @@ import {
   MapPin,
   DollarSign,
   ArrowLeft,
-  Target,
   Loader2,
-  Zap,
   ShieldAlert,
   ArrowUpRight,
 } from "lucide-react"
@@ -28,7 +26,6 @@ import type { BusinessInputData } from "@/components/hero-input"
 import type { PartialAnalysis } from "@/app/analisis/page"
 import type { SectionPlan, AnalysisSectionKey } from "@/lib/server/section-plan-prompt"
 
-import { LandingCTA } from "@/components/dashboard/landing-cta"
 import { ViabilitySection } from "@/components/dashboard/viability-section"
 import { MonetizationSection } from "@/components/dashboard/monetization-section"
 import { CompetitorsSection } from "@/components/dashboard/competitors-section"
@@ -139,12 +136,12 @@ export function StartupDashboard({ data, partial, isStreaming, sectionPlan, onRe
             className="mb-6 gap-2 text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4" />
-            Volver al dashboard
+            Volver al panel
           </Button>
           <div className="animate-in fade-in slide-in-from-right-4 duration-300">
             {activeSection === "viability" && v && <ViabilitySection data={v.viability} />}
             {activeSection === "monetization" && v && <MonetizationSection data={v.viability} />}
-            {activeSection === "competitors" && r && <CompetitorsSection data={r.competitors} city={data.city} />}
+            {activeSection === "competitors" && r && <CompetitorsSection data={r.competitors} city={data.city} isMock={r._isMock} />}
             {activeSection === "clients" && v && <ClientsSection data={v.clients} city={data.city} />}
             {activeSection === "legal" && d && <LegalSection data={d.legalStructure} />}
             {activeSection === "kit" && r && <KitSection data={r.startupKit} investment={data.investment} />}
@@ -279,82 +276,58 @@ export function StartupDashboard({ data, partial, isStreaming, sectionPlan, onRe
           )}
         </div>
 
-        {/* Bento Grid Dashboard */}
-        <div className={cn("grid gap-4 transition-all duration-700 delay-150 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4", isLoaded ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0")}>
-
+        {/* Command Center Widgets */}
+        <div className={cn(
+          "grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 transition-all duration-700 delay-150",
+          isLoaded ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"
+        )}>
+          {/* Viabilidad */}
           {isSectionEnabled("viability") && (v ? (
-            <Card className="group relative cursor-pointer overflow-hidden transition-all hover:shadow-lg sm:col-span-2 lg:row-span-2 animate-in fade-in duration-500" onClick={() => handleSectionClick("viability")}>
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/10" />
-              <CardContent className="relative flex h-full flex-col justify-between p-6">
-                <div className="flex items-start justify-between">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
-                    <Gauge className="h-6 w-6 text-primary" />
-                  </div>
-                  <ChevronRight className="h-5 w-5 text-muted-foreground transition-transform group-hover:translate-x-1" />
-                </div>
-                <div className="mt-6">
-                  <p className="text-sm font-medium text-muted-foreground">Potencial de mercado</p>
-                  <div className="mt-2 flex items-baseline gap-2">
-                    <span className={cn("text-6xl font-bold", getScoreColor(v.viability.marketPotential))}>{v.viability.marketPotential}</span>
-                    <span className="text-2xl text-muted-foreground">/10</span>
-                  </div>
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    <span className="rounded-full bg-secondary px-3 py-1 text-xs font-medium">Competencia: {getCompetitionLabel(v.viability.competitionLevel)}</span>
-                    <span className="rounded-full bg-secondary px-3 py-1 text-xs font-medium">Tendencia: {getTrendLabel(v.viability.trend)}</span>
-                  </div>
-                </div>
-                <div className="mt-6 flex items-center gap-2 text-primary">
-                  <Clock className="h-4 w-4" />
-                  <span className="text-sm font-medium">Primer ingreso: {v.viability.timeToFirstIncome}</span>
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
-            <Card className="relative overflow-hidden sm:col-span-2 lg:row-span-2">
-              <CardContent className="relative flex h-full flex-col justify-between p-6">
-                <Skeleton className="h-12 w-12 rounded-xl" />
-                <div className="mt-6 space-y-3">
-                  <Skeleton className="h-4 w-28" />
-                  <Skeleton className="h-16 w-32" />
-                  <div className="flex gap-2"><Skeleton className="h-6 w-28 rounded-full" /><Skeleton className="h-6 w-24 rounded-full" /></div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-
-          {isSectionEnabled("monetization") && (v ? (
-            <Card className="group cursor-pointer transition-all hover:shadow-lg sm:col-span-2 lg:col-span-2 animate-in fade-in duration-500" onClick={() => handleSectionClick("monetization")}>
+            <Card className="group cursor-pointer transition-all hover:shadow-lg animate-in fade-in duration-500" onClick={() => handleSectionClick("viability")}>
               <CardContent className="p-5">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg" style={{ backgroundColor: "oklch(0.58 0.15 35 / 0.12)" }}>
-                      <DollarSign className="h-5 w-5" style={{ color: "oklch(0.58 0.15 35)" }} />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-foreground">Monetización</p>
-                      <p className="text-sm text-muted-foreground">Modelo de negocio y precios sugeridos</p>
-                    </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                    <Gauge className="h-5 w-5 text-primary" />
                   </div>
-                  <ChevronRight className="h-5 w-5 text-muted-foreground transition-transform group-hover:translate-x-1" />
+                  <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-1" />
                 </div>
-                <div className="mt-4 grid gap-3 sm:grid-cols-3">
-                  {v.viability.monetization.plans.map((plan, i) => (
-                    <div key={i} className="rounded-lg border border-border bg-secondary/20 p-3">
-                      <p className="text-xs font-semibold text-foreground">{plan.name}</p>
-                      <p className="mt-1 text-sm font-bold text-primary">${plan.monthlyPriceArs.toLocaleString("es-AR")}</p>
-                      <p className="mt-1 line-clamp-1 text-[11px] text-muted-foreground">{plan.target}</p>
-                    </div>
-                  ))}
+                <div className="mt-4">
+                  <div className="flex items-baseline gap-2">
+                    <p className="text-sm font-semibold text-foreground">Viabilidad</p>
+                    <span className={cn("text-sm font-bold", getScoreColor(v.viability.marketPotential))}>{v.viability.marketPotential}/10</span>
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Señales de mercado, modelo de negocio y proyecciones de crecimiento
+                  </p>
                 </div>
               </CardContent>
             </Card>
-          ) : (
-            <LoadingCard className="sm:col-span-2 lg:col-span-2" />
-          ))}
+          ) : <LoadingCard />)}
 
+          {/* Monetización */}
+          {isSectionEnabled("monetization") && (v ? (
+            <Card className="group cursor-pointer transition-all hover:shadow-lg animate-in fade-in duration-500" onClick={() => handleSectionClick("monetization")}>
+              <CardContent className="p-5">
+                <div className="flex items-center justify-between">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg" style={{ backgroundColor: "oklch(0.58 0.15 35 / 0.12)" }}>
+                    <DollarSign className="h-5 w-5" style={{ color: "oklch(0.58 0.15 35)" }} />
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-1" />
+                </div>
+                <div className="mt-4">
+                  <p className="text-sm font-semibold text-foreground">Monetización</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {v.viability.monetization.plans.length} planes de precio sugeridos y referencia de mercado
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          ) : <LoadingCard />)}
+
+          {/* Competidores */}
           {isSectionEnabled("competitors") && (r ? (
             <Card className="group cursor-pointer transition-all hover:shadow-lg animate-in fade-in duration-500" onClick={() => handleSectionClick("competitors")}>
-              <CardContent className="flex h-full flex-col justify-between p-5">
+              <CardContent className="p-5">
                 <div className="flex items-center justify-between">
                   <div className="flex h-10 w-10 items-center justify-center rounded-lg" style={{ backgroundColor: "oklch(0.55 0.18 270 / 0.1)" }}>
                     <TrendingUp className="h-5 w-5" style={{ color: "oklch(0.55 0.18 270)" }} />
@@ -362,16 +335,19 @@ export function StartupDashboard({ data, partial, isStreaming, sectionPlan, onRe
                   <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-1" />
                 </div>
                 <div className="mt-4">
-                  <p className="text-2xl font-bold text-foreground">{r.competitors.competitors.length}</p>
-                  <p className="mt-1 text-sm text-muted-foreground">Competidores identificados</p>
+                  <p className="text-sm font-semibold text-foreground">Competidores</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {r.competitors.competitors.length} identificados — fortalezas, debilidades y mapa de zonas
+                  </p>
                 </div>
               </CardContent>
             </Card>
           ) : <LoadingCard />)}
 
+          {/* Clientes */}
           {isSectionEnabled("clients") && (v ? (
             <Card className="group cursor-pointer transition-all hover:shadow-lg animate-in fade-in duration-500" onClick={() => handleSectionClick("clients")}>
-              <CardContent className="flex h-full flex-col justify-between p-5">
+              <CardContent className="p-5">
                 <div className="flex items-center justify-between">
                   <div className="flex h-10 w-10 items-center justify-center rounded-lg" style={{ backgroundColor: "oklch(0.55 0.18 270 / 0.1)" }}>
                     <Users className="h-5 w-5" style={{ color: "oklch(0.55 0.18 270)" }} />
@@ -379,20 +355,21 @@ export function StartupDashboard({ data, partial, isStreaming, sectionPlan, onRe
                   <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-1" />
                 </div>
                 <div className="mt-4">
-                  <p className="text-2xl font-bold text-foreground">
-                    {v.clients.type === "b2b" ? v.clients.b2bClients?.length || 0 : v.clients.b2cSegments?.length || 0}
-                  </p>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    {v.clients.type === "b2b" ? "Clientes B2B potenciales" : "Segmentos B2C"}
+                  <p className="text-sm font-semibold text-foreground">Clientes</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {v.clients.type === "b2b"
+                      ? `${v.clients.b2bClients?.length || 0} clientes B2B — perfiles y cómo abordarlos`
+                      : `${v.clients.b2cSegments?.length || 0} segmentos — perfiles y canales de llegada`}
                   </p>
                 </div>
               </CardContent>
             </Card>
           ) : <LoadingCard />)}
 
+          {/* Legal */}
           {isSectionEnabled("legal") && (d ? (
             <Card className="group cursor-pointer transition-all hover:shadow-lg animate-in fade-in duration-500" onClick={() => handleSectionClick("legal")}>
-              <CardContent className="flex h-full flex-col justify-between p-5">
+              <CardContent className="p-5">
                 <div className="flex items-center justify-between">
                   <div className="flex h-10 w-10 items-center justify-center rounded-lg" style={{ backgroundColor: "oklch(0.6 0.12 160 / 0.1)" }}>
                     <Scale className="h-5 w-5" style={{ color: "oklch(0.6 0.12 160)" }} />
@@ -400,125 +377,110 @@ export function StartupDashboard({ data, partial, isStreaming, sectionPlan, onRe
                   <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-1" />
                 </div>
                 <div className="mt-4">
-                  <p className="text-lg font-bold text-foreground">Legal & Impuestos</p>
-                  <p className="mt-1 text-sm text-muted-foreground">Estructura recomendada</p>
-                  <p className="mt-1 text-xs text-muted-foreground">{d.legalStructure.structures.find((s) => s.recommended)?.name || "SAS"}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">{d.legalStructure.taxInfo.regime}</p>
+                  <p className="text-sm font-semibold text-foreground">Legal e Impuestos</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {d.legalStructure.structures.find((s) => s.recommended)?.name || "SAS"} recomendada — régimen fiscal y trámites
+                  </p>
                 </div>
               </CardContent>
             </Card>
           ) : <LoadingCard />)}
 
+          {/* Kit de inicio */}
+          {isSectionEnabled("kit") && (r ? (
+            <Card className="group cursor-pointer transition-all hover:shadow-lg animate-in fade-in duration-500" onClick={() => handleSectionClick("kit")}>
+              <CardContent className="p-5">
+                <div className="flex items-center justify-between">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg" style={{ backgroundColor: "oklch(0.6 0.15 80 / 0.1)" }}>
+                    <Package className="h-5 w-5" style={{ color: "oklch(0.6 0.15 80)" }} />
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-1" />
+                </div>
+                <div className="mt-4">
+                  <p className="text-sm font-semibold text-foreground">Kit de inicio</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {r.startupKit.items.length} elementos esenciales — qué comprar, dónde y a qué precio
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          ) : <LoadingCard />)}
+
+          {/* Obstáculos */}
           {isSectionEnabled("obstacles") && (d ? (
             <Card className="group cursor-pointer transition-all hover:shadow-lg animate-in fade-in duration-500" onClick={() => handleSectionClick("obstacles")}>
               <CardContent className="p-5">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg" style={{ backgroundColor: "oklch(0.55 0.18 30 / 0.1)" }}>
-                      <AlertTriangle className="h-5 w-5" style={{ color: "oklch(0.55 0.18 30)" }} />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-foreground">Obstáculos y soluciones</p>
-                      <p className="text-sm text-muted-foreground">{d.obstacles.length} riesgos identificados</p>
-                    </div>
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg" style={{ backgroundColor: "oklch(0.55 0.18 30 / 0.1)" }}>
+                    <AlertTriangle className="h-5 w-5" style={{ color: "oklch(0.55 0.18 30)" }} />
                   </div>
-                  <ChevronRight className="h-5 w-5 text-muted-foreground transition-transform group-hover:translate-x-1" />
+                  <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-1" />
                 </div>
-                <div className="mt-4 flex gap-2">
-                  <div className="flex items-center gap-2 rounded-full bg-destructive/10 px-2.5 py-1"><div className="h-2 w-2 rounded-full bg-destructive" /><span className="text-xs font-medium text-destructive">{getSeverityCount("High")}</span></div>
-                  <div className="flex items-center gap-2 rounded-full bg-warning/10 px-2.5 py-1"><div className="h-2 w-2 rounded-full bg-warning" /><span className="text-xs font-medium text-warning">{getSeverityCount("Medium")}</span></div>
-                  <div className="flex items-center gap-2 rounded-full bg-success/10 px-2.5 py-1"><div className="h-2 w-2 rounded-full bg-success" /><span className="text-xs font-medium text-success">{getSeverityCount("Low")}</span></div>
+                <div className="mt-4">
+                  <p className="text-sm font-semibold text-foreground">Obstáculos</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {d.obstacles.length} riesgos ({getSeverityCount("High")} críticos) — mitigación y casos reales
+                  </p>
                 </div>
               </CardContent>
             </Card>
           ) : <LoadingCard />)}
+        </div>
 
-          {isSectionEnabled("kit") && (r ? (
-            <Card className="group cursor-pointer transition-all hover:shadow-lg sm:col-span-2 animate-in fade-in duration-500" onClick={() => handleSectionClick("kit")}>
-              <CardContent className="p-5">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg" style={{ backgroundColor: "oklch(0.6 0.15 80 / 0.1)" }}>
-                      <Package className="h-5 w-5" style={{ color: "oklch(0.6 0.15 80)" }} />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-foreground">Kit de inicio</p>
-                      <p className="text-sm text-muted-foreground">{r.startupKit.items.length} productos esenciales</p>
-                    </div>
-                  </div>
-                  <ChevronRight className="h-5 w-5 text-muted-foreground transition-transform group-hover:translate-x-1" />
-                </div>
-                <div className="mt-4 flex h-3 w-full overflow-hidden rounded-full">
-                  {r.startupKit.budgetDistribution.map((item, i) => (
-                    <div key={i} style={{ width: `${item.percentage}%`, backgroundColor: item.color }} />
-                  ))}
-                </div>
-                <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1">
-                  {r.startupKit.budgetDistribution.slice(0, 3).map((item, i) => (
-                    <div key={i} className="flex items-center gap-1.5 text-xs">
-                      <div className="h-2 w-2 rounded-full" style={{ backgroundColor: item.color }} />
-                      <span className="text-muted-foreground">{item.category}</span>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
-            <Card className="sm:col-span-2">
-              <CardContent className="p-5">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Skeleton className="h-10 w-10 rounded-lg" />
-                    <div className="space-y-1"><Skeleton className="h-4 w-24" /><Skeleton className="h-3 w-36" /></div>
-                  </div>
-                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                </div>
-                <Skeleton className="mt-4 h-3 w-full rounded-full" />
-                <div className="mt-3 flex gap-4"><Skeleton className="h-3 w-20" /><Skeleton className="h-3 w-20" /><Skeleton className="h-3 w-20" /></div>
-              </CardContent>
-            </Card>
-          ))}
-
-          {isSectionEnabled("roadmap") && (d ? (
-            <Card className="group cursor-pointer transition-all hover:shadow-lg lg:col-span-2 animate-in fade-in duration-500" onClick={() => handleSectionClick("roadmap")}>
-              <CardContent className="p-5">
-                <div className="flex items-center justify-between">
+        {/* Roadmap Strip */}
+        {isSectionEnabled("roadmap") && (d ? (
+          <div className={cn(
+            "mt-8 transition-all duration-700 delay-300",
+            isLoaded ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"
+          )}>
+            <Card className="group cursor-pointer transition-all hover:shadow-lg" onClick={() => handleSectionClick("roadmap")}>
+              <CardContent className="p-6">
+                <div className="mb-5 flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-lg" style={{ backgroundColor: "oklch(0.55 0.15 195 / 0.1)" }}>
                       <Map className="h-5 w-5" style={{ color: "oklch(0.55 0.15 195)" }} />
                     </div>
                     <div>
-                      <p className="font-semibold text-foreground">Roadmap de lanzamiento</p>
-                      <p className="text-sm text-muted-foreground">{d.validationPlan.length} pasos de validación + {d.roadmap.length} fases</p>
+                      <p className="font-semibold text-foreground">Hoja de ruta de lanzamiento</p>
+                      <p className="text-sm text-muted-foreground">{d.roadmap.length} fases &middot; {d.validationPlan.length} pasos de validación</p>
                     </div>
                   </div>
                   <ChevronRight className="h-5 w-5 text-muted-foreground transition-transform group-hover:translate-x-1" />
                 </div>
-                <div className="mt-4 flex items-center gap-2 overflow-x-auto pb-1">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-success/20 text-xs font-bold text-success">
-                    <Target className="h-4 w-4" />
-                  </div>
-                  <div className="h-0.5 w-4 bg-border" />
+
+                {/* Horizontal timeline */}
+                <div className="relative flex items-start gap-0 overflow-x-auto pb-1">
                   {d.roadmap.map((step, i) => (
                     <div key={i} className="flex shrink-0 items-center">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-primary bg-background text-xs font-bold text-primary">{i + 1}</div>
-                      {i < d.roadmap.length - 1 && <div className="h-0.5 w-6 bg-border" />}
+                      <div className="flex flex-col items-center text-center">
+                        <div className="relative z-10 flex h-8 w-8 items-center justify-center rounded-full border-2 border-primary bg-background text-xs font-bold text-primary">
+                          {i + 1}
+                        </div>
+                        <p className="mt-1.5 max-w-[100px] text-xs font-medium leading-tight text-foreground line-clamp-2">{step.title}</p>
+                      </div>
+                      {i < d.roadmap.length - 1 && <div className="mx-2 mt-[-20px] h-0.5 w-8 shrink-0 bg-border" />}
                     </div>
                   ))}
-                  <span className="ml-2 shrink-0 text-xs text-muted-foreground">{d.roadmap[0].period} - {d.roadmap[d.roadmap.length - 1].period}</span>
                 </div>
               </CardContent>
             </Card>
-          ) : <LoadingCard className="lg:col-span-2" />)}
-
-        </div>
-
-        {/* Landing CTA */}
-        {!isStreaming && (
-          <div className="mt-8">
-            <LandingCTA />
           </div>
-        )}
+        ) : (
+          <div className="mt-8">
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center gap-3">
+                  <Skeleton className="h-10 w-10 rounded-lg" />
+                  <div className="space-y-1">
+                    <Skeleton className="h-4 w-40" />
+                    <Skeleton className="h-3 w-56" />
+                  </div>
+                </div>
+                <Skeleton className="mt-5 h-8 w-full rounded-lg" />
+              </CardContent>
+            </Card>
+          </div>
+        ))}
       </div>
     </div>
   )

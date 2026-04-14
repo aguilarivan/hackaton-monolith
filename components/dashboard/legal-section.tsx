@@ -11,7 +11,7 @@ interface LegalSectionProps {
 }
 
 function formatArs(value: number): string {
-  return `ARS ${Math.round(value).toLocaleString("en-US")}`
+  return `ARS ${Math.round(value).toLocaleString("es-AR")}`
 }
 
 export function LegalSection({ data }: LegalSectionProps) {
@@ -48,7 +48,7 @@ export function LegalSection({ data }: LegalSectionProps) {
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[oklch(0.6_0.12_160_/_0.1)]">
               <Scale className="h-5 w-5 text-[oklch(0.6_0.12_160)]" />
             </div>
-            <CardTitle className="text-xl">Recommended Legal Structure</CardTitle>
+            <CardTitle className="text-xl">Estructura Legal Recomendada</CardTitle>
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -72,7 +72,7 @@ export function LegalSection({ data }: LegalSectionProps) {
           <p className="text-sm leading-relaxed text-muted-foreground">{data.explanation}</p>
 
           <div className="rounded-lg border border-border bg-secondary/20 p-4">
-            <p className="mb-3 text-sm font-medium text-foreground">Recommended Evolution</p>
+            <p className="mb-3 text-sm font-medium text-foreground">Evolución Recomendada</p>
             <div className="flex flex-wrap items-center gap-3">
               {data.timeline.map((step, index) => (
                 <div key={index} className="flex items-center gap-3">
@@ -97,15 +97,15 @@ export function LegalSection({ data }: LegalSectionProps) {
               <Calculator className="h-5 w-5 text-[oklch(0.6_0.12_160)]" />
             </div>
             <div>
-              <CardTitle className="text-xl">Tax Charges Simulator</CardTitle>
-              <p className="text-sm text-muted-foreground">Estimate taxes by category and monthly revenue</p>
+              <CardTitle className="text-xl">Simulador de Cargas Impositivas</CardTitle>
+              <p className="text-sm text-muted-foreground">Estimá impuestos por categoría y facturación mensual</p>
             </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-5">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Tax category</label>
+              <label className="text-sm font-medium text-foreground">Categoría impositiva</label>
               <select
                 value={selectedCategory}
                 onChange={(event) => setSelectedCategory(event.target.value)}
@@ -119,7 +119,7 @@ export function LegalSection({ data }: LegalSectionProps) {
               </select>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Monthly revenue (ARS)</label>
+              <label className="text-sm font-medium text-foreground">Facturación mensual (ARS)</label>
               <input
                 type="number"
                 min={0}
@@ -133,27 +133,27 @@ export function LegalSection({ data }: LegalSectionProps) {
           {selectedTaxCategory && simulated && (
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               <div className="rounded-lg border border-border bg-secondary/20 p-3">
-                <p className="text-xs text-muted-foreground">Fixed monthly</p>
+                <p className="text-xs text-muted-foreground">Cuota fija mensual</p>
                 <p className="text-sm font-semibold text-foreground">{formatArs(selectedTaxCategory.fixedMonthlyArs)}</p>
               </div>
               <div className="rounded-lg border border-border bg-secondary/20 p-3">
-                <p className="text-xs text-muted-foreground">VAT estimate</p>
+                <p className="text-xs text-muted-foreground">Estimación IVA</p>
                 <p className="text-sm font-semibold text-foreground">{formatArs(simulated.vat)}</p>
               </div>
               <div className="rounded-lg border border-border bg-secondary/20 p-3">
-                <p className="text-xs text-muted-foreground">Income tax estimate</p>
+                <p className="text-xs text-muted-foreground">Estimación Ganancias</p>
                 <p className="text-sm font-semibold text-foreground">{formatArs(simulated.income)}</p>
               </div>
               <div className="rounded-lg border border-border bg-secondary/20 p-3">
-                <p className="text-xs text-muted-foreground">Social charges</p>
+                <p className="text-xs text-muted-foreground">Cargas sociales</p>
                 <p className="text-sm font-semibold text-foreground">{formatArs(simulated.social)}</p>
               </div>
               <div className="rounded-lg border border-primary/30 bg-primary/5 p-3">
-                <p className="text-xs text-muted-foreground">Total monthly taxes</p>
+                <p className="text-xs text-muted-foreground">Total impuestos mensuales</p>
                 <p className="text-sm font-semibold text-primary">{formatArs(simulated.monthlyTotal)}</p>
               </div>
               <div className="rounded-lg border border-primary/30 bg-primary/5 p-3">
-                <p className="text-xs text-muted-foreground">Projected annual taxes</p>
+                <p className="text-xs text-muted-foreground">Impuestos anuales proyectados</p>
                 <p className="text-sm font-semibold text-primary">{formatArs(simulated.annualTotal)}</p>
               </div>
             </div>
@@ -168,7 +168,7 @@ export function LegalSection({ data }: LegalSectionProps) {
               <Receipt className="h-5 w-5 text-[oklch(0.6_0.12_160)]" />
             </div>
             <div>
-              <CardTitle className="text-xl">Tax Obligations</CardTitle>
+              <CardTitle className="text-xl">Obligaciones Impositivas</CardTitle>
               <p className="text-sm text-muted-foreground">{data.taxInfo.regime}</p>
             </div>
           </div>
@@ -176,17 +176,17 @@ export function LegalSection({ data }: LegalSectionProps) {
         <CardContent className="space-y-6">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="rounded-lg border border-border bg-secondary/20 p-4">
-              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Monthly Estimate</p>
+              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Estimación Mensual</p>
               <p className="mt-1 text-xl font-bold text-foreground">{data.taxInfo.monthlyEstimate}</p>
             </div>
             <div className="rounded-lg border border-border bg-secondary/20 p-4">
-              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Annual Estimate</p>
+              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Estimación Anual</p>
               <p className="mt-1 text-xl font-bold text-foreground">{data.taxInfo.annualEstimate}</p>
             </div>
           </div>
 
           <div className="space-y-3">
-            <h4 className="text-sm font-semibold text-foreground">Benefits of this regime</h4>
+            <h4 className="text-sm font-semibold text-foreground">Beneficios de este régimen</h4>
             <div className="grid gap-2 sm:grid-cols-2">
               {data.taxInfo.benefits.map((benefit, index) => (
                 <div key={index} className="flex items-start gap-2 rounded-lg border border-border bg-card p-3">
@@ -198,7 +198,7 @@ export function LegalSection({ data }: LegalSectionProps) {
           </div>
 
           <div className="space-y-3">
-            <h4 className="text-sm font-semibold text-foreground">Start legal and tax bureaucracy</h4>
+            <h4 className="text-sm font-semibold text-foreground">Iniciar trámites legales e impositivos</h4>
             <div className="grid gap-2">
               {data.bureaucracyLinks.map((link, index) => (
                 <a
@@ -221,9 +221,9 @@ export function LegalSection({ data }: LegalSectionProps) {
           <div className="flex items-start gap-3 rounded-lg border border-warning/30 bg-warning/5 p-4">
             <FileText className="mt-0.5 h-5 w-5 shrink-0 text-warning" />
             <div>
-              <p className="text-sm font-medium text-foreground">Important Note</p>
+              <p className="text-sm font-medium text-foreground">Nota Importante</p>
               <p className="mt-1 text-sm text-muted-foreground">
-                Tax estimates are simplified simulations for decision support. Confirm exact obligations with a certified accountant.
+                Las estimaciones impositivas son simulaciones simplificadas para ayudar en la toma de decisiones. Confirmá las obligaciones exactas con un contador certificado.
               </p>
             </div>
           </div>

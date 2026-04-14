@@ -38,8 +38,8 @@ export function RoadmapSection({ data, validationPlan }: RoadmapSectionProps) {
               <Target className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <CardTitle className="text-xl">Idea Validation Plan</CardTitle>
-              <p className="text-sm text-muted-foreground">Validate before investing heavily</p>
+              <CardTitle className="text-xl">Plan de Validación de Idea</CardTitle>
+              <p className="text-sm text-muted-foreground">Validá antes de invertir fuerte</p>
             </div>
           </div>
         </CardHeader>
@@ -59,7 +59,7 @@ export function RoadmapSection({ data, validationPlan }: RoadmapSectionProps) {
                   </div>
                   <div className="flex items-center gap-2 rounded-md bg-success/10 px-3 py-1.5">
                     <CheckCircle2 className="h-4 w-4 text-success" />
-                    <span className="text-sm font-medium text-success">Success metric: {step.metric}</span>
+                    <span className="text-sm font-medium text-success">Métrica de éxito: {step.metric}</span>
                   </div>
                 </div>
               </div>
@@ -75,8 +75,8 @@ export function RoadmapSection({ data, validationPlan }: RoadmapSectionProps) {
               <LayoutTemplate className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <CardTitle className="text-xl">Launch Tools</CardTitle>
-              <p className="text-sm text-muted-foreground">Integrated landing creation and domain availability checks</p>
+              <CardTitle className="text-xl">Herramientas de Lanzamiento</CardTitle>
+              <p className="text-sm text-muted-foreground">Creación de página integrada y verificación de dominios disponibles</p>
             </div>
           </div>
         </CardHeader>
@@ -84,36 +84,36 @@ export function RoadmapSection({ data, validationPlan }: RoadmapSectionProps) {
           <div className="flex flex-wrap gap-3">
             <Button onClick={handleGenerateLanding} disabled={isGeneratingLanding} className="gap-2">
               {isGeneratingLanding ? <Loader2 className="h-4 w-4 animate-spin" /> : <LayoutTemplate className="h-4 w-4" />}
-              {isGeneratingLanding ? "Generating..." : "Create landing page"}
+              {isGeneratingLanding ? "Generando..." : "Crear mi página"}
             </Button>
             <Button variant="outline" onClick={() => setDomainChecked(true)} className="gap-2">
               <Globe className="h-4 w-4" />
-              Check available domains
+              Verificar dominios disponibles
             </Button>
           </div>
 
           {landingGenerated && (
             <div className="rounded-lg border border-success/30 bg-success/5 p-3 text-sm">
-              <p className="font-semibold text-success">Landing page draft generated</p>
-              <p className="text-muted-foreground">A launch-ready one-page structure is now included in your roadmap workflow.</p>
+              <p className="font-semibold text-success">Borrador de página generado</p>
+              <p className="text-muted-foreground">Una estructura de una página lista para lanzar ya está incluida en tu flujo de trabajo.</p>
             </div>
           )}
 
           {domainChecked && (
             <div className="space-y-2 rounded-lg border border-border bg-card p-3">
-              <p className="text-sm font-semibold text-foreground">Domain availability</p>
+              <p className="text-sm font-semibold text-foreground">Disponibilidad de dominio</p>
               {domainOptions.length > 0 ? (
                 domainOptions.map((domain, index) => (
                   <div key={index} className="flex items-center justify-between rounded-md border border-border bg-background px-3 py-2 text-sm">
                     <span className="font-medium text-foreground">{domain.domain}</span>
                     <span className={cn("inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium", domain.available ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive")}>
                       {domain.available ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
-                      {domain.available ? "available" : "taken"}
+                      {domain.available ? "disponible" : "ocupado"}
                     </span>
                   </div>
                 ))
               ) : (
-                <p className="text-sm text-muted-foreground">No domain suggestions available for this idea yet.</p>
+                <p className="text-sm text-muted-foreground">No hay sugerencias de dominio disponibles para esta idea todavía.</p>
               )}
             </div>
           )}
@@ -126,7 +126,7 @@ export function RoadmapSection({ data, validationPlan }: RoadmapSectionProps) {
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
               <Map className="h-5 w-5 text-primary" />
             </div>
-            <CardTitle className="text-xl">Launch Roadmap</CardTitle>
+            <CardTitle className="text-xl">Hoja de Ruta de Lanzamiento</CardTitle>
           </div>
         </CardHeader>
         <CardContent>
@@ -163,7 +163,7 @@ export function RoadmapSection({ data, validationPlan }: RoadmapSectionProps) {
                                 step.domainSuggestion.available ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"
                               )}
                             >
-                              {step.domainSuggestion.available ? <><Check className="h-3 w-3" />available</> : <><X className="h-3 w-3" />taken</>}
+                              {step.domainSuggestion.available ? <><Check className="h-3 w-3" />disponible</> : <><X className="h-3 w-3" />ocupado</>}
                             </span>
                           </div>
                         </div>
@@ -208,7 +208,7 @@ export function RoadmapSection({ data, validationPlan }: RoadmapSectionProps) {
                                 step.domainSuggestion.available ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"
                               )}
                             >
-                              {step.domainSuggestion.available ? <><Check className="h-3 w-3" />available</> : <><X className="h-3 w-3" />taken</>}
+                              {step.domainSuggestion.available ? <><Check className="h-3 w-3" />disponible</> : <><X className="h-3 w-3" />ocupado</>}
                             </span>
                           </div>
                         </div>

@@ -1,9 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { ArrowRight, MapPin, DollarSign, Tag } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
+import { Rocket, MapPin, DollarSign, Tag } from "lucide-react"
 
 export type BusinessType = "fisica" | "digital" | "ambos"
 
@@ -61,22 +59,34 @@ export function HeroInput({ onSubmit }: HeroInputProps) {
   }
 
   return (
-    <div className="flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center px-4 py-8">
-      <div className="mx-auto w-full max-w-3xl space-y-5">
+    <div className="relative flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center px-4 py-12 sm:py-16">
+      <div className="relative mx-auto w-full max-w-3xl">
+        {/* Decorative twinkling dots */}
+        <span className="dz-twinkle pointer-events-none absolute -left-4 top-6 hidden h-1.5 w-1.5 rounded-full bg-primary/50 sm:block" />
+        <span
+          className="dz-twinkle pointer-events-none absolute -right-3 top-20 hidden h-1 w-1 rounded-full bg-primary/40 sm:block"
+          style={{ animationDelay: "2s" }}
+        />
+        <span className="dz-float pointer-events-none absolute right-10 -top-2 hidden h-2 w-2 rounded-full bg-primary/20 sm:block" />
+
         {/* Heading */}
-        <div className="space-y-2 text-center">
-          <h1 className="text-balance text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
+        <div className="dz-enter-1 text-center">
+          <h1 className="font-display text-balance text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
             Lanzá el negocio{" "}
-            <span className="text-primary">que siempre soñaste</span>
+            <span className="bg-gradient-to-r from-primary via-[oklch(0.6_0.18_175)] to-[oklch(0.55_0.16_160)] bg-clip-text text-transparent">
+              que siempre soñaste
+            </span>
           </h1>
-          <p className="mx-auto max-w-xl text-pretty text-sm text-muted-foreground">
-            Describí tu idea, tu ciudad y tu inversión inicial. La IA analiza todo y genera un informe completo adaptado a tu contexto.
-          </p>
         </div>
 
-        {/* Input Form Card */}
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+        <p className="dz-enter-2 mx-auto mt-5 max-w-xl text-pretty text-center text-base text-muted-foreground sm:text-lg">
+          Describí tu idea, tu ciudad y tu inversión inicial. La IA analiza
+          todo y genera un informe completo adaptado a tu contexto.
+        </p>
+
+        {/* Form Card */}
+        <form onSubmit={handleSubmit} className="dz-enter-3 mt-10">
+          <div className="rounded-2xl border border-border/50 bg-card/80 p-6 shadow-xl backdrop-blur-xl sm:p-8 dark:border-primary/[0.08] dark:bg-white/[0.03] dark:shadow-2xl dark:shadow-primary/[0.05]">
             {/* Brand Name Input */}
             <div className="space-y-2">
               <label htmlFor="brandName" className="text-sm font-medium text-foreground">
@@ -91,13 +101,13 @@ export function HeroInput({ onSubmit }: HeroInputProps) {
                   value={brandName}
                   onChange={(e) => setBrandName(e.target.value)}
                   placeholder="Ej: Empanadas La Abuela"
-                  className="w-full rounded-lg border border-input bg-background py-2.5 pl-10 pr-4 text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  className="dz-input w-full rounded-xl border border-input bg-background/50 py-3 pl-10 pr-4 text-base text-foreground placeholder:text-muted-foreground dark:bg-white/[0.02]"
                 />
               </div>
             </div>
 
             {/* Divider */}
-            <div className="my-5 border-t border-border" />
+            <div className="my-6 border-t border-border/50 dark:border-white/[0.06]" />
 
             {/* Idea Textarea */}
             <div className="space-y-2">
@@ -109,12 +119,12 @@ export function HeroInput({ onSubmit }: HeroInputProps) {
                 value={idea}
                 onChange={(e) => setIdea(e.target.value)}
                 placeholder="Ej: servicio de catering corporativo en Buenos Aires"
-                className="min-h-[100px] w-full resize-none rounded-lg border border-input bg-background p-4 text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="dz-input min-h-[110px] w-full resize-none rounded-xl border border-input bg-background/50 p-4 text-base text-foreground placeholder:text-muted-foreground dark:bg-white/[0.02]"
               />
             </div>
 
             {/* City and Investment Row */}
-            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <div className="mt-5 grid gap-4 sm:grid-cols-2">
               {/* City Input */}
               <div className="space-y-2">
                 <label htmlFor="city" className="text-sm font-medium text-foreground">
@@ -128,7 +138,7 @@ export function HeroInput({ onSubmit }: HeroInputProps) {
                     value={city}
                     onChange={(e) => setCity(e.target.value)}
                     placeholder="Ej: Buenos Aires"
-                    className="w-full rounded-lg border border-input bg-background py-2.5 pl-10 pr-4 text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    className="dz-input w-full rounded-xl border border-input bg-background/50 py-3 pl-10 pr-4 text-base text-foreground placeholder:text-muted-foreground dark:bg-white/[0.02]"
                   />
                 </div>
               </div>
@@ -145,8 +155,8 @@ export function HeroInput({ onSubmit }: HeroInputProps) {
                     type="text"
                     value={investment}
                     onChange={handleInvestmentChange}
-                    placeholder="Ej: 500,000"
-                    className="w-full rounded-lg border border-input bg-background py-2.5 pl-10 pr-4 text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    placeholder="Ej: 500.000"
+                    className="dz-input w-full rounded-xl border border-input bg-background/50 py-3 pl-10 pr-4 text-base text-foreground placeholder:text-muted-foreground dark:bg-white/[0.02]"
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
                     ARS
@@ -157,16 +167,15 @@ export function HeroInput({ onSubmit }: HeroInputProps) {
           </div>
 
           {/* Submit Button */}
-          <div className="flex flex-col items-center gap-3">
-            <Button
+          <div className="dz-enter-4 mt-8 flex flex-col items-center gap-4">
+            <button
               type="submit"
-              size="lg"
               disabled={!idea.trim()}
-              className="h-12 px-8 text-base font-medium"
+              className="dz-cta group inline-flex h-14 items-center justify-center gap-3 rounded-xl px-10 text-lg font-semibold text-white"
             >
-              Validar mi idea
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
+              Iniciar misión
+              <Rocket className="h-5 w-5 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:-rotate-12" />
+            </button>
             <p className="text-center text-sm text-muted-foreground">
               La IA analiza mercado, competencia y arma tu plan de lanzamiento personalizado
             </p>

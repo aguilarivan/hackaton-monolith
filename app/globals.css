@@ -109,7 +109,8 @@
 }
 
 @theme inline {
-  --font-sans: 'Inter', 'Geist', 'Geist Fallback', system-ui, sans-serif;
+  --font-sans: var(--font-body), 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-display: var(--font-heading), 'Sora', system-ui, sans-serif;
   --font-mono: 'Geist Mono', 'Geist Mono Fallback', monospace;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -173,4 +174,170 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* ===========================
+   DayZero Hero Section
+   =========================== */
+
+@keyframes dz-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes dz-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes dz-shine {
+  0% { transform: translateX(-150%); }
+  100% { transform: translateX(150%); }
+}
+
+@keyframes dz-glow-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+/* Staggered entrance */
+.dz-enter-1 {
+  opacity: 0;
+  animation: dz-fade-up 0.65s cubic-bezier(0.16, 1, 0.3, 1) 0.1s forwards;
+}
+.dz-enter-2 {
+  opacity: 0;
+  animation: dz-fade-up 0.65s cubic-bezier(0.16, 1, 0.3, 1) 0.25s forwards;
+}
+.dz-enter-3 {
+  opacity: 0;
+  animation: dz-fade-up 0.65s cubic-bezier(0.16, 1, 0.3, 1) 0.4s forwards;
+}
+.dz-enter-4 {
+  opacity: 0;
+  animation: dz-fade-up 0.65s cubic-bezier(0.16, 1, 0.3, 1) 0.55s forwards;
+}
+
+/* Form field focus glow */
+.dz-input {
+  transition: border-color 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+}
+.dz-input:focus {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 3px oklch(0.55 0.15 195 / 0.12), 0 0 20px oklch(0.55 0.15 195 / 0.06);
+  outline: none;
+}
+:is(.dark) .dz-input:focus {
+  box-shadow: 0 0 0 3px oklch(0.65 0.15 195 / 0.15), 0 0 24px oklch(0.65 0.15 195 / 0.1);
+}
+
+/* Hero CTA button */
+.dz-cta {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, oklch(0.52 0.17 190), oklch(0.42 0.14 225));
+  box-shadow: 0 0 24px oklch(0.55 0.15 195 / 0.2), 0 4px 12px oklch(0 0 0 / 0.15);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+}
+.dz-cta:hover:not(:disabled) {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow:
+    0 0 36px oklch(0.6 0.16 195 / 0.4),
+    0 0 72px oklch(0.55 0.15 195 / 0.12),
+    0 8px 24px oklch(0 0 0 / 0.2);
+}
+.dz-cta::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 35%,
+    oklch(1 0 0 / 0.1) 45%,
+    oklch(1 0 0 / 0.18) 50%,
+    oklch(1 0 0 / 0.1) 55%,
+    transparent 65%
+  );
+  transform: translateX(-150%);
+}
+.dz-cta:hover:not(:disabled)::after {
+  animation: dz-shine 0.75s ease-out forwards;
+}
+.dz-cta:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* Star field (tiled radial-gradient dots) */
+.dz-stars {
+  position: absolute;
+  inset: 0;
+}
+.dz-stars::before,
+.dz-stars::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+.dz-stars::before {
+  background-image:
+    radial-gradient(1px 1px at 15% 12%, oklch(0.95 0 0 / 0.25), transparent),
+    radial-gradient(1.5px 1.5px at 45% 28%, oklch(0.9 0 0 / 0.35), transparent),
+    radial-gradient(1px 1px at 72% 8%, oklch(0.95 0 0 / 0.2), transparent),
+    radial-gradient(1px 1px at 88% 45%, oklch(0.9 0 0 / 0.18), transparent),
+    radial-gradient(1.5px 1.5px at 25% 58%, oklch(0.95 0 0 / 0.3), transparent),
+    radial-gradient(1px 1px at 62% 72%, oklch(0.9 0 0 / 0.2), transparent),
+    radial-gradient(1px 1px at 8% 78%, oklch(0.95 0 0 / 0.15), transparent),
+    radial-gradient(1.5px 1.5px at 92% 85%, oklch(0.9 0 0 / 0.25), transparent),
+    radial-gradient(1px 1px at 35% 92%, oklch(0.95 0 0 / 0.15), transparent),
+    radial-gradient(1px 1px at 55% 42%, oklch(0.9 0 0 / 0.22), transparent);
+  background-size: 350px 350px;
+}
+.dz-stars::after {
+  background-image:
+    radial-gradient(1px 1px at 22% 18%, oklch(0.85 0.05 195 / 0.2), transparent),
+    radial-gradient(2px 2px at 68% 35%, oklch(0.9 0 0 / 0.35), transparent),
+    radial-gradient(1px 1px at 38% 75%, oklch(0.95 0 0 / 0.15), transparent),
+    radial-gradient(1.5px 1.5px at 82% 55%, oklch(0.85 0.05 195 / 0.2), transparent),
+    radial-gradient(1px 1px at 12% 48%, oklch(0.9 0 0 / 0.18), transparent),
+    radial-gradient(1.5px 1.5px at 58% 15%, oklch(0.95 0 0 / 0.25), transparent),
+    radial-gradient(1px 1px at 75% 88%, oklch(0.9 0 0 / 0.2), transparent);
+  background-size: 500px 420px;
+}
+
+/* Hero background (deep space gradient in dark mode) */
+.dz-hero-bg {
+  background: var(--background);
+}
+:is(.dark) .dz-hero-bg {
+  background:
+    radial-gradient(ellipse 80% 50% at 50% 40%, oklch(0.55 0.12 195 / 0.08), transparent),
+    radial-gradient(ellipse 40% 50% at 85% 20%, oklch(0.5 0.1 50 / 0.04), transparent),
+    linear-gradient(to bottom, oklch(0.06 0.025 250), oklch(0.1 0.02 235));
+}
+
+/* Noise grain overlay */
+.dz-noise {
+  position: absolute;
+  inset: 0;
+  opacity: 0.025;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay;
+}
+
+/* Floating decorative element */
+.dz-float {
+  animation: dz-float 6s ease-in-out infinite;
+}
+
+/* Twinkling decorative dot */
+.dz-twinkle {
+  animation: dz-glow-pulse 3s ease-in-out infinite;
 }

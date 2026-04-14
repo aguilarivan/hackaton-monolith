@@ -77,24 +77,26 @@ export async function POST(request: Request) {
 
   ;(async () => {
     try {
+      // Haiku sections run sequentially to avoid the 4,000 output TPM rate limit.
+      // Research (Sonnet) runs concurrently since it uses a separate model quota.
+      // Section plan can skip entire groups if all their sections are disabled.
       const tasks: Promise<void>[] = []
 
-      if (needViability) {
-        tasks.push(
-          generateViabilitySection(input, answers, mock).then((data) =>
-            emit({ type: "viability", data })
-          )
-        )
+      // Haiku chain: viability → details (sequential to avoid TPM burst)
+      if (needViability || needDetails) {
+        tasks.push((async () => {
+          if (needViability) {
+            const viability = await generateViabilitySection(input, answers, mock)
+            await emit({ type: "viability", data: viability })
+          }
+          if (needDetails) {
+            const details = await generateDetailsSection(input, answers, mock)
+            await emit({ type: "details", data: details })
+          }
+        })())
       }
 
-      if (needDetails) {
-        tasks.push(
-          generateDetailsSection(input, answers, mock).then((data) =>
-            emit({ type: "details", data })
-          )
-        )
-      }
-
+      // Research (Sonnet + web search) — runs in parallel with Haiku chain
       if (needResearch) {
         tasks.push(
           generateResearchSection(input, answers, mock).then((data) =>

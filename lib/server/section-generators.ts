@@ -51,6 +51,7 @@ export interface ViabilitySection {
   appName: string
   viability: ViabilityData
   clients: ClientData
+  _isMock?: boolean
 }
 
 export interface DetailsSection {
@@ -58,11 +59,13 @@ export interface DetailsSection {
   validationPlan: ValidationStep[]
   roadmap: RoadmapStep[]
   legalStructure: LegalStructure
+  _isMock?: boolean
 }
 
 export interface ResearchSection {
   competitors: CompetitorData
   startupKit: StartupKitData
+  _isMock?: boolean
 }
 
 // ── Shared tool loop ──────────────────────────────────────────────────────────
@@ -77,7 +80,7 @@ async function runToolLoop(
   for (let turn = 0; turn < 5; turn++) {
     const response = await anthropic.messages.create({
       model: "claude-haiku-4-5",
-      max_tokens: 8192,
+      max_tokens: 3000,
       system: [{ type: "text", text: system, cache_control: { type: "ephemeral" } }],
       tools: [tool],
       tool_choice: { type: "auto" },
@@ -277,10 +280,11 @@ export async function generateViabilitySection(
       appName: parsed.appName,
       viability: { ...parsed.viability, growthData: mock.viability.growthData, sourceSignals: mock.viability.sourceSignals },
       clients: parsed.clients,
+      _isMock: false,
     }
   } catch (error) {
     console.error("[generate_viability] error:", (error as Error).message)
-    return { appName: mock.appName, viability: mock.viability, clients: mock.clients }
+    return { appName: mock.appName, viability: mock.viability, clients: mock.clients, _isMock: true }
   }
 }
 
@@ -392,16 +396,16 @@ const DetailsOutputSchema = z.object({
     description: z.string(),
     solution: z.string(),
     failureCase: z.object({ startup: z.string(), reason: z.string(), lesson: z.string() }).optional(),
-  }))),
-  validationPlan: jsonString(z.array(z.object({ action: z.string(), metric: z.string(), duration: z.string() }))),
-  roadmap: jsonString(z.array(z.object({ period: z.string(), title: z.string(), actions: z.array(z.string()) }))),
+  }))).optional(),
+  validationPlan: jsonString(z.array(z.object({ action: z.string(), metric: z.string(), duration: z.string() }))).optional(),
+  roadmap: jsonString(z.array(z.object({ period: z.string(), title: z.string(), actions: z.array(z.string()) }))).optional(),
   legalStructure: jsonString(z.object({
     structures: z.array(z.object({ name: z.string(), recommended: z.boolean() })),
     explanation: z.string(),
     timeline: z.array(z.object({ month: z.number(), action: z.string() })),
     taxInfo: z.object({ regime: z.string(), monthlyEstimate: z.string(), annualEstimate: z.string(), benefits: z.array(z.string()) }),
     taxCategories: z.array(z.object({ name: z.string(), type: z.enum(["simplified", "general"]), fixedMonthlyArs: z.number(), vatRate: z.number(), incomeTaxRate: z.number(), socialChargeRate: z.number() })).optional().default([]),
-  })),
+  })).optional(),
 })
 
 export async function generateDetailsSection(
@@ -411,34 +415,106 @@ export async function generateDetailsSection(
 ): Promise<DetailsSection> {
   try {
     const block = await runToolLoop(
-      `Sos un analista de startups argentinos. Generá obstáculos, roadmap, plan de validación y estructura legal para la idea. Marcos legales: Monotributo, SAS (recomendada), SRL, SA. Citá startups reales que fallaron. Llamá a generate_details.`,
+      `Sos un analista de startups argentinos. Generá obstáculos, roadmap, plan de validación y estructura legal para la idea. Marcos legales: Monotributo, SAS (recomendada), SRL, SA. Citá startups reales que fallaron. Llamá a generate_details con los 4 campos: obstacles, validationPlan, roadmap y legalStructure.`,
       buildAnalysisUserMessage(input, answers),
       DETAILS_TOOL
     )
     const parsed = DetailsOutputSchema.parse(deepParse(block.input))
+
+    // Merge per-field: use Claude's data where available, fall back to mock
     return {
-      obstacles: parsed.obstacles,
-      validationPlan: parsed.validationPlan,
-      roadmap: parsed.roadmap.map((step, i) => ({
+      obstacles: parsed.obstacles ?? mock.obstacles,
+      validationPlan: parsed.validationPlan ?? mock.validationPlan,
+      roadmap: (parsed.roadmap ?? mock.roadmap).map((step, i) => ({
         ...step,
         domainSuggestion: mock.roadmap[i]?.domainSuggestion,
         domainChecks: mock.roadmap[i]?.domainChecks,
       })),
-      legalStructure: { ...parsed.legalStructure, bureaucracyLinks: mock.legalStructure.bureaucracyLinks },
+      legalStructure: parsed.legalStructure
+        ? { ...parsed.legalStructure, bureaucracyLinks: mock.legalStructure.bureaucracyLinks }
+        : mock.legalStructure,
+      _isMock: false,
     }
   } catch (error) {
     console.error("[generate_details] error:", (error as Error).message)
-    return { obstacles: mock.obstacles, validationPlan: mock.validationPlan, roadmap: mock.roadmap, legalStructure: mock.legalStructure }
+    return { obstacles: mock.obstacles, validationPlan: mock.validationPlan, roadmap: mock.roadmap, legalStructure: mock.legalStructure, _isMock: true }
   }
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// SECTION 3 — Competitors + Kit
+// SECTION 3 — Competitors + Kit  (Sonnet + web search)
 // ══════════════════════════════════════════════════════════════════════════════
+
+const WEB_SEARCH_TOOL = { type: "web_search_20260209" as const, name: "web_search" } as const
+
+/**
+ * Like runToolLoop but also handles web_search tool calls transparently.
+ * Claude may call web_search multiple times before calling the target tool.
+ * For each web_search tool_use we send back an empty tool_result; Anthropic's
+ * server-side infrastructure injects the real search results.
+ */
+async function runToolLoopWithSearch(
+  system: string,
+  userMessage: string,
+  tool: Anthropic.Tool,
+): Promise<Anthropic.ToolUseBlock> {
+  const messages: Anthropic.MessageParam[] = [{ role: "user", content: userMessage }]
+
+  for (let turn = 0; turn < 12; turn++) {
+    const response = await anthropic.messages.create({
+      model: "claude-sonnet-4-6",
+      max_tokens: 8192,
+      system: [{ type: "text", text: system, cache_control: { type: "ephemeral" } }],
+      tools: [WEB_SEARCH_TOOL as unknown as Anthropic.Tool, tool],
+      tool_choice: { type: "auto" },
+      messages,
+    })
+
+    console.log(`[${tool.name}+search] turn=${turn + 1} stop=${response.stop_reason} blocks=${JSON.stringify(response.content.map(b => b.type === "tool_use" ? `tool_use:${b.name}` : b.type))}`)
+
+    // Target tool was called → done
+    const targetBlock = response.content.find(
+      (b): b is Anthropic.ToolUseBlock => b.type === "tool_use" && b.name === tool.name
+    )
+    if (targetBlock) return targetBlock
+
+    if (response.stop_reason === "end_turn") {
+      // Claude finished without calling the tool — nudge it
+      messages.push({ role: "assistant", content: response.content })
+      messages.push({ role: "user", content: `Ahora llamá a ${tool.name} con toda la información que encontraste.` })
+      continue
+    }
+
+    // stop_reason === "tool_use" — handle web_search tool_use blocks
+    const webSearchBlocks = response.content.filter(
+      (b): b is Anthropic.ToolUseBlock => b.type === "tool_use" && b.name === "web_search"
+    )
+
+    if (webSearchBlocks.length > 0) {
+      messages.push({ role: "assistant", content: response.content })
+      // Acknowledge each web_search call; server injects real results
+      messages.push({
+        role: "user",
+        content: webSearchBlocks.map((b) => ({
+          type: "tool_result" as const,
+          tool_use_id: b.id,
+          content: [],
+        })),
+      })
+      continue
+    }
+
+    // Unknown stop — nudge
+    messages.push({ role: "assistant", content: response.content })
+    messages.push({ role: "user", content: `Llamá a ${tool.name} con el análisis completo.` })
+  }
+
+  throw new Error(`${tool.name} not called after max turns`)
+}
 
 const RESEARCH_TOOL: Anthropic.Tool = {
   name: "generate_research",
-  description: "Genera análisis de competidores y kit de inicio.",
+  description: "Registra los competidores encontrados via búsqueda web y el kit de inicio.",
   input_schema: {
     type: "object" as const,
     properties: {
@@ -447,29 +523,33 @@ const RESEARCH_TOOL: Anthropic.Tool = {
         properties: {
           competitors: {
             type: "array",
+            description: "Competidores encontrados via búsqueda web. Solo incluir los que encontraste realmente.",
             items: {
               type: "object",
               properties: {
-                name: { type: "string" },
-                description: { type: "string" },
-                strengths: { type: "array", items: { type: "string" } },
-                weaknesses: { type: "array", items: { type: "string" } },
-                cityArea: { type: "string" },
-                marketShare: { type: "string" },
+                name: { type: "string", description: "Nombre exacto tal como aparece en la búsqueda" },
+                description: { type: "string", description: "Descripción basada en lo que encontraste en su sitio o perfil" },
+                strengths: { type: "array", items: { type: "string" }, description: "Fortalezas observadas en la búsqueda" },
+                weaknesses: { type: "array", items: { type: "string" }, description: "Debilidades observadas" },
+                cityArea: { type: "string", description: "Zona o barrio donde opera, tal como aparece en sus datos" },
+                marketShare: { type: "string", description: "Estimación de presencia relativa. Ej: 'Alta', 'Media', '~20%'" },
+                url: { type: "string", description: "URL exacta del sitio web, Instagram u otro perfil encontrado" },
+                sourceQuery: { type: "string", description: "Query exacta que usaste para encontrar este competidor. Ej: 'tinder perros Buenos Aires'" },
               },
-              required: ["name", "description", "strengths", "weaknesses", "cityArea", "marketShare"],
+              required: ["name", "description", "strengths", "weaknesses", "cityArea", "marketShare", "sourceQuery"],
             },
           },
           launchZones: {
             type: "array",
+            description: "4 zonas reales de la ciudad evaluadas según lo que encontraste sobre actividad comercial y competencia",
             items: {
               type: "object",
               properties: {
-                zone: { type: "string" },
-                competitorDensity: { type: "number" },
-                demandSignal: { type: "number" },
-                launchScore: { type: "number" },
-                color: { type: "string", description: "hex: verde #22c55e si >7.5, amarillo #f59e0b si 5.5-7.5, rojo #ef4444 si <5.5" },
+                zone: { type: "string", description: "Nombre real del barrio o zona" },
+                competitorDensity: { type: "number", description: "1-10, basado en cuántos competidores encontraste en esa zona" },
+                demandSignal: { type: "number", description: "1-10, basado en actividad online encontrada (posts, reseñas, búsquedas)" },
+                launchScore: { type: "number", description: "1-10, calculado como demandSignal*0.6 + (10-competitorDensity)*0.4" },
+                color: { type: "string", description: "hex: #22c55e si >7.5, #f59e0b si 5.5-7.5, #ef4444 si <5.5" },
               },
               required: ["zone", "competitorDensity", "demandSignal", "launchScore", "color"],
             },
@@ -487,7 +567,7 @@ const RESEARCH_TOOL: Anthropic.Tool = {
               properties: {
                 name: { type: "string" },
                 reason: { type: "string" },
-                price: { type: "number", description: "precio estimado en ARS" },
+                price: { type: "number", description: "precio en ARS 2026 basado en búsqueda" },
                 percentage: { type: "number", description: "% del presupuesto total" },
               },
               required: ["name", "reason", "price", "percentage"],
@@ -505,7 +585,6 @@ const ResearchOutputSchema = z.object({
   competitors: z.preprocess(
     (val) => {
       const v = typeof val === "string" ? (() => { try { return JSON.parse(val) } catch { return val } })() : val
-      // Haiku a veces devuelve el array directo en lugar del objeto wrapper
       if (Array.isArray(v)) return { competitors: v, launchZones: [] }
       return v
     },
@@ -517,6 +596,8 @@ const ResearchOutputSchema = z.object({
         weaknesses: z.array(z.string()),
         cityArea: z.string(),
         marketShare: z.string(),
+        url: z.string().optional(),
+        sourceQuery: z.string().optional(),
       })),
       launchZones: z.array(z.object({
         zone: z.string(),
@@ -544,23 +625,52 @@ const ResearchOutputSchema = z.object({
   ),
 })
 
+function buildResearchSystem(city: string): string {
+  return `Tenés acceso a búsqueda web. Tu tarea es encontrar competidores REALES para la idea que te van a dar.
+
+REGLAS ABSOLUTAS:
+- PROHIBIDO inventar nombres de empresas. Solo usá lo que encontrás en las búsquedas.
+- PROHIBIDO usar tu conocimiento de entrenamiento para nombres de empresas. Solo datos de búsqueda.
+- Si una búsqueda no devuelve resultados, cambiá los términos y volvé a buscar.
+- Es mejor devolver 2 competidores reales que 4 inventados.
+
+CÓMO DETERMINAR EL ALCANCE DE LA BÚSQUEDA:
+Primero analizá si el negocio es DIGITAL o FÍSICO:
+
+- DIGITAL (app, plataforma, SaaS, marketplace, servicio online): la competencia NO es local.
+  → Buscá en Argentina primero, luego expandí a latinoamérica y global si hay pocas opciones.
+  → Queries: "[idea] app Argentina", "[idea] plataforma", "[idea] app site:play.google.com", "[idea] startup"
+
+- FÍSICO (local, tienda, restaurante, servicio presencial): la competencia es local o regional.
+  → Buscá en ${city} y alrededores.
+  → Queries: "[idea] ${city}", "[idea] ${city} Instagram", "[idea] provincia"
+
+- HÍBRIDO (ej: delivery, consultoría, e-commerce): buscá ambos niveles.
+
+PROCESO:
+1. Primera búsqueda ya ejecutada — analizá si el negocio es digital, físico o híbrido
+2. Hacé 2-3 búsquedas con el alcance correcto según el tipo
+3. Para cada competidor encontrado: anotá su URL real y la query que lo encontró (sourceQuery)
+4. Para las zonas de lanzamiento: si es digital usá zonas donde hay más usuarios potenciales en ${city}; si es físico usá barrios reales
+
+Registrá sourceQuery exacto por cada competidor. Llamá a generate_research con lo que encontraste.`
+}
+
 export async function generateResearchSection(
   input: BusinessInputData,
   answers: ClaudeAnswer[],
   mock: StartupAnalysis
 ): Promise<ResearchSection> {
   try {
-    const block = await runToolLoop(
-      `Sos un analista de startups argentinos. Generá 4 competidores reales o plausibles para la ciudad indicada, 4 zonas de lanzamiento con scores, y 3 ítems del kit de inicio con precios en ARS 2026. Usá zonas geográficas reales. Llamá a generate_research.`,
+    const block = await runToolLoopWithSearch(
+      buildResearchSystem(input.city || "la ciudad indicada"),
       buildAnalysisUserMessage(input, answers),
       RESEARCH_TOOL
     )
+    console.log("[generate_research] raw block.input:", JSON.stringify(block.input, null, 2))
     const parsed = ResearchOutputSchema.parse(deepParse(block.input))
 
-    const competitorsWithLocations: Competitor[] = parsed.competitors.competitors.map((c, i) => ({
-      ...c,
-      location: mock.competitors.competitors[i]?.location,
-    }))
+    const competitors: Competitor[] = parsed.competitors.competitors.map((c) => ({ ...c }))
 
     const kitItems: StartupKitItem[] = parsed.startupKit.items.map((item, i) => ({
       ...item,
@@ -572,7 +682,7 @@ export async function generateResearchSection(
 
     return {
       competitors: {
-        competitors: competitorsWithLocations,
+        competitors,
         mapCenter: mock.competitors.mapCenter,
         launchZones: parsed.competitors.launchZones,
       },
@@ -580,14 +690,20 @@ export async function generateResearchSection(
         items: kitItems,
         operationalReserve: mock.startupKit.operationalReserve,
         budgetDistribution: [
-          { category: "Equipment & Setup", percentage: totalItemPct, color: "var(--section-kit)" },
+          { category: "Equipamiento", percentage: totalItemPct, color: "var(--section-kit)" },
           { category: "Marketing", percentage: 20, color: "var(--section-roadmap)" },
-          { category: "Reserve", percentage: reservePct, color: "var(--section-viability)" },
+          { category: "Reserva", percentage: reservePct, color: "var(--section-viability)" },
         ],
       },
+      _isMock: false,
     }
   } catch (error) {
-    console.error("[generate_research] error:", (error as Error).message)
-    return { competitors: mock.competitors, startupKit: mock.startupKit }
+    console.error("[generate_research] error:", error)
+    // No mock fallback — return empty competitors so the UI shows "no encontrado"
+    return {
+      competitors: { competitors: [], mapCenter: mock.competitors.mapCenter, launchZones: [] },
+      startupKit: mock.startupKit,
+      _isMock: false,
+    }
   }
 }
