@@ -8,7 +8,7 @@ import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
 import { LanguageToggle } from "@/components/language-toggle"
 import { SpaceProgress } from "@/components/space-progress"
-import { clearFlowStorage, getBrandIdentity, getBusinessInput } from "@/lib/flow-storage"
+import { clearFlowStorage, getBrandIdentity, getBusinessInput, getLandingProgress, landingProgressRatio, LANDING_PROGRESS_EVENT } from "@/lib/flow-storage"
 import type { SpaceProgressProps } from "@/components/space-progress"
 
 const STEP_MAP: Record<string, SpaceProgressProps["currentStep"]> = {
@@ -32,15 +32,31 @@ export function Header() {
 
   const [user, setUser] = useState<AuthUser | null>(null)
   const [brandName, setBrandName] = useState<string | null>(null)
+  const [landingRatio, setLandingRatio] = useState<{ done: number; total: number } | null>(null)
   const showBrandName = showReset && brandName // only on steps 2/3, never on home
 
-  const currentStep = STEP_MAP[pathname] ?? null
+  const routeStep = STEP_MAP[pathname] ?? null
+  // Promote to step 4 when user has started engaging with the roadmap
+  const currentStep = routeStep === 3 && landingRatio && landingRatio.done > 0
+    ? 4 as SpaceProgressProps["currentStep"]
+    : routeStep
   const showProgress = currentStep !== null && pathname !== "/login"
 
   useEffect(() => {
     const input = getBusinessInput()
     const stored = getBrandIdentity()
     setBrandName(stored?.name ?? input?.brandName ?? null)
+  }, [pathname])
+
+  // Read landing progress on mount + listen for changes from roadmap section
+  useEffect(() => {
+    const sync = () => {
+      const p = getLandingProgress()
+      setLandingRatio(p ? landingProgressRatio(p) : null)
+    }
+    sync()
+    window.addEventListener(LANDING_PROGRESS_EVENT, sync)
+    return () => window.removeEventListener(LANDING_PROGRESS_EVENT, sync)
   }, [pathname])
 
   useEffect(() => {
@@ -87,6 +103,7 @@ export function Header() {
           <SpaceProgress
             currentStep={currentStep as SpaceProgressProps["currentStep"]}
             brandName={brandName ?? undefined}
+            landingRatio={landingRatio}
           />
         )}
 
