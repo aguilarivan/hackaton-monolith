@@ -1,6 +1,10 @@
+import Anthropic from "@anthropic-ai/sdk"
 import { getFlow, type BusinessInputData } from "@/lib/server/flow-store"
 import { generateClarificationQuestions } from "@/lib/server/question-generator"
 import { apiError, apiSuccess, parseJsonBody } from "@/lib/server/api-response"
+import { anthropic } from "@/lib/server/claude-client"
+import { ClarificationQuestionArraySchema } from "@/lib/server/analysis-schema"
+import { QUESTIONS_SYSTEM_PROMPT, buildQuestionsUserMessage } from "@/lib/server/questions-prompt"
 
 function isBusinessInputData(value: unknown): value is BusinessInputData {
   if (!value || typeof value !== "object") return false
@@ -11,6 +15,55 @@ function isBusinessInputData(value: unknown): value is BusinessInputData {
     typeof payload.city === "string" &&
     typeof payload.investment === "number"
   )
+}
+
+async function generateQuestionsWithClaude(input: BusinessInputData) {
+  const fallback = generateClarificationQuestions(input)
+
+  try {
+    const response = await anthropic.messages.create({
+      model: "claude-haiku-4-5",
+      max_tokens: 1500,
+      system: [
+        {
+          type: "text",
+          text: QUESTIONS_SYSTEM_PROMPT,
+          cache_control: { type: "ephemeral" },
+        },
+      ],
+      messages: [
+        {
+          role: "user",
+          content: buildQuestionsUserMessage(input),
+        },
+      ],
+    })
+
+    const textBlock = response.content.find((b) => b.type === "text")
+    const text = textBlock?.type === "text" ? textBlock.text.trim() : ""
+
+    // Extract JSON array from the response
+    const jsonMatch = text.match(/\[[\s\S]*\]/)
+    if (!jsonMatch) {
+      console.warn("[claude/questions] No JSON array found in response, text:", text.slice(0, 200))
+      return fallback
+    }
+
+    const parsed = ClarificationQuestionArraySchema.parse(JSON.parse(jsonMatch[0]))
+
+    console.log(
+      `[claude/questions] OK — ${parsed.length} questions, cache_read=${response.usage.cache_read_input_tokens ?? 0}`
+    )
+
+    return parsed
+  } catch (error) {
+    if (error instanceof Anthropic.APIError) {
+      console.error(`[claude/questions] API error ${error.status}:`, error.message)
+    } else {
+      console.error("[claude/questions] Parse/validation error:", error)
+    }
+    return fallback
+  }
 }
 
 export async function POST(request: Request) {
@@ -41,16 +94,9 @@ export async function POST(request: Request) {
       })
     }
 
-    const questions = generateClarificationQuestions(input)
+    const questions = await generateQuestionsWithClaude(input)
 
-    if (questions.length === 0) {
-      return apiError({
-        status: 500,
-        code: "INTERNAL_ERROR",
-        message: "No clarification questions were generated",
-      })
-    }
-
+    // Empty array is a valid response: Claude determined the idea has enough context
     return apiSuccess({ questions })
   } catch (error) {
     if (error instanceof Error && error.message === "INVALID_JSON_BODY") {

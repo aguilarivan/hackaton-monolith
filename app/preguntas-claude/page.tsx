@@ -29,6 +29,7 @@ export default function ClaudeQuestionsPage() {
   const [messageIndex, setMessageIndex] = useState(0)
   const [businessData, setBusinessData] = useState<ReturnType<typeof getBusinessInput>>(null)
   const [questions, setQuestions] = useState<ClarificationQuestion[]>([])
+  const [noQuestionsNeeded, setNoQuestionsNeeded] = useState(false)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [requestId, setRequestId] = useState<string | null>(null)
@@ -53,7 +54,11 @@ export default function ClaudeQuestionsPage() {
     try {
       const flowId = getFlowId()
       const apiQuestions = await getClarificationQuestionsFromApi(input, flowId ?? undefined)
-      setQuestions(apiQuestions)
+      if (apiQuestions.length === 0) {
+        setNoQuestionsNeeded(true)
+      } else {
+        setQuestions(apiQuestions)
+      }
     } catch (error) {
       setQuestions([])
       if (isApiClientError(error)) {
@@ -89,6 +94,20 @@ export default function ClaudeQuestionsPage() {
       clearTimeout(reveal)
     }
   }, [businessData])
+
+  // Auto-navigate when Claude determined no questions are needed
+  useEffect(() => {
+    if (isPreparing || !noQuestionsNeeded) return
+
+    const flowId = getFlowId()
+    if (!flowId) return
+
+    saveFlowAnswers(flowId, [])
+      .finally(() => {
+        saveClaudeAnswers([])
+        router.push("/analisis")
+      })
+  }, [isPreparing, noQuestionsNeeded, router])
 
   const isValid = useMemo(
     () => questions.length > 0 && questions.every((question) => {
