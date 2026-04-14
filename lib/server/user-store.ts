@@ -12,19 +12,14 @@ export interface User {
 // In-memory store — resets on every server restart (consistent with flow-store.ts)
 const usersByEmail = new Map<string, User>()
 
-async function seedDemoUser() {
-  const hash = await bcrypt.hash("password123", 10)
-  const user: User = {
-    id: randomUUID(),
-    email: "demo@dayzero.app",
-    passwordHash: hash,
-    name: "Demo User",
-    createdAt: Date.now(),
-  }
-  usersByEmail.set(user.email, user)
+const demoUser: User = {
+  id: randomUUID(),
+  email: "demo@dayzero.app",
+  passwordHash: bcrypt.hashSync("password123", 10),
+  name: "Demo User",
+  createdAt: Date.now(),
 }
-
-seedDemoUser()
+usersByEmail.set(demoUser.email, demoUser)
 
 export async function findUserByEmail(email: string): Promise<User | undefined> {
   return usersByEmail.get(email.toLowerCase().trim())
