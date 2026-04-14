@@ -8,9 +8,9 @@ export interface SpaceProgressProps {
 }
 
 const STEPS = [
-  { id: 1, planet: "🌎", label: "Tu idea" },
-  { id: 2, planet: "🪐", label: "Preguntas" },
-  { id: 3, planet: "⭐", label: "Análisis" },
+  { id: 1, planet: "🌎", label: "Misión" },
+  { id: 2, planet: "🪐", label: "Calibración" },
+  { id: 3, planet: "⭐", label: "Despegue" },
   { id: 4, planet: "🌍", label: "Aterrizaje" },
 ]
 
