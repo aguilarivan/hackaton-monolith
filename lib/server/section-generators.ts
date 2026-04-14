@@ -475,7 +475,7 @@ async function runToolLoopWithSearch(
       messages,
     })
 
-    console.log(`[${tool.name}+search] turn=${turn + 1} stop=${response.stop_reason} blocks=${response.content.length}`)
+    console.log(`[${tool.name}+search] turn=${turn + 1} stop=${response.stop_reason} blocks=${JSON.stringify(response.content.map(b => b.type === "tool_use" ? `tool_use:${b.name}` : b.type))}`)
 
     // Target tool was called → done
     const targetBlock = response.content.find(
@@ -703,7 +703,7 @@ export async function generateResearchSection(
       _isMock: false,
     }
   } catch (error) {
-    console.error("[generate_research] error:", (error as Error).message)
+    console.error("[generate_research] error:", error)
     // No mock fallback — return empty competitors so the UI shows "no encontrado"
     return {
       competitors: { competitors: [], mapCenter: mock.competitors.mapCenter, launchZones: [] },
